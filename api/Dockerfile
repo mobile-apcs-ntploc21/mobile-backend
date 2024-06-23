@@ -11,7 +11,7 @@ COPY package*.json ./
 
 RUN npm install --production=false
 
-COPY . ./
+COPY src ./
 
 RUN npm run build
 
