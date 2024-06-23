@@ -1,0 +1,41 @@
+{
+  "name": "apollo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.ts",
+  "type": "module",
+  "scripts": {
+    "compile": "tsc",
+    "start": "nodemon src/server.ts",
+    "start:dev": "nodemon src/server.ts",
+    "start:prod": "nodemon src/server.ts NODE_ENV=production"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/graphql-resolvers": "^0.3.2",
+    "@types/mongoose": "^5.11.97",
+    "@types/validator": "^13.12.0",
+    "apollo-server": "^3.13.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^7.3.1",
+    "graphql": "^16.9.0",
+    "graphql-resolvers": "^0.4.2",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.4.3",
+    "morgan": "^1.10.0",
+    "validator": "^13.12.0",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.14.8",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
+  }
+}
