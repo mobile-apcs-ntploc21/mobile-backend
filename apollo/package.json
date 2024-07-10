@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/server.ts",
-  "type": "module",
   "scripts": {
     "compile": "tsc",
     "start": "nodemon src/server.ts",
