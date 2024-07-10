@@ -6,10 +6,16 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import xss from "xss-clean";
+import mongoSanitize from "express-mongo-sanitize";
 
 import userRouter from "./routes/user";
 import AppError from "./utils/appError";
 import globalErrorHandler from "./controllers/error";
+
+import { verifyToken } from "./utils/auth";
 
 const app = express();
 
@@ -27,13 +33,18 @@ const limiter = rateLimit({
   max: Number(process.env.MAX_RATE_LIMIT),
   windowMs: Number(process.env.MAX_RATE_LIMIT_TIME) * 60 * 1000, // unit: minutes
   message: `Too many requests from this IP, please try again after ${process.env.MAX_RATE_LIMIT_TIME} minutes !`,
+  max: Number(process.env.MAX_RATE_LIMIT),
+  windowMs: Number(process.env.MAX_RATE_LIMIT_TIME) * 60 * 1000, // unit: minutes
+  message: `Too many requests from this IP, please try again after ${process.env.MAX_RATE_LIMIT_TIME} minutes !`,
 });
 
+app.use("/api", limiter);
 app.use("/api", limiter);
 
 // Set environment
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
+// Middleware
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -50,7 +61,7 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-//Handle global error
+// Handle global error
 app.use(globalErrorHandler);
 
 // Handle undefined route
