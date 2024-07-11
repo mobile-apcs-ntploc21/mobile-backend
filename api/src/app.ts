@@ -6,10 +6,14 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
+import dotenv from "dotenv";
 
+// import { authMiddleware } from "./utils/authMiddleware";
 import userRouter from "./routes/user";
 import AppError from "./utils/appError";
 import globalErrorHandler from "./controllers/error";
+
+dotenv.config({ path: "./config.env" });
 
 const app = express();
 

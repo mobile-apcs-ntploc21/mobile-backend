@@ -1,11 +1,7 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
 import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
-import {
-  GET_USER_BY_ID,
-  GET_USER_BY_EMAIL,
-  LOGIN_USER,
-} from "../graphql/queries";
+import { GET_USER_BY_EMAIL, LOGIN_USER } from "../graphql/queries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -27,15 +23,6 @@ const generateRefreshToken = (payload: any) => {
       expiresIn: "7d",
     }
   );
-};
-
-// Get user by ID
-const getUserById = async (id: string) => {
-  const response = await graphQLClient().request(GET_USER_BY_ID, {
-    id: id,
-  });
-
-  return response.getUserById;
 };
 
 // Get user by email
@@ -171,10 +158,17 @@ export const refresh = async (
 ) => {
   try {
     const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        message: "Missing refresh token.",
+      });
+    }
+
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
-    );
+    ) as jwt.JwtPayload;
     const user = await getUserByEmail(decodedToken.email);
 
     if (!user || user.token !== refreshToken) {
