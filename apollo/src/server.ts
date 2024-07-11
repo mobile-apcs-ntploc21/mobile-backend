@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import app from "../../api/src/app";
+import app from "./app";
 import mongoose, { ConnectOptions } from "mongoose";
 import { ApolloServer } from "apollo-server-express";
 

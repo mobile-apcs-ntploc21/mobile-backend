@@ -30,12 +30,10 @@ const limiter = rateLimit({
 });
 
 app.use("/api", limiter);
-app.use("/api", limiter);
 
 // Set environment
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
-// Middleware
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -44,16 +42,16 @@ app.use(cors());
 app.use("/api/v1/users", userRouter);
 
 // Handle when go to undefined route
-// app.all("*", (req: Request, res: Response, next: NextFunction) => {
-//   res.status(404).json({
-//     status: "fail",
-//     message: `Cannot find ${req.originalUrl} on this server !`,
-//   });
-// });
+app.all("*", (req: Request, res: Response, next: NextFunction) => {
+  res.status(404).json({
+    status: "fail",
+    message: `Cannot find ${req.originalUrl} on this server !`,
+  });
+});
 
 // Handle global error
 app.use(globalErrorHandler);
 
 app.listen(4001, () => console.log("API is listening on port 4001..."));
 
-export default app;
+// export default app;
