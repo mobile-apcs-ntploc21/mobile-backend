@@ -4,6 +4,7 @@
   "main": "src/app.ts",
   "scripts": {
     "compile": "tsc",
+    "build": "tsc",
     "start": "nodemon src/app.ts",
     "start:dev": "nodemon src/app.ts",
     "start:prod": "nodemon src/app.ts NODE_ENV=production"
@@ -29,9 +30,12 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.8",
     "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.2"
   }
 }

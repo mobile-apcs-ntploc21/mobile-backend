@@ -158,13 +158,6 @@ export const refresh = async (
 ) => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        message: "Missing refresh token.",
-      });
-    }
-
     const decodedToken = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
