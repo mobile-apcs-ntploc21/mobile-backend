@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, Router } from "express";
-import { login, register, refresh, aboutMe } from "../lib/auth";
+import { refresh, aboutMe } from "../lib/auth";
+import { createUser, loginUser } from "../controllers/user";
 const userRouter = Router();
 
 // Define your routes here
@@ -14,7 +15,7 @@ userRouter.post(
   "/login",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await login(req, res);
+      await loginUser(req, res, next);
     } catch (error) {
       next(error);
     }
@@ -26,7 +27,7 @@ userRouter.post(
   "/register",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await register(req, res);
+      await createUser(req, res, next);
     } catch (error) {
       next(error);
     }
