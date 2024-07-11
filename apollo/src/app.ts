@@ -6,18 +6,15 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
-import dotenv from "dotenv";
-
-// import { authMiddleware } from "./utils/authMiddleware";
-import userRouter from "./routes/user";
 import AppError from "./utils/appError";
-import globalErrorHandler from "./controllers/error";
 
-dotenv.config({ path: "./config.env" });
-
-const app = express();
+import { ApolloServer } from "apollo-server-express";
+import resolvers from "./graphql/resolvers";
+import typeDefs from "./graphql/typedefs";
+import http from "http";
 
 // SET SECURITY HTTP HEADER
+const app = express();
 app.use(helmet());
 
 // Data sanitization against noSQL query injection
@@ -33,29 +30,25 @@ const limiter = rateLimit({
   message: `Too many requests from this IP, please try again after ${process.env.MAX_RATE_LIMIT_TIME} minutes !`,
 });
 
-app.use("/api", limiter);
-
-// Set environment
+// set environment
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
-// Middleware
+// middleware
 app.use(express.json());
 app.use(cors());
 
-// Set default route
-app.use("/api/v1/users", userRouter);
-
-// Handle when go to undefined route
-app.all("*", (req: Request, res: Response, next: NextFunction) => {
-  res.status(404).json({
-    status: "fail",
-    message: `Cannot find ${req.originalUrl} on this server !`,
+let apolloServer = null;
+async function startServer() {
+  apolloServer = new ApolloServer({
+    typeDefs,
+    resolvers,
   });
-});
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app, path: "/graphql", cors: true });
+}
+startServer();
+const httpserver = http.createServer(app);
 
-// Handle global error
-app.use(globalErrorHandler);
-
-app.listen(4001, () => console.log("API is listening on port 4001..."));
+app.use("/graphql", limiter);
 
 export default app;

@@ -1,0 +1,20 @@
+version: '3'
+services:
+  api:
+    build: ./api
+    ports:
+      - '4001:4001'
+    volumes:
+      - ./api:/app
+    command: npm start
+    depends_on:
+      - apollo
+    environment:
+      - GQL_SERVER_URL=http://apollo:4000/graphql
+  apollo:
+    build: ./apollo
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./apollo:/app
+    command: npm start

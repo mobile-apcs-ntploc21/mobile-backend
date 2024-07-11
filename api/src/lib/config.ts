@@ -1,2 +1,4 @@
+require("dotenv").config({ path: "./config.env" });
+
 export const GQL_SERVER_URL =
-    process.env.GQL_SERVER_URL || "http://gqlserver:4000";
+  process.env.GQL_SERVER_URL || "http://apollo:4000/graphql";

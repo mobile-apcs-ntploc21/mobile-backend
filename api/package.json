@@ -4,6 +4,7 @@
   "main": "src/app.ts",
   "scripts": {
     "compile": "tsc",
+    "build": "tsc",
     "start": "nodemon src/app.ts",
     "start:dev": "nodemon src/app.ts",
     "start:prod": "nodemon src/app.ts NODE_ENV=production"
@@ -16,20 +17,25 @@
     "@types/cors": "^2.8.17",
     "@types/helmet": "^4.0.0",
     "@types/morgan": "^1.9.9",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.3.1",
-    "graphql-request": "^7.1.0",
+    "graphql-request": "^4.2.0",
     "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.8",
     "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
     "typescript": "^5.5.2"
   }
 }

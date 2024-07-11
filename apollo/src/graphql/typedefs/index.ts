@@ -1,6 +1,7 @@
-import { gql } from 'apollo-server-express';
+import { gql } from "apollo-server-express";
+import { mergeTypeDefs } from "@graphql-tools/merge";
 
-import userSchema from './User';
+import userSchema from "./user";
 
 const linkedSchema = gql`
   type Query {
@@ -11,4 +12,8 @@ const linkedSchema = gql`
   }
 `;
 
-export default [linkedSchema, userSchema];
+// Merge all typeDefs: Add more in the future if needed
+// e.g [userSchema, postSchema, channelSchema]
+const typeDefs = mergeTypeDefs([linkedSchema, userSchema]);
+
+export default typeDefs;
