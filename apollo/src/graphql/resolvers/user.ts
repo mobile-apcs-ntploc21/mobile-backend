@@ -54,6 +54,18 @@ const userResolvers = {
       }
       return user;
     }),
+
+    updateRefreshToken: combineResolvers(async (_, { input }, { models }) => {
+      const user = await UserModel.findOne({ email: input.email });
+
+      if (!user) {
+        throw new UserInputError("User not found !");
+      }
+
+      user.token = input.token;
+      await user.save();
+      return user;
+    }),
   },
 };
 

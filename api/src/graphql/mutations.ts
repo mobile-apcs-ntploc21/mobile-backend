@@ -13,3 +13,14 @@ export const CREATE_USER = gql`
     }
   }
 `;
+
+// Update refreshToken
+export const UPDATE_REFRESH_TOKEN = gql`
+  mutation updateRefreshToken($input: UpdateRefreshTokenInput!) {
+    updateRefreshToken(input: $input) {
+      id
+      email
+      token
+    }
+  }
+`;

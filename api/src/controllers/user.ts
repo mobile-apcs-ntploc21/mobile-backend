@@ -1,6 +1,6 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
-import { CREATE_USER } from "../graphql/mutations";
+import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
 import {
   GET_USER_BY_ID,
   GET_USER_BY_EMAIL,
@@ -98,6 +98,14 @@ export const createUser = async (
       id: response.id,
     });
 
+    // Update refresh token to database
+    await graphQLClient().request(UPDATE_REFRESH_TOKEN, {
+      input: {
+        email: email,
+        token: refreshToken,
+      },
+    });
+
     res.json({ ...response, jwtToken, refreshToken });
     res.locals.data = {
       id: response.id,
@@ -144,6 +152,14 @@ export const loginUser = async (
       id: response.id,
     });
 
+    // Update refresh token to database
+    await graphQLClient().request(UPDATE_REFRESH_TOKEN, {
+      input: {
+        email: email,
+        token: refreshToken,
+      },
+    });
+
     res.json({ ...response, jwtToken, refreshToken });
     res.locals.data = {
       id: response.id,
@@ -161,6 +177,44 @@ export const refresh = async (
   next: express.NextFunction
 ) => {
   try {
+    const { refreshToken } = req.body;
+    const decodedToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const user = await getUserByEmail(decodedToken.email);
+
+    if (!user || user.token !== refreshToken) {
+      return res.status(401).json({
+        message: "Invalid token",
+      });
+    }
+
+    // Generate new JWT and refresh token
+    const jwtToken = generateToken({
+      email: user.email,
+      id: user.id,
+    });
+    const newRefreshToken = generateRefreshToken({
+      email: user.email,
+      id: user.id,
+    });
+
+    // Update refresh token to database
+    await graphQLClient().request(UPDATE_REFRESH_TOKEN, {
+      input: {
+        email: user.email,
+        token: newRefreshToken,
+      },
+    });
+
+    res.json({
+      id: user.id,
+      jwtToken: jwtToken,
+      refreshToken: newRefreshToken,
+    });
+
+    return next();
   } catch (err) {
     return next(err);
   }

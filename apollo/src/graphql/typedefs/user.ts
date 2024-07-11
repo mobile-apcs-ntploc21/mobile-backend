@@ -25,6 +25,7 @@ export default gql`
 
   extend type Mutation {
     createUser(input: CreateUserInput!): User!
+    updateRefreshToken(input: UpdateRefreshTokenInput!): User!
   }
 
   input CreateUserInput {
@@ -34,5 +35,10 @@ export default gql`
     password: String!
     phone_number: String
     age: Int
+  }
+
+  input UpdateRefreshTokenInput {
+    email: String!
+    token: String!
   }
 `;

@@ -7,6 +7,7 @@ export const GET_USER_BY_ID = gql`
       username
       email
       phone_number
+      token
     }
   }
 `;
@@ -18,6 +19,7 @@ export const GET_USER_BY_EMAIL = gql`
       username
       email
       phone_number
+      token
     }
   }
 `;
