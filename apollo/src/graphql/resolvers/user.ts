@@ -22,7 +22,6 @@ const userResolvers = {
     }),
 
     getUserByEmail: combineResolvers(async (_, { email }, { models }) => {
-      console.log(email);
       const user = await UserModel.findOne({ email });
       if (!user) {
         return null;

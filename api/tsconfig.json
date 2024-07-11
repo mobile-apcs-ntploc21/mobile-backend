@@ -8,8 +8,8 @@
       "es2020"
     ],
     "target": "es2020",
-    "module": "ES2020",
-    "moduleResolution": "Bundler",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "types": [
       "node"

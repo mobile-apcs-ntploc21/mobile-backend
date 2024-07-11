@@ -1,2 +1,4 @@
+require("dotenv").config({ path: "./config.env" });
+
 export const GQL_SERVER_URL =
-  process.env.GQL_SERVER_URL || "http://192.168.1.84:4000";
+  process.env.GQL_SERVER_URL || "http://gqlserver:4000";

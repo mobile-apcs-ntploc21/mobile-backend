@@ -11,7 +11,7 @@ import jwt from "jsonwebtoken";
 
 // Generate JWT token
 const generateToken = (payload: any) => {
-  return jwt.sign(payload, process.env.JWT_SECRET, {
+  return jwt.sign(payload, process.env.JWT_SECRET || "please_add_secret", {
     algorithm: "HS256",
     expiresIn: "1d",
   });
@@ -19,10 +19,14 @@ const generateToken = (payload: any) => {
 
 // Generate refresh token
 const generateRefreshToken = (payload: any) => {
-  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-    algorithm: "HS256",
-    expiresIn: "7d",
-  });
+  return jwt.sign(
+    payload,
+    process.env.REFRESH_TOKEN_SECRET || "please_add_secret",
+    {
+      algorithm: "HS256",
+      expiresIn: "7d",
+    }
+  );
 };
 
 // Get user by ID
@@ -36,7 +40,6 @@ const getUserById = async (id: string) => {
 
 // Get user by email
 const getUserByEmail = async (email: string) => {
-  console.log(email);
   const response = await graphQLClient().request(GET_USER_BY_EMAIL, {
     email: email,
   });
@@ -106,12 +109,7 @@ export const createUser = async (
       },
     });
 
-    res.json({ ...response, jwtToken, refreshToken });
-    res.locals.data = {
-      id: response.id,
-    };
-
-    return next();
+    return res.status(201).json({ ...response, jwtToken, refreshToken });
   } catch (err) {
     return next(err);
   }
@@ -160,12 +158,7 @@ export const loginUser = async (
       },
     });
 
-    res.json({ ...response, jwtToken, refreshToken });
-    res.locals.data = {
-      id: response.id,
-    };
-
-    return next();
+    return res.status(200).json({ ...response, jwtToken, refreshToken });
   } catch (err) {
     return next(err);
   }
@@ -208,13 +201,11 @@ export const refresh = async (
       },
     });
 
-    res.json({
+    return res.status(200).json({
       id: user.id,
       jwtToken: jwtToken,
       refreshToken: newRefreshToken,
     });
-
-    return next();
   } catch (err) {
     return next(err);
   }

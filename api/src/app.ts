@@ -54,4 +54,4 @@ app.use(globalErrorHandler);
 
 app.listen(4001, () => console.log("API is listening on port 4001..."));
 
-// export default app;
+export default app;

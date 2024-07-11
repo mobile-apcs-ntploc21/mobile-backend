@@ -27,15 +27,6 @@ const StartServer = async () => {
       console.error("Error connecting to the database", error);
     });
 
-  // Create Apollo Server
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: { UserModel },
-  });
-  await server.start();
-  server.applyMiddleware({ app, path: "/graphql" });
-
   const port = process.env.PORT || 4000;
 
   app.listen(port, () => {
