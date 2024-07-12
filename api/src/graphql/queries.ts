@@ -24,6 +24,18 @@ export const GET_USER_BY_EMAIL = gql`
   }
 `;
 
+export const GET_USER_BY_USERNAME = gql`
+  query getUserByUsername($username: String!) {
+    getUserByUsername(username: $username) {
+      id
+      username
+      email
+      phone_number
+      token
+    }
+  }
+`;
+
 export const LOGIN_USER = gql`
   query loginUser($email: String!, $password: String!) {
     loginUser(email: $email, password: $password) {
