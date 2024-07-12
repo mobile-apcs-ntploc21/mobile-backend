@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, Router } from "express";
-import { createUser, loginUser, refresh } from "../controllers/user";
+import { createUser, loginUser, refresh, getMe } from "../controllers/user";
 const userRouter = Router();
 
 // Define your routes here
@@ -39,6 +39,18 @@ userRouter.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await refresh(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// /me route
+userRouter.get(
+  "/me",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await getMe(req, res, next);
     } catch (error) {
       next(error);
     }

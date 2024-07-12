@@ -102,6 +102,16 @@ export const createUser = async (
   }
 };
 
+/**
+ * @route /login - To login user
+ * Given a valid email and password, return the user information
+ *
+ * @async
+ * @param {express.Request} req
+ * @param {express.Response} res
+ * @param {express.NextFunction} next
+ * @returns {HTML Status | Json}
+ */
 export const loginUser = async (
   req: express.Request,
   res: express.Response,
@@ -151,6 +161,16 @@ export const loginUser = async (
   }
 };
 
+/**
+ * @route /refresh - To refresh JWT token
+ * Given a valid refresh token, return a new JWT token and refresh token
+ *
+ * @async
+ * @param {express.Request} req
+ * @param {express.Response} res
+ * @param {express.NextFunction} next
+ * @returns {HTML Status | Json}
+ */
 export const refresh = async (
   req: express.Request,
   res: express.Response,
@@ -193,6 +213,60 @@ export const refresh = async (
       jwtToken: jwtToken,
       refreshToken: newRefreshToken,
     });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+/**
+ * @route /me - To get user information
+ * Given a valid JWT token, return the user information
+ *
+ * @async
+ * @param {express.Request} req
+ * @param {express.Response} res
+ * @param {express.NextFunction} next
+ * @returns {HTML Status | Json} - User information
+ */
+export const getMe = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    let token: string | undefined;
+
+    // Check if token is in header
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
+    } else {
+      return res.status(401).json({
+        status: "fail",
+        message: "You are not authorized to access this route",
+      });
+    }
+
+    if (!token) {
+      return res.status(401).json({
+        status: "fail",
+        message: "You are not authorized to access this route",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload;
+    const user = await getUserByEmail(decoded.email);
+
+    if (!user) {
+      return res.status(401).json({
+        status: "fail",
+        message: "The user belonging to this token does no longer exist",
+      });
+    }
+
+    return res.status(200).json(user);
   } catch (err) {
     return next(err);
   }
