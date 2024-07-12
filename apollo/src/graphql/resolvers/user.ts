@@ -29,6 +29,14 @@ const userResolvers = {
       return user;
     }),
 
+    getUserByUsername: combineResolvers(async (_, { username }, { models }) => {
+      const user = await UserModel.findOne({ username });
+      if (!user) {
+        return null;
+      }
+      return user;
+    }),
+
     loginUser: combineResolvers(async (_, { email, password }, { models }) => {
       const user = await UserModel.findOne({ email });
 

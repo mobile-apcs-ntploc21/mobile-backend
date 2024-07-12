@@ -17,6 +17,7 @@ const userSchema = new Schema<IUser>(
   {
     username: {
       type: String,
+      unique: true,
       minLength: [4, "Username length must greater or equal to 4!"],
     },
     email: {

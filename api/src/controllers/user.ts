@@ -1,7 +1,7 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
 import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
-import { GET_USER_BY_EMAIL, LOGIN_USER } from "../graphql/queries";
+import { GET_USER_BY_EMAIL, LOGIN_USER, GET_USER_BY_USERNAME } from "../graphql/queries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -34,6 +34,15 @@ const getUserByEmail = async (email: string) => {
   return response.getUserByEmail;
 };
 
+// Get user by username
+const getUserByUsername = async (username: string) => {
+  const response = await graphQLClient().request(GET_USER_BY_USERNAME, {
+    username: username,
+  });
+
+  return response.getUserByUsername;
+};
+
 export const createUser = async (
   req: express.Request,
   res: express.Response,
@@ -58,7 +67,21 @@ export const createUser = async (
 
     if (user) {
       return res.status(400).json({
-        message: "User already exists",
+        message: "Email already exists",
+      });
+    }
+
+    const userByUsername = await getUserByUsername(username)
+      .then((res) => {
+        return res;
+      })
+      .catch((err) => {
+        return null;
+      });
+
+    if (userByUsername) {
+      return res.status(400).json({
+        message: "Username already exists",
       });
     }
 
