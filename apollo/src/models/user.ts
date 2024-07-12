@@ -34,7 +34,6 @@ const userSchema = new Schema<IUser>(
     },
     phone_number: {
       type: String,
-      required: [true, "Please provide a phone number"],
       validate: [
         validator.isMobilePhone,
         "Please provide a valid phone number!",
