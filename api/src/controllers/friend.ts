@@ -1,39 +1,21 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
-import { GET_RELATIONSHIP_TYPE } from "../graphql/queries";
 import {
-  CREATE_RELATIONSHIP,
-  UPDATE_RELATIONSHIP,
-  DELETE_RELATIONSHIP,
-} from "../graphql/mutations";
+  GET_ALL_FRIENDS,
+  GET_BLOCKED_USERS,
+  GET_RECEIVED_FRIEND_REQUESTS,
+  GET_RELATIONSHIP_TYPE,
+  GET_SENT_FRIEND_REQUESTS
+} from "../graphql/queries";
+import {CREATE_RELATIONSHIP, DELETE_RELATIONSHIP, UPDATE_RELATIONSHIP} from "../graphql/mutations";
 
-const getRelationshipType = async (
-  user_first_id: string,
-  user_second_id: string
-) => {
+const getRelationshipType = async (user_first_id: string, user_second_id: string) => {
   if (user_first_id > user_second_id) {
     const temp = user_first_id;
     user_first_id = user_second_id;
     user_second_id = temp;
   }
-  const { getRelationshipType: response } = await graphQLClient().request(
-    GET_RELATIONSHIP_TYPE,
-    {
-      user_first_id: user_first_id,
-      user_second_id: user_second_id,
-    }
-  );
-
-  return response;
-};
-
-const deleteRelationship = async (user_first_id: string, user_second_id: string) => {
-  if (user_first_id > user_second_id) {
-    const temp = user_first_id;
-    user_first_id = user_second_id;
-    user_second_id = temp;
-  }
-  const response = await graphQLClient().request(DELETE_RELATIONSHIP, {
+  const { getRelationshipType: response } = await graphQLClient().request(GET_RELATIONSHIP_TYPE, {
     user_first_id: user_first_id,
     user_second_id: user_second_id,
   });
@@ -47,12 +29,10 @@ const deleteRelationship = async (user_first_id: string, user_second_id: string)
     user_first_id = user_second_id;
     user_second_id = temp;
   }
-  const response = await graphQLClient().request(DELETE_RELATIONSHIP, {
+  return await graphQLClient().request(DELETE_RELATIONSHIP, {
     user_first_id: user_first_id,
     user_second_id: user_second_id,
   });
-
-  return response;
 }
 
 /* Friend Management */
@@ -487,6 +467,102 @@ export const unblockUser = async (
 };
 
 /* Listing and Queries */
+
+// List all friends
+export const getAllFriends = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const user_id = req.params.uid;
+
+    const { getAllFriends: response } = await graphQLClient().request(GET_ALL_FRIENDS, {
+      user_id: user_id,
+    });
+
+    return res.status(200).json({
+      friends: response,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// List received friend requests
+export const getReceivedFriendRequests = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const user_id = req.params.uid;
+
+    const { getReceivedFriendRequests: response } = await graphQLClient().request(GET_RECEIVED_FRIEND_REQUESTS, {
+      user_id: user_id,
+    });
+
+    return res.status(200).json({
+      requests: response,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// List sent friend requests
+export const getSentFriendRequests = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const user_id = req.params.uid;
+
+    const { getSentFriendRequests: response } = await graphQLClient().request(GET_SENT_FRIEND_REQUESTS, {
+      user_id: user_id,
+    });
+
+    return res.status(200).json({
+      requests: response,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+// List blocked users
+export const getBlockedUsers = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const user_id = req.params.uid;
+
+    const { getBlockedUsers: response } = await graphQLClient().request(GET_BLOCKED_USERS, {
+      user_id: user_id,
+    });
+
+    return res.status(200).json({
+      blocked: response,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
 // Get user relationship with `id`
 // Returns: "NOT-FRIEND" | "REQUEST-SENT" | "REQUEST-RECEIVED" | "FRIEND" | "BLOCK"

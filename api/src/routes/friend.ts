@@ -7,6 +7,10 @@ import {
   removeFriend,
   blockUser,
   unblockUser,
+  getAllFriends,
+  getReceivedFriendRequests,
+  getSentFriendRequests,
+  getBlockedUsers,
   getRelationshipTypeApi } from "../controllers/friend";
 import { authMiddleware } from "../utils/authMiddleware";
 
@@ -32,6 +36,16 @@ friendRouter.post('/block/:id', authMiddleware, blockUser);
 friendRouter.delete('/block/:id', authMiddleware, unblockUser);
 
 /* Listing and Queries */
+// get all friends of user with `id`
+friendRouter.get("/friends/", authMiddleware, getAllFriends);
+// get all received friend requests of the current user
+friendRouter.get("/friends/requests/received", authMiddleware, getReceivedFriendRequests);
+// get all sent friend requests of the current user
+friendRouter.get("/friends/requests/sent", authMiddleware, getSentFriendRequests);
+// get all blocked users of the current user
+friendRouter.get("/block/", authMiddleware, getBlockedUsers);
+
+// get relationship type between the current user and user with `id`
 friendRouter.get("/relationship/:id", authMiddleware, getRelationshipTypeApi);
 
 

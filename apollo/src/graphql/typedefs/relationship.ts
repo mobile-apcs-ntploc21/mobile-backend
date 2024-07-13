@@ -23,6 +23,10 @@ export default gql`
   
   extend type Query {
     getRelationshipType(user_first_id: ID!, user_second_id: ID!): RelationshipType
+    getAllFriends(user_id: ID!): [User]
+    getReceivedFriendRequests(user_id: ID!): [User]
+    getSentFriendRequests(user_id: ID!): [User]
+    getBlockedUsers(user_id: ID!): [User]
   }
   
   extend type Mutation {
