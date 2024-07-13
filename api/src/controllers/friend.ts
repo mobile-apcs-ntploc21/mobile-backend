@@ -41,6 +41,20 @@ const deleteRelationship = async (user_first_id: string, user_second_id: string)
   return response;
 }
 
+const deleteRelationship = async (user_first_id: string, user_second_id: string) => {
+  if (user_first_id > user_second_id) {
+    const temp = user_first_id;
+    user_first_id = user_second_id;
+    user_second_id = temp;
+  }
+  const response = await graphQLClient().request(DELETE_RELATIONSHIP, {
+    user_first_id: user_first_id,
+    user_second_id: user_second_id,
+  });
+
+  return response;
+}
+
 /* Friend Management */
 
 // Add user with `id` as friend (Send friend request).
