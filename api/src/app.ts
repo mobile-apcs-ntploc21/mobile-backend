@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 
 import { authMiddleware } from "./utils/authMiddleware";
 import userRouter from "./routes/user";
+import friendRouter from "./routes/friend";
 import AppError from "./utils/appError";
 import globalErrorHandler from "./controllers/error";
 
@@ -44,6 +45,8 @@ app.use(cors());
 
 // Set default route
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/", authMiddleware, friendRouter);
+
 
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
