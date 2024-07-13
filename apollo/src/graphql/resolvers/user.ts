@@ -2,8 +2,9 @@ import { UserInputError } from "apollo-server";
 import { combineResolvers } from "graphql-resolvers";
 import UserModel from "../../models/user";
 import bcrypt from "bcryptjs";
+import { IResolvers } from '@graphql-tools/utils';
 
-const userResolvers = {
+const userResolvers: IResolvers = {
   Query: {
     users: combineResolvers(async (_, __, { models }) => {
       const users = await models.UserModel.findAll();

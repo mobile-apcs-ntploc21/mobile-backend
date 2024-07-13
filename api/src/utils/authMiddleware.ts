@@ -61,8 +61,11 @@ export const authMiddleware = async (
     }
 
     // Save user data to res.locals
-    res.locals.uid = user.id;
-    res.locals.token = token;
+
+    // req.
+    req.params.uid = user.id;
+    // res.locals.uid = user.id;
+    // res.locals.token = token;
     next();
   } catch (error) {
     next(error);
