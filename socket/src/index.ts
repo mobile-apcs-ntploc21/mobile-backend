@@ -9,7 +9,7 @@ io.on('connection', (socket) => {
   console.log(`New connection: ${socket.id}`);
 
   // Add new user to the online users list
-  socket.on('add-user', addUser);
+  socket.on('add-user', (userId) => addUser(userId, socket.id));
 
   // Get all online users
   socket.on('get-online-users', () => {

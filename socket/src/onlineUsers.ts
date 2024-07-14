@@ -12,15 +12,12 @@ export type OnlineUser = {
 
 let onlineUsers: OnlineUser[] = [];
 
-const genInfo = (socketId: string) => {
-  return { socketId, lastSeen: new Date() };
-};
-
 export const addUser = (userId: string, socketId: string) => {
   console.log('Add user:', userId);
-  let user = onlineUsers.find((user) => user.userId === userId);
-  if (user) user.infos.push(genInfo(socketId));
-  else onlineUsers.push({ userId, infos: [genInfo(socketId)] });
+  const user = onlineUsers.find((user) => user.userId === userId);
+  const newInfo = { socketId, lastSeen: new Date() };
+  if (user) user.infos.push(newInfo);
+  else onlineUsers.push({ userId, infos: [newInfo] });
 };
 
 export const removeUser = (userId: string, socketId: string) => {
