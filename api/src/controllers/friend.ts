@@ -1,21 +1,31 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
 import { GET_RELATIONSHIP_TYPE } from "../graphql/queries";
-import { CREATE_RELATIONSHIP, UPDATE_RELATIONSHIP, DELETE_RELATIONSHIP } from "../graphql/mutations";
+import {
+  CREATE_RELATIONSHIP,
+  UPDATE_RELATIONSHIP,
+  DELETE_RELATIONSHIP,
+} from "../graphql/mutations";
 
-const getRelationshipType = async (user_first_id: string, user_second_id: string) => {
+const getRelationshipType = async (
+  user_first_id: string,
+  user_second_id: string
+) => {
   if (user_first_id > user_second_id) {
     const temp = user_first_id;
     user_first_id = user_second_id;
     user_second_id = temp;
   }
-  const { getRelationshipType: response } = await graphQLClient().request(GET_RELATIONSHIP_TYPE, {
-    user_first_id: user_first_id,
-    user_second_id: user_second_id,
-  });
+  const { getRelationshipType: response } = await graphQLClient().request(
+    GET_RELATIONSHIP_TYPE,
+    {
+      user_first_id: user_first_id,
+      user_second_id: user_second_id,
+    }
+  );
 
   return response;
-}
+};
 
 /* Friend Management */
 
@@ -43,7 +53,10 @@ export const addFriend = async (
       user_second_id = current_user;
     }
 
-    const relationshipType = await getRelationshipType(user_first_id, user_second_id)
+    const relationshipType = await getRelationshipType(
+      user_first_id,
+      user_second_id
+    )
       .then((res) => {
         return res;
       })
@@ -74,7 +87,6 @@ export const addFriend = async (
     res.status(200).json({
       message: "Friend request sent.",
     });
-
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -120,13 +132,19 @@ export const acceptFriend = async (
       });
     }
 
-    if (user_first_id == current_user && relationshipType == "PENDING_SECOND_FIRST") {
+    if (
+      user_first_id == current_user &&
+      relationshipType == "PENDING_SECOND_FIRST"
+    ) {
       const response = await graphQLClient().request(UPDATE_RELATIONSHIP, {
         user_first_id: current_user,
         user_second_id: friend,
         type: "FRIEND",
       });
-    } else if (user_first_id == friend && relationshipType == "PENDING_FIRST_SECOND") {
+    } else if (
+      user_first_id == friend &&
+      relationshipType == "PENDING_FIRST_SECOND"
+    ) {
       const response = await graphQLClient().request(UPDATE_RELATIONSHIP, {
         user_first_id: friend,
         user_second_id: current_user,
@@ -141,7 +159,6 @@ export const acceptFriend = async (
     return res.status(200).json({
       message: "Friend request accepted.",
     });
-
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -184,7 +201,10 @@ export const cancelFriendRequest = async (
         user_first_id: current_user,
         user_second_id: friend,
       });
-    } else if (current_user > friend && relationshipType == "PENDING_SECOND_FIRST") {
+    } else if (
+      current_user > friend &&
+      relationshipType == "PENDING_SECOND_FIRST"
+    ) {
       const response = await graphQLClient().request(DELETE_RELATIONSHIP, {
         user_first_id: friend,
         user_second_id: current_user,
@@ -198,7 +218,6 @@ export const cancelFriendRequest = async (
     return res.status(200).json({
       message: "Friend request cancelled.",
     });
-
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -241,7 +260,10 @@ export const cancelReceivedFriendRequest = async (
         user_first_id: friend,
         user_second_id: current_user,
       });
-    } else if (current_user < friend && relationshipType == "PENDING_SECOND_FIRST") {
+    } else if (
+      current_user < friend &&
+      relationshipType == "PENDING_SECOND_FIRST"
+    ) {
       const response = await graphQLClient().request(DELETE_RELATIONSHIP, {
         user_first_id: current_user,
         user_second_id: friend,
@@ -255,7 +277,6 @@ export const cancelReceivedFriendRequest = async (
     return res.status(200).json({
       message: "Received friend request cancelled.",
     });
-
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -307,7 +328,6 @@ export const removeFriend = async (
     return res.status(200).json({
       message: "Friend removed.",
     });
-
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -334,21 +354,22 @@ export const getRelationshipTypeApi = async (
       user_second_id = current_user;
     }
 
-    const { getRelationshipType: response } = await graphQLClient().request(GET_RELATIONSHIP_TYPE, {
-      user_first_id: current_user,
-      user_second_id: friend,
-    });
+    const { getRelationshipType: response } = await graphQLClient().request(
+      GET_RELATIONSHIP_TYPE,
+      {
+        user_first_id: user_first_id,
+        user_second_id: user_second_id,
+      }
+    );
 
     if (!response) {
-        return res.status(200).json({"type": "NOT-FRIEND"});
+      return res.status(200).json({ type: "NOT-FRIEND" });
     }
 
-    return res.status(200).json({"type": response});
-
+    return res.status(200).json({ type: response });
   } catch (error) {
     return res.status(500).json({
       message: error.message,
     });
   }
 };
-
