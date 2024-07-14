@@ -17,12 +17,14 @@ const genInfo = (socketId: string) => {
 };
 
 export const addUser = (userId: string, socketId: string) => {
+  console.log('Add user:', userId);
   let user = onlineUsers.find((user) => user.userId === userId);
   if (user) user.infos.push(genInfo(socketId));
   else onlineUsers.push({ userId, infos: [genInfo(socketId)] });
 };
 
 export const removeUser = (userId: string, socketId: string) => {
+  console.log('Remove user:', userId);
   let user = onlineUsers.find((user) => user.userId === userId);
   if (user) {
     user.infos = user.infos.filter((info) => info.socketId !== socketId);
@@ -32,6 +34,7 @@ export const removeUser = (userId: string, socketId: string) => {
 };
 
 export const pingUser = (userId: string, socketId: string) => {
+  console.log('Ping user:', userId);
   let user = onlineUsers.find((user) => user.userId === userId);
   if (user) {
     let info = user.infos.find((info) => info.socketId === socketId);
