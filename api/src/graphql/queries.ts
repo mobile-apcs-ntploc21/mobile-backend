@@ -47,6 +47,16 @@ export const LOGIN_USER = gql`
   }
 `;
 
+export const settingsQueries = {
+  GET_USER_SETTINGS: gql`
+    query getUserSettings($userId: ID!) {
+      getUserSettings(userId: $userId) {
+        settings
+      }
+    }
+  `,
+};
+
 export const GET_RELATIONSHIP_TYPE = gql`
   query getRelationshipType($user_first_id: ID!, $user_second_id: ID!) {
     getRelationshipType(user_first_id: $user_first_id, user_second_id: $user_second_id)

@@ -1,18 +1,17 @@
 import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import cors from "cors";
-import path from "path";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
 import dotenv from "dotenv";
 
+import globalErrorHandler from "./controllers/error";
 import { authMiddleware } from "./utils/authMiddleware";
 import userRouter from "./routes/user";
 import friendRouter from "./routes/friend";
-import AppError from "./utils/appError";
-import globalErrorHandler from "./controllers/error";
+import settingsRouter from "./routes/settings";
 
 dotenv.config({ path: "./config.env" });
 
@@ -45,8 +44,8 @@ app.use(cors());
 
 // Set default route
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/", authMiddleware, settingsRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
-
 
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
@@ -55,6 +54,24 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
     message: `Cannot find ${req.originalUrl} on this server !`,
   });
 });
+
+// Error handling middleware
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    res.set("Content-Type", "application/json");
+    res.statusCode = 400;
+    return res.json({
+      error: {
+        message: err.message,
+      },
+    });
+  }
+);
 
 // Handle global error
 app.use(globalErrorHandler);
