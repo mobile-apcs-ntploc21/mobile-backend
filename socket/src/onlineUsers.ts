@@ -12,7 +12,13 @@ export type OnlineUser = {
 
 let onlineUsers: OnlineUser[] = [];
 
-export const addUser = (userId: string, socketId: string) => {
+export const getUser = (socketId: string) => {
+  return onlineUsers.find(({ infos }) =>
+    infos.some((info) => info.socketId === socketId)
+  );
+};
+
+export const addSocket = (userId: string, socketId: string) => {
   console.log('Add user:', userId);
   const user = onlineUsers.find((user) => user.userId === userId);
   const newInfo = { socketId, lastSeen: new Date() };
@@ -20,23 +26,21 @@ export const addUser = (userId: string, socketId: string) => {
   else onlineUsers.push({ userId, infos: [newInfo] });
 };
 
-export const removeUser = (userId: string, socketId: string) => {
-  console.log('Remove user:', userId);
-  let user = onlineUsers.find((user) => user.userId === userId);
-  if (user) {
-    user.infos = user.infos.filter((info) => info.socketId !== socketId);
-    if (user.infos.length === 0)
-      onlineUsers = onlineUsers.filter((user) => user.userId !== userId);
-  }
+export const removeSocket = (socketId: string) => {
+  console.log('Remove socket id:', socketId);
+  const user = getUser(socketId);
+  if (!user) throw new Error(`Remove socket id ${socketId} but not found!`);
+  user.infos = user.infos.filter((info) => info.socketId !== socketId);
 };
 
-export const pingUser = (userId: string, socketId: string) => {
-  console.log('Ping user:', userId);
-  let user = onlineUsers.find((user) => user.userId === userId);
-  if (user) {
-    let info = user.infos.find((info) => info.socketId === socketId);
-    if (info) info.lastSeen = new Date();
-  }
+export const pingSocket = (socketId: string) => {
+  console.log('Ping socket id:', socketId);
+  const user = getUser(socketId);
+  if (!user) throw new Error(`Ping socket id ${socketId} but not found!`);
+  user.infos = user.infos.map((info) => {
+    if (info.socketId === socketId) info.lastSeen = new Date();
+    return info;
+  });
 };
 
 export const getOnlineUsers = () => onlineUsers.map((user) => user.userId);
@@ -49,5 +53,5 @@ setInterval(() => {
     );
     return user.infos.length > 0;
   });
-  console.log('After clean up:', onlineUsers);
+  console.log('After clean up:', JSON.stringify(onlineUsers));
 }, THRESHOLD_HEARTBEAT);
