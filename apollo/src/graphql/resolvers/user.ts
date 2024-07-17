@@ -1,6 +1,6 @@
-import { UserInputError } from "apollo-server";
-import { combineResolvers } from "graphql-resolvers";
-import bcrypt from "bcryptjs";
+import { UserInputError } from 'apollo-server';
+import { combineResolvers } from 'graphql-resolvers';
+import bcrypt from 'bcryptjs';
 import { IResolvers } from '@graphql-tools/utils';
 
 import UserModel from "../../models/user";
@@ -12,7 +12,7 @@ const userResolvers: IResolvers = {
     users: combineResolvers(async (_, __, { models }) => {
       const users = await models.UserModel.findAll();
       if (!users) {
-        throw new UserInputError("No user found !");
+        throw new UserInputError('No user found !');
       }
       return users;
     }),
@@ -61,7 +61,7 @@ const userResolvers: IResolvers = {
       const user = await UserModel.create(input);
 
       if (!user) {
-        throw new UserInputError("Cannot create user !");
+        throw new UserInputError('Cannot create user !');
       }
 
       // Create default settings
@@ -77,7 +77,7 @@ const userResolvers: IResolvers = {
       const user = await UserModel.findOne({ email: input.email });
 
       if (!user) {
-        throw new UserInputError("User not found !");
+        throw new UserInputError('User not found !');
       }
 
       user.token = input.token;
