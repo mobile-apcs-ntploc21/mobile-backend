@@ -1,0 +1,51 @@
+import { Schema, model } from 'mongoose';
+
+export enum CustomStatus {
+  ONLINE = 'ONLINE',
+  IDLE = 'IDLE',
+  DO_NOT_DISTURB = 'DO_NOT_DISTURB',
+  INVISIBLE = 'INVISIBLE',
+  OFFLINE = 'OFFLINE',
+}
+
+type UserStatus = {
+  user_id: {
+    type: Schema.Types.ObjectId;
+  };
+  type: CustomStatus;
+  last_seen: Date;
+  status_text: string;
+  is_online: boolean;
+};
+
+const schema = new Schema<UserStatus>({
+  user_id: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User ID is required!'],
+  },
+  type: {
+    type: String,
+    enum: Object.values(CustomStatus),
+    required: [true, 'Status type is required!'],
+    default: CustomStatus.ONLINE,
+  },
+  last_seen: {
+    type: Date,
+    required: [true, 'Last seen is required!'],
+    default: Date.now,
+  },
+  status_text: {
+    type: String,
+    default: '',
+  },
+  is_online: {
+    type: Boolean,
+    required: [true, 'Online status is required!'],
+    default: false,
+  },
+});
+
+const UserStatusModel = model<UserStatus>('User_Status', schema);
+
+export default UserStatusModel;

@@ -3,7 +3,7 @@ FROM node:16-slim
 WORKDIR /app
 
 ENV NODE_PATH ./dist
-ENV NODE_ENV production
+ENV NODE_ENV development
 
 # EXPOSE 4000
 
