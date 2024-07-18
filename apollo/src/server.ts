@@ -3,10 +3,6 @@ import app from "./app";
 import mongoose, { ConnectOptions } from "mongoose";
 import { ApolloServer } from "apollo-server-express";
 
-import typeDefs from "./graphql/typedefs/index";
-import resolvers from "./graphql/resolvers/index";
-import UserModel from "./models/user";
-
 dotenv.config({ path: "./config.env" });
 
 const StartServer = async () => {
