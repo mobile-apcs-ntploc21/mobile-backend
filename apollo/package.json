@@ -18,6 +18,7 @@
     "@types/mongoose": "^5.11.97",
     "@types/validator": "^13.12.0",
     "apollo-server": "^3.13.0",
+    "aws-sdk": "^2.1659.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -30,6 +31,7 @@
     "helmet": "^7.1.0",
     "mongoose": "^8.4.3",
     "morgan": "^1.10.0",
+    "sharp": "^0.33.4",
     "validator": "^13.12.0",
     "xss-clean": "^0.1.4"
   },
