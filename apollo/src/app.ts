@@ -43,7 +43,7 @@ async function startApp() {
   // Set up the WebSocket for handling GraphQL subscriptions
   const wsServer = new WebSocketServer({
     server: httpServer,
-    path: config.WEBSOCKET_ROUTE,
+    url: config.WEBSOCKET_ENDPOINT,
   });
   const serverCleanup = useServer({ schema }, wsServer);
 

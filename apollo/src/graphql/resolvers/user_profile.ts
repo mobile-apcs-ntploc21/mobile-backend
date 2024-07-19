@@ -91,7 +91,7 @@ const userProfileResolvers: IResolvers = {
       } = args;
       const user = await UserModel.findOne({ _id: user_id });
       if (!user) {
-        throw new UserInputError("User not found.");
+        throw new UserInputError("User with that userId not found.");
       }
       const username = user.username;
 
@@ -109,19 +109,28 @@ const userProfileResolvers: IResolvers = {
     },
 
     updateUserProfile: async (_, args) => {
-      const { user_id, server_id, display_name, about_me } = args;
+      const {
+        user_id,
+        server_id,
+        display_name,
+        about_me,
+        avatar_url,
+        banner_url,
+      } = args;
 
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id }, // Find the user profile by user_id and server_id
         {
           display_name,
           about_me,
+          avatar_url,
+          banner_url,
         },
         { new: true }
       );
 
       if (!userProfile) {
-        throw new UserInputError("User profile not found.");
+        throw new UserInputError("User profile with that userId not found.");
       }
 
       pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
@@ -131,6 +140,7 @@ const userProfileResolvers: IResolvers = {
       return userProfile;
     },
 
+    /*
     updateUserProfileAvatar: async (_, { user_id, server_id, avatar_url }) => {
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id },
@@ -139,7 +149,7 @@ const userProfileResolvers: IResolvers = {
       );
 
       if (!userProfile) {
-        throw new UserInputError("User profile not found.");
+        throw new UserInputError("User profile with that userId not found.");
       }
 
       pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
@@ -157,7 +167,7 @@ const userProfileResolvers: IResolvers = {
       );
 
       if (!userProfile) {
-        throw new UserInputError("User profile not found.");
+        throw new UserInputError("User profile with that userId not found.");
       }
 
       pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
@@ -166,6 +176,7 @@ const userProfileResolvers: IResolvers = {
 
       return userProfile;
     },
+    */
 
     deleteUserProfile: async (_, { user_id, server_id }) => {
       const userProfile = await UserProfileModel.findOneAndDelete({
@@ -174,7 +185,7 @@ const userProfileResolvers: IResolvers = {
       });
 
       if (!userProfile) {
-        throw new UserInputError("User profile not found.");
+        throw new UserInputError("User profile with that userId not found.");
       }
 
       return userProfile;
@@ -184,8 +195,23 @@ const userProfileResolvers: IResolvers = {
   Subscription: {
     userProfileUpdated: {
       subscribe: async (_, { userId }) => {
-        const userProfile = await UserProfileModel.findOne({ user_id: userId });
-        return pubsub.asyncIterator(`USER_PROFILE_UPDATED ${userProfile._id}`);
+        try {
+          const userProfile = await UserProfileModel.findOne({
+            user_id: userId,
+          });
+          if (!userProfile) {
+            throw new UserInputError(
+              "User profile with that userId not found."
+            );
+          }
+          return pubsub.asyncIterator(
+            `USER_PROFILE_UPDATED ${userProfile._id}`
+          );
+        } catch (err) {
+          throw new Error(
+            "Error subscribing to user profile updates. Maybe check the user ID or the result of the query."
+          );
+        }
       },
     },
   },

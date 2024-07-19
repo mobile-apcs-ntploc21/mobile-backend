@@ -36,17 +36,7 @@ const typeDefs = gql`
       server_id: ID
       display_name: String
       about_me: String
-    ): UserProfile
-
-    updateUserProfileAvatar(
-      user_id: ID!
-      server_id: ID
       avatar_url: String
-    ): UserProfile
-
-    updateUserProfileBanner(
-      user_id: ID!
-      server_id: ID
       banner_url: String
     ): UserProfile
 
