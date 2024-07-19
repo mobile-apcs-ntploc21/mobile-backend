@@ -1,7 +1,11 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
 import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
-import { GET_USER_BY_EMAIL, LOGIN_USER, GET_USER_BY_USERNAME } from "../graphql/queries";
+import {
+  GET_USER_BY_EMAIL,
+  LOGIN_USER,
+  GET_USER_BY_USERNAME,
+} from "../graphql/queries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -42,6 +46,8 @@ const getUserByUsername = async (username: string) => {
 
   return response.getUserByUsername;
 };
+
+// ========================================
 
 export const createUser = async (
   req: express.Request,
