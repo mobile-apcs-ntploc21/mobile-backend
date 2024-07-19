@@ -9,7 +9,6 @@ interface IUserProfile {
   about_me: string;
   avatar_url?: string; // Optional, if not provided, use the default avatar
   banner_url?: string; // Optional, if not provided, use the default banner
-  status: mongoose.Types.ObjectId;
 }
 
 const userProfileSchema = new Schema<IUserProfile>(
@@ -38,7 +37,7 @@ const userProfileSchema = new Schema<IUserProfile>(
     about_me: {
       type: String,
       default: "Hello, I'm new here!",
-      required: true,
+      required: false,
       validate: {
         validator: (value: string) => {
           return validator.isLength(value, { min: 0, max: 190 });
@@ -54,14 +53,9 @@ const userProfileSchema = new Schema<IUserProfile>(
       type: String,
       required: false,
     },
-    status: {
-      type: Schema.Types.ObjectId,
-      ref: "OnlineStatus",
-      required: false,
-    },
   },
   { timestamps: true }
 );
 
-const UserProfileModel = model<IUserProfile>("UserProfile", userProfileSchema);
+const UserProfileModel = model<IUserProfile>("User_Profile", userProfileSchema);
 export default UserProfileModel;

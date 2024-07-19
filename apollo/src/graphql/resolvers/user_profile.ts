@@ -1,25 +1,13 @@
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
+import { PubSub } from "graphql-subscriptions";
 import { GraphQLScalarType, Kind } from "graphql";
 import mongoose from "mongoose";
-import sharp from "sharp";
-import { v4 as uuidv4 } from "uuid";
 
-import UserModel from "@/models/user";
-import UserProfileModel from "@/models/user_profile";
-import { s3, streamToBuffer, uploadToS3 } from "@/utils/aws";
+import UserModel from "../../models/user";
+import UserProfileModel from "../../models/user_profile";
 
-const optimizeImage = async (buffer: Buffer) => {
-  const optimizedImage = await sharp(buffer)
-    .resize(512, 512, {
-      fit: "cover",
-      position: "center",
-    })
-    .jpeg()
-    .toBuffer();
-
-  return optimizedImage;
-};
+const pubsub = new PubSub();
 
 export const defaultProfile = {
   server_id: null,
@@ -27,7 +15,6 @@ export const defaultProfile = {
   about_me: "",
   avatar_url: "",
   banner_url: "",
-  status: null,
 };
 
 const userProfileResolvers: IResolvers = {
@@ -49,6 +36,38 @@ const userProfileResolvers: IResolvers = {
   }),
 
   Query: {
+    syncUserProfile: async () => {
+      // Create a default profile for the user if it doesn't exist
+      try {
+        const users = await UserModel.find();
+        const userProfiles = users.map(async (user) => {
+          const userProfile = await UserProfileModel.findOne({
+            user_id: user._id,
+          });
+
+          if (!userProfile) {
+            const defaultProfile = {
+              user_id: user._id,
+              server_id: null,
+              display_name: user.username,
+              username: user.username,
+              about_me: "",
+              avatar_url: "",
+              banner_url: "",
+            };
+
+            return await UserProfileModel.create(defaultProfile);
+          }
+
+          return userProfile;
+        });
+
+        return userProfiles;
+      } catch (error) {
+        throw new Error("Error syncing user profiles.");
+      }
+    },
+
     getUserProfile: async (_, { user_id, server_id }) => {
       // TODO: Implement populate "OnlineStatus" to get the status
       const userProfile = await UserProfileModel.findOne({
@@ -69,7 +88,6 @@ const userProfileResolvers: IResolvers = {
         about_me,
         avatar_url,
         banner_url,
-        status,
       } = args;
       const user = await UserModel.findOne({ _id: user_id });
       if (!user) {
@@ -85,21 +103,19 @@ const userProfileResolvers: IResolvers = {
         about_me: about_me || defaultProfile.about_me,
         avatar_url: avatar_url || defaultProfile.avatar_url,
         banner_url: banner_url || defaultProfile.banner_url,
-        status: status || defaultProfile.status,
       });
 
       return userProfile;
     },
 
     updateUserProfile: async (_, args) => {
-      const { user_id, server_id, display_name, about_me, status } = args;
+      const { user_id, server_id, display_name, about_me } = args;
 
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id }, // Find the user profile by user_id and server_id
         {
           display_name,
           about_me,
-          status,
         },
         { new: true }
       );
@@ -107,62 +123,46 @@ const userProfileResolvers: IResolvers = {
       if (!userProfile) {
         throw new UserInputError("User profile not found.");
       }
+
+      pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
+        userProfileUpdated: userProfile,
+      });
 
       return userProfile;
     },
 
-    updateUserProfileAvatar: async (_, { user_id, server_id, file }) => {
-      // Check if user exists
-      if (!UserModel.findOne({ user_id })) {
-        throw new UserInputError("User not found.");
-      }
-
-      // TODO: Process the file and upload it to the cloud storage
-      const { createReadStream } = await file;
-      const stream = createReadStream();
-      const buffer = await streamToBuffer(stream);
-      const optimizedImage = await optimizeImage(buffer);
-      const url = await uploadToS3(optimizedImage, "avatars");
-
+    updateUserProfileAvatar: async (_, { user_id, server_id, avatar_url }) => {
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id },
-        {
-          avatar_url: url,
-        },
+        { avatar_url },
         { new: true }
       );
 
       if (!userProfile) {
         throw new UserInputError("User profile not found.");
       }
+
+      pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
+        userProfileUpdated: userProfile,
+      });
 
       return userProfile;
     },
 
-    updateUserProfileBanner: async (_, { user_id, server_id, file }) => {
-      // Check if user exists
-      if (!UserModel.findOne({ user_id })) {
-        throw new UserInputError("User not found.");
-      }
-
-      // TODO: Process the file and upload it to the cloud storage
-      const { createReadStream } = await file;
-      const stream = createReadStream();
-      const buffer = await streamToBuffer(stream);
-      const optimizedImage = await optimizeImage(buffer);
-      const url = await uploadToS3(optimizedImage, "avatars");
-
+    updateUserProfileBanner: async (_, { user_id, server_id, banner_url }) => {
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id },
-        {
-          background_url: url,
-        },
+        { banner_url },
         { new: true }
       );
 
       if (!userProfile) {
         throw new UserInputError("User profile not found.");
       }
+
+      pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
+        userProfileUpdated: userProfile,
+      });
 
       return userProfile;
     },
@@ -178,6 +178,15 @@ const userProfileResolvers: IResolvers = {
       }
 
       return userProfile;
+    },
+  },
+
+  Subscription: {
+    userProfileUpdated: {
+      subscribe: async (_, { userId }) => {
+        const userProfile = await UserProfileModel.findOne({ user_id: userId });
+        return pubsub.asyncIterator(`USER_PROFILE_UPDATED ${userProfile._id}`);
+      },
     },
   },
 };

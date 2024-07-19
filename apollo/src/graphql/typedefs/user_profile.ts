@@ -16,6 +16,7 @@ const typeDefs = gql`
   }
 
   extend type Query {
+    syncUserProfile: [UserProfile]
     getUserProfile(user_id: ID!, server_id: ID): UserProfile
   }
 
@@ -40,16 +41,20 @@ const typeDefs = gql`
     updateUserProfileAvatar(
       user_id: ID!
       server_id: ID
-      file: Upload!
+      avatar_url: String
     ): UserProfile
 
     updateUserProfileBanner(
       user_id: ID!
       server_id: ID
-      file: Upload!
+      banner_url: String
     ): UserProfile
 
     deleteUserProfile(user_id: ID!, server_id: ID): UserProfile
+  }
+
+  type Subscription {
+    userProfileUpdated(userId: ID!): UserProfile
   }
 `;
 
