@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
-import app from "./app";
+import startApp from "./app";
 import mongoose, { ConnectOptions } from "mongoose";
-import { ApolloServer } from "apollo-server-express";
+import { config } from "./config";
 
 dotenv.config({ path: "./config.env" });
 
@@ -23,11 +23,10 @@ const StartServer = async () => {
       console.error("Error connecting to the database", error);
     });
 
-  const port = process.env.PORT || 4000;
-
-  app.listen(port, () => {
-    console.log(`App running on port ${port} ...`);
-  });
+  const app = await startApp();
+  // app.listen(config.PORT, () => {
+  //   console.log(`App running on port ${port} ...`);
+  // });
 };
 
 StartServer();

@@ -1,54 +1,85 @@
 import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import cors from "cors";
-import path from "path";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
-import AppError from "./utils/appError";
-
+import http from "http";
 import { ApolloServer } from "apollo-server-express";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typedefs";
-import http from "http";
+import { config } from "./config";
 
-// SET SECURITY HTTP HEADER
-const app = express();
-app.use(helmet());
+async function startApp() {
+  const app: express.Application = express();
+  const httpServer = http.createServer(app);
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-// Data sanitization against noSQL query injection
-app.use(mongoSanitize());
+  app.use(helmet()); // SET SECURITY HTTP HEADER
+  app.use(mongoSanitize()); // Data sanitization against noSQL query injection
+  app.use(xss()); // Data sanitization against XSS
 
-// Data sanitization against XSS
-app.use(xss());
+  // Rate limit
+  const limiter = rateLimit({
+    max: Number(process.env.MAX_RATE_LIMIT),
+    windowMs: Number(process.env.MAX_RATE_LIMIT_TIME) * 60 * 1000, // unit: minutes
+    message: `Too many requests from this IP, please try again after ${process.env.MAX_RATE_LIMIT_TIME} minutes !`,
+  });
 
-// Rate limit
-const limiter = rateLimit({
-  max: Number(process.env.MAX_RATE_LIMIT),
-  windowMs: Number(process.env.MAX_RATE_LIMIT_TIME) * 60 * 1000, // unit: minutes
-  message: `Too many requests from this IP, please try again after ${process.env.MAX_RATE_LIMIT_TIME} minutes !`,
-});
+  // Set environment
+  if (process.env.NODE_ENV === "development") {
+    app.use(morgan("dev"));
+  }
 
-// set environment
-if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
+  // Middlewares
+  app.use(express.json());
+  app.use(cors());
 
-// middleware
-app.use(express.json());
-app.use(cors());
+  // Set up the WebSocket for handling GraphQL subscriptions
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: config.WEBSOCKET_ROUTE,
+  });
+  const serverCleanup = useServer({ schema }, wsServer);
 
-let apolloServer = null;
-async function startServer() {
-  apolloServer = new ApolloServer({
-    typeDefs,
-    resolvers,
+  // Set up Apollo Server
+  const apolloServer = new ApolloServer({
+    schema,
+    introspection: true,
+    plugins: [
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
   });
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app, path: "/graphql", cors: true });
+  apolloServer.applyMiddleware({
+    app,
+    path: config.GRAPHQL_ROUTE,
+    cors: true,
+  });
+
+  app.use(config.GRAPHQL_ROUTE, limiter);
+
+  // Handle subscription over http
+  httpServer.listen(config.PORT, () => {
+    console.log(
+      `Apollo Server is listening on http://localhost:${config.PORT}${config.GRAPHQL_ROUTE}`
+    );
+  });
+
+  return app;
 }
-startServer();
-const httpserver = http.createServer(app);
 
-app.use("/graphql", limiter);
-
-export default app;
+export default startApp;
