@@ -2,6 +2,7 @@ import { gql } from "apollo-server-express";
 import { mergeTypeDefs } from "@graphql-tools/merge";
 
 import userSchema from "./user";
+import userSettingsSchema from "./userSettings";
 import relationshipSchema from "./relationship";
 import userProfileSchema from "./user_profile";
 
@@ -19,6 +20,7 @@ const linkedSchema = gql`
 const typeDefs = mergeTypeDefs([
   linkedSchema,
   userSchema,
+  userSettingsSchema,
   relationshipSchema,
   userProfileSchema,
 ]);

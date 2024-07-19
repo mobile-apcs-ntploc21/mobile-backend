@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction, Router } from "express";
 import { createUser, loginUser, refresh, getMe } from "../controllers/user";
+import { get } from "http";
+import { log } from "console";
 const userRouter = Router();
 
 // Define your routes here
@@ -9,52 +11,16 @@ userRouter.get("/", (req: Request, res: Response, next: NextFunction) => {
   // Call next middleware
 });
 
-// /login route
-userRouter.post(
-  "/login",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await loginUser(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+// Login user
+userRouter.post("/login", loginUser);
 
-// /register route
-userRouter.post(
-  "/register",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await createUser(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+// Register user
+userRouter.post("/register", createUser);
 
-// /refresh route
-userRouter.post(
-  "/refresh",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await refresh(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+// Refresh token
+userRouter.post("/refresh", refresh);
 
-// /me route
-userRouter.get(
-  "/me",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      await getMe(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
+// Get user
+userRouter.get("/me", getMe);
 
 export default userRouter;
