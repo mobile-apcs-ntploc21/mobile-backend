@@ -10,10 +10,37 @@ import { ApolloServer } from "apollo-server-express";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import jwt from "jsonwebtoken";
 
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typedefs";
 import { config } from "./config";
+
+// const checkToken = (token: string) => {
+//   const parts = token.split(" ");
+//   const bearer = parts[0],
+//     credential = parts[1];
+
+//   if (/^Bearer$/i.test(bearer) && credential) {
+//     const user = getUserFromToken(credential);
+//     if (user) {
+//       return { user };
+//     }
+//   }
+
+//   return { user: null };
+// };
+
+// const getUserFromToken = (token) => {
+//   try {
+//     if (token) {
+//       return jwt.verify(token, process.env.JWT_SECRET!);
+//     }
+//     return null;
+//   } catch (error) {
+//     return null;
+//   }
+// };
 
 async function startApp() {
   const app: express.Application = express();
@@ -45,7 +72,22 @@ async function startApp() {
     server: httpServer,
     url: config.WEBSOCKET_ENDPOINT,
   });
-  const serverCleanup = useServer({ schema }, wsServer);
+  const serverCleanup = useServer(
+    {
+      schema,
+      onConnect: (ctx) => {
+        console.log("Client connected");
+        // if (ctx?.connectionParams?.Authorization) {
+        //   return checkToken(ctx.connectionParams.Authorization as string);
+        // }
+        // throw new Error("Missing auth token!");
+      },
+      onDisconnect: (ctx, code, reason) => {
+        console.log("Client disconnected");
+      },
+    },
+    wsServer
+  );
 
   // Set up Apollo Server
   const apolloServer = new ApolloServer({
