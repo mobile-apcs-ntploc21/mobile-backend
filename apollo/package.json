@@ -33,6 +33,7 @@
     "helmet": "^7.1.0",
     "mongoose": "^8.4.3",
     "morgan": "^1.10.0",
+    "short-unique-id": "^5.2.0",
     "subscriptions-transport-ws": "^0.11.0",
     "validator": "^13.12.0",
     "ws": "^8.18.0",

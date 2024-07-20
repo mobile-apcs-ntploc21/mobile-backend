@@ -7,6 +7,8 @@ interface IOptions {
   GRAPHQL_ENDPOINT: string;
   WEBSOCKET_ROUTE: string;
   WEBSOCKET_ENDPOINT: string;
+  JWT_SECRET: string;
+  REFRESH_TOKEN_SECRET: string;
 }
 
 const config: IOptions = {
@@ -18,6 +20,8 @@ const config: IOptions = {
   GRAPHQL_ENDPOINT: "",
   WEBSOCKET_ROUTE: "/subscriptions",
   WEBSOCKET_ENDPOINT: "",
+  JWT_SECRET: process.env.JWT_SECRET || "jwtsecret",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "refreshsecret",
 };
 
 config.GRAPHQL_ENDPOINT = `http://${config.HOST}:${config.PORT}${config.GRAPHQL_ROUTE}`;

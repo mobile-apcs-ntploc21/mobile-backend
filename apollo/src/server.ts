@@ -1,9 +1,11 @@
 import dotenv from "dotenv";
-import startApp from "./app";
-import mongoose, { ConnectOptions } from "mongoose";
-import { config } from "./config";
-
 dotenv.config({ path: "./config.env" });
+
+console.log("Loading environment variables...");
+
+import mongoose, { ConnectOptions } from "mongoose";
+import startApp from "./app";
+import { config } from "./config";
 
 const StartServer = async () => {
   mongoose.set("strictQuery", true);
@@ -23,10 +25,14 @@ const StartServer = async () => {
       console.error("Error connecting to the database", error);
     });
 
-  const app = await startApp();
-  // app.listen(config.PORT, () => {
-  //   console.log(`App running on port ${port} ...`);
-  // });
+  const port = process.env.PORT || 4000;
+
+  const httpserver = await startApp();
+
+  httpserver.listen(port, () => {
+    console.log(`Apollo Server is running at ${config.GRAPHQL_ENDPOINT}`);
+    console.log(`WebSocket Server is running at ${config.WEBSOCKET_ENDPOINT}`);
+  });
 };
 
 StartServer();
