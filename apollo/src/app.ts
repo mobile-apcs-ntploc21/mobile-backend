@@ -10,7 +10,7 @@ import { ApolloServer } from "apollo-server-express";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import jwt from "jsonwebtoken";
+import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typedefs";
@@ -70,7 +70,7 @@ async function startApp() {
   // Set up the WebSocket for handling GraphQL subscriptions
   const wsServer = new WebSocketServer({
     server: httpServer,
-    url: config.WEBSOCKET_ENDPOINT,
+    path: config.WEBSOCKET_ROUTE,
   });
   const serverCleanup = useServer(
     {
@@ -94,6 +94,7 @@ async function startApp() {
     schema,
     introspection: true,
     plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
       {
         async serverWillStart() {
           return {
