@@ -17,24 +17,25 @@ export const defaultProfile = {
   banner_url: "",
 };
 
-const userProfileResolvers: IResolvers = {
-  ObjectId: new GraphQLScalarType({
-    name: "ObjectId",
-    description: "Mongo object id scalar type",
-    parseValue(value: string) {
-      return new mongoose.Types.ObjectId(value);
-    },
-    serialize(value: mongoose.Types.ObjectId) {
-      return value.toHexString();
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.STRING) {
-        return new mongoose.Types.ObjectId(ast.value);
-      }
-      return null;
-    },
-  }),
+const ObjectId = new GraphQLScalarType({
+  name: "ObjectId",
+  description: "Mongo object id scalar type",
+  parseValue(value: string) {
+    return new mongoose.Types.ObjectId(value);
+  },
+  serialize(value: mongoose.Types.ObjectId) {
+    return value.toHexString();
+  },
+  parseLiteral(ast) {
+    if (ast.kind === Kind.STRING) {
+      return new mongoose.Types.ObjectId(ast.value);
+    }
+    return null;
+  },
+});
 
+const userProfileApollo: IResolvers = {
+  ObjectId,
   Query: {
     syncUserProfile: async () => {
       // Create a default profile for the user if it doesn't exist
@@ -140,44 +141,6 @@ const userProfileResolvers: IResolvers = {
       return userProfile;
     },
 
-    /*
-    updateUserProfileAvatar: async (_, { user_id, server_id, avatar_url }) => {
-      const userProfile = await UserProfileModel.findOneAndUpdate(
-        { user_id, server_id },
-        { avatar_url },
-        { new: true }
-      );
-
-      if (!userProfile) {
-        throw new UserInputError("User profile with that userId not found.");
-      }
-
-      pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
-        userProfileUpdated: userProfile,
-      });
-
-      return userProfile;
-    },
-
-    updateUserProfileBanner: async (_, { user_id, server_id, banner_url }) => {
-      const userProfile = await UserProfileModel.findOneAndUpdate(
-        { user_id, server_id },
-        { banner_url },
-        { new: true }
-      );
-
-      if (!userProfile) {
-        throw new UserInputError("User profile with that userId not found.");
-      }
-
-      pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
-        userProfileUpdated: userProfile,
-      });
-
-      return userProfile;
-    },
-    */
-
     deleteUserProfile: async (_, { user_id, server_id }) => {
       const userProfile = await UserProfileModel.findOneAndDelete({
         user_id,
@@ -191,7 +154,10 @@ const userProfileResolvers: IResolvers = {
       return userProfile;
     },
   },
+};
 
+const userProfileWs: IResolvers = {
+  ObjectId,
   Subscription: {
     userProfileUpdated: {
       subscribe: async (_, { userId }) => {
@@ -217,4 +183,4 @@ const userProfileResolvers: IResolvers = {
   },
 };
 
-export default userProfileResolvers;
+export { userProfileApollo, userProfileWs };

@@ -1,6 +1,6 @@
 import { gql } from "apollo-server-express";
 
-const typeDefs = gql`
+const gqlType = gql`
   scalar ObjectId
 
   type UserProfile {
@@ -14,7 +14,9 @@ const typeDefs = gql`
     banner_url: String
     status: ObjectId
   }
+`;
 
+const gqlApollo = gql`
   extend type Query {
     syncUserProfile: [UserProfile]
     getUserProfile(user_id: ID!, server_id: ID): UserProfile
@@ -42,10 +44,13 @@ const typeDefs = gql`
 
     deleteUserProfile(user_id: ID!, server_id: ID): UserProfile
   }
+`;
 
+const gqlWs = gql`
   type Subscription {
     userProfileUpdated(userId: ID!): UserProfile
   }
 `;
 
-export default typeDefs;
+export const apolloTypedefs = [gqlType, gqlApollo];
+export const wsTypedefs = [gqlType, gqlWs];

@@ -4,8 +4,8 @@ import { WebSocketServer } from "ws";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import ShortUniqueId from "short-unique-id";
 
-import typeDefs from "./graphql/typedefs";
-import resolvers from "./graphql/resolvers";
+import { wsTypedefs } from "./graphql/typedefs";
+import { wsResolvers } from "./graphql/resolvers";
 import { config } from "./config";
 import { AuthStatus, validateToken } from "./utils/auth";
 
@@ -60,8 +60,8 @@ const startWsServer = (server: http.Server) => {
   });
 
   const schema = makeExecutableSchema({
-    typeDefs: typeDefs,
-    resolvers: resolvers,
+    typeDefs: wsTypedefs,
+    resolvers: wsResolvers,
   });
 
   return useServer(

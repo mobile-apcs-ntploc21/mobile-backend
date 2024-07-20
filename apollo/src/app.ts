@@ -13,8 +13,8 @@ import { useServer } from "graphql-ws/lib/use/ws";
 
 import http from "http";
 import { config } from "./config";
-import typeDefs from "./graphql/typedefs";
-import resolvers from "./graphql/resolvers";
+import { apolloTypedefs } from "./graphql/typedefs";
+import { apolloResolvers } from "./graphql/resolvers";
 import startWsServer from "./wss";
 
 const startApp = async () => {
@@ -44,8 +44,8 @@ const startApp = async () => {
 
   // Create Apollo Server
   const apolloServer = new ApolloServer({
-    typeDefs: typeDefs,
-    resolvers: resolvers,
+    typeDefs: apolloTypedefs,
+    resolvers: apolloResolvers,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer: httpserver }),
       {
