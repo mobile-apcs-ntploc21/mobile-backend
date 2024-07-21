@@ -59,7 +59,10 @@ export const settingsQueries = {
 
 export const GET_RELATIONSHIP_TYPE = gql`
   query getRelationshipType($user_first_id: ID!, $user_second_id: ID!) {
-    getRelationshipType(user_first_id: $user_first_id, user_second_id: $user_second_id)
+    getRelationshipType(
+      user_first_id: $user_first_id
+      user_second_id: $user_second_id
+    )
   }
 `;
 
@@ -98,3 +101,19 @@ export const GET_BLOCKED_USERS = gql`
     }
   }
 `;
+
+export const userProfileQueries = {
+  GET_USER_PROFILE: gql`
+    query getUserProfile($user_id: ID!, $server_id: ID) {
+      getUserProfile(user_id: $user_id, server_id: $server_id) {
+        user_id
+        server_id
+        display_name
+        username
+        about_me
+        avatar_url
+        banner_url
+      }
+    }
+  `,
+};

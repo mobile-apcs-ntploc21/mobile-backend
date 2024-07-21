@@ -116,3 +116,40 @@ export const DELETE_RELATIONSHIP = gql`
     }
   }
 `;
+
+export const userProfileMutation = {
+  CREATE_USER_PROFILE: gql`
+    mutation createUserProfile($input: UserProfileInput!) {
+      createUserProfile(input: $input) {
+        user_id
+        server_id
+        display_name
+        username
+        about_me
+        avatar_url
+        banner_url
+      }
+    }
+  `,
+  UPDATE_USER_PROFILE: gql`
+    mutation updateUserProfile($input: UserProfileInput!) {
+      updateUserProfile(input: $input) {
+        user_id
+        server_id
+        display_name
+        username
+        about_me
+        avatar_url
+        banner_url
+      }
+    }
+  `,
+  DELETE_USER_PROFILE: gql`
+    mutation deleteUserProfile($user_id: ID!, $server_id: ID!) {
+      deleteUserProfile(user_id: $user_id, server_id: $server_id) {
+        user_id
+        server_id
+      }
+    }
+  `,
+};
