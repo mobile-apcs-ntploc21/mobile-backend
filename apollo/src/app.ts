@@ -7,11 +7,8 @@ import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
 import { ApolloServer } from "apollo-server-express";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
-import { WebSocketServer } from "ws";
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { useServer } from "graphql-ws/lib/use/ws";
-
 import http from "http";
+
 import { config } from "./config";
 import { apolloTypedefs } from "./graphql/typedefs";
 import { apolloResolvers } from "./graphql/resolvers";

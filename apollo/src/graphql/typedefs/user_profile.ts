@@ -14,6 +14,16 @@ const gqlType = gql`
     banner_url: String
     status: ObjectId
   }
+
+  input UserProfileInput {
+    user_id: ID!
+    server_id: ID
+    display_name: String
+    about_me: String
+    avatar_url: String
+    banner_url: String
+    status: ID
+  }
 `;
 
 const gqlApollo = gql`
@@ -23,25 +33,8 @@ const gqlApollo = gql`
   }
 
   extend type Mutation {
-    createUserProfile(
-      user_id: ID!
-      server_id: ID
-      display_name: String
-      about_me: String!
-      avatar_url: String
-      banner_url: String
-      status: ID
-    ): UserProfile
-
-    updateUserProfile(
-      user_id: ID!
-      server_id: ID
-      display_name: String
-      about_me: String
-      avatar_url: String
-      banner_url: String
-    ): UserProfile
-
+    createUserProfile(input: UserProfileInput!): UserProfile
+    updateUserProfile(input: UserProfileInput!): UserProfile
     deleteUserProfile(user_id: ID!, server_id: ID): UserProfile
   }
 `;

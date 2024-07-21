@@ -89,7 +89,8 @@ const userProfileApollo: IResolvers = {
         about_me,
         avatar_url,
         banner_url,
-      } = args;
+      } = args.input;
+
       const user = await UserModel.findOne({ _id: user_id });
       if (!user) {
         throw new UserInputError("User with that userId not found.");
@@ -117,7 +118,7 @@ const userProfileApollo: IResolvers = {
         about_me,
         avatar_url,
         banner_url,
-      } = args;
+      } = args.input;
 
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id }, // Find the user profile by user_id and server_id

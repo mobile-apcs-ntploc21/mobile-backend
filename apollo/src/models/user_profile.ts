@@ -27,6 +27,12 @@ const userProfileSchema = new Schema<IUserProfile>(
     display_name: {
       type: String,
       required: false,
+      validate: {
+        validator: (value: string) => {
+          return validator.isLength(value, { min: 1, max: 50 });
+        },
+        message: "Display name cannot exceed 50 characters",
+      },
     },
     username: {
       type: String,
