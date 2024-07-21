@@ -5,6 +5,7 @@ import * as up from "../controllers/user_profile";
 const userProfileRouter = Router();
 
 // Get user profile
+userProfileRouter.get("/profile/me", authMiddleware, up.getProfile);
 userProfileRouter.get("/profile/:userId", authMiddleware, up.getProfile);
 userProfileRouter.get(
   "/profile/:userId/:serverId",
@@ -13,29 +14,25 @@ userProfileRouter.get(
 );
 
 // Create user profile
-userProfileRouter.post(
-  "/profile/:userId/:serverId",
-  authMiddleware,
-  up.createProfile
-);
+userProfileRouter.post("/profile/:serverId", authMiddleware, up.createProfile);
 
 // Upload user profile picture
-userProfileRouter.put(
+userProfileRouter.patch(
   "/profile/avatar",
   authMiddleware,
   up.uploadProfilePicture
 );
 
 // Upload user profile banner
-userProfileRouter.put(
+userProfileRouter.patch(
   "/profile/banner",
   authMiddleware,
   up.uploadProfileBanner
 );
 
 // Update user profile (String based)
-userProfileRouter.put("/profile/", authMiddleware, up.updateProfile);
-userProfileRouter.put("/profile/:serverId", authMiddleware, up.updateProfile);
+userProfileRouter.patch("/profile/", authMiddleware, up.updateProfile);
+userProfileRouter.patch("/profile/:serverId", authMiddleware, up.updateProfile);
 
 // Delete user profile
 userProfileRouter.delete(

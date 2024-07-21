@@ -56,7 +56,7 @@ export const getProfile = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const userId = req.params.userId as string;
+  const userId = (req.params?.userId as string) ?? req.params.uid;
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {
