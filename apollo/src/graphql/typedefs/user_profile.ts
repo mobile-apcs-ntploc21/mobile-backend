@@ -41,7 +41,7 @@ const gqlApollo = gql`
 
 const gqlWs = gql`
   type Subscription {
-    userProfileUpdated(userId: ID!): UserProfile
+    userProfileUpdated(user_id: ID!, server_id: ID): UserProfile
   }
 `;
 

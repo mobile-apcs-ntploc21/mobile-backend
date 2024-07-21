@@ -135,9 +135,12 @@ const userProfileApollo: IResolvers = {
         throw new UserInputError("User profile with that userId not found.");
       }
 
-      pubsub.publish(`USER_PROFILE_UPDATED ${userProfile._id}`, {
-        userProfileUpdated: userProfile,
-      });
+      pubsub.publish(
+        `USER_PROFILE_UPDATED ${userProfile._id} ${server_id || "null"}`,
+        {
+          userProfileUpdated: userProfile,
+        }
+      );
 
       return userProfile;
     },
@@ -161,10 +164,11 @@ const userProfileWs: IResolvers = {
   ObjectId,
   Subscription: {
     userProfileUpdated: {
-      subscribe: async (_, { userId }) => {
+      subscribe: async (_, { user_id, server_id }) => {
         try {
           const userProfile = await UserProfileModel.findOne({
-            user_id: userId,
+            user_id: user_id,
+            server_id: server_id || defaultProfile.server_id,
           });
           if (!userProfile) {
             throw new UserInputError(
@@ -172,7 +176,7 @@ const userProfileWs: IResolvers = {
             );
           }
           return pubsub.asyncIterator(
-            `USER_PROFILE_UPDATED ${userProfile._id}`
+            `USER_PROFILE_UPDATED ${userProfile._id} ${server_id || "null"}`
           );
         } catch (err) {
           throw new Error(
