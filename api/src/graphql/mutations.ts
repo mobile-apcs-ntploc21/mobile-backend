@@ -41,15 +41,15 @@ export const settingsMutations = {
     }
   `,
   DELETE_USER_SETTINGS: gql`
-    mutation deleteUserSettings($userId: ID!) {
-      deleteUserSettings(userId: $userId) {
+    mutation deleteUserSettings($user_id: ID!) {
+      deleteUserSettings(user_id: $user_id) {
         settings
       }
     }
   `,
   RESTORE_USER_SETTINGS: gql`
-    mutation restoreUserSettings($userId: ID!) {
-      restoreUserSettings(userId: $userId) {
+    mutation restoreUserSettings($user_id: ID!) {
+      restoreUserSettings(user_id: $user_id) {
         settings
       }
     }

@@ -49,8 +49,8 @@ export const LOGIN_USER = gql`
 
 export const settingsQueries = {
   GET_USER_SETTINGS: gql`
-    query getUserSettings($userId: ID!) {
-      getUserSettings(userId: $userId) {
+    query getUserSettings($user_id: ID!) {
+      getUserSettings(user_id: $user_id) {
         settings
       }
     }

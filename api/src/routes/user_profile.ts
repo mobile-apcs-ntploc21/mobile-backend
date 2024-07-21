@@ -40,7 +40,7 @@ userProfileRouter.post("/profile/:serverId", authMiddleware, up.createProfile);
 //   up.uploadProfileBanner
 // );
 
-// Update user profile (String based)
+// Update user profile
 userProfileRouter.patch("/profile/", authMiddleware, up.updateProfile);
 userProfileRouter.patch("/profile/:serverId", authMiddleware, up.updateProfile);
 

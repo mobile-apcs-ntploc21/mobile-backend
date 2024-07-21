@@ -2,13 +2,12 @@ import express from "express";
 import graphQLClient from "../utils/graphql";
 import { settingsMutations } from "../graphql/mutations";
 import { settingsQueries } from "../graphql/queries";
-import { parse } from "path";
 
-const getUserSettings = async (userId: string) => {
+const getUserSettings = async (user_id: string) => {
   const response = await graphQLClient().request(
     settingsQueries.GET_USER_SETTINGS,
     {
-      userId: userId,
+      user_id: user_id,
     }
   );
 
@@ -23,7 +22,6 @@ export const getSettings = async (
   next: express.NextFunction
 ) => {
   const currentUser = req.params.uid;
-
   try {
     const settings = await getUserSettings(currentUser).catch(() => null);
 
@@ -56,7 +54,7 @@ export const createSettings = async (
       settingsMutations.CREATE_USER_SETTINGS,
       {
         input: {
-          userId: currentUser,
+          user_id: currentUser,
           settings: JSON.stringify(req.body),
         },
       }
@@ -83,7 +81,7 @@ export const updateSettings = async (
       settingsMutations.UPDATE_USER_SETTINGS,
       {
         input: {
-          userId: currentUser,
+          user_id: currentUser,
           settings: JSON.stringify(req.body),
         },
       }
@@ -109,7 +107,7 @@ export const deleteSettings = async (
     const response = await graphQLClient().request(
       settingsMutations.DELETE_USER_SETTINGS,
       {
-        userId: currentUser,
+        user_id: currentUser,
       }
     );
 
@@ -130,7 +128,7 @@ export const resetSettings = async (
     const response = await graphQLClient().request(
       settingsMutations.RESTORE_USER_SETTINGS,
       {
-        userId: currentUser,
+        user_id: currentUser,
       }
     );
 

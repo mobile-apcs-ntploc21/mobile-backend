@@ -1,11 +1,55 @@
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import { UserInputError } from "apollo-server";
 import { combineResolvers } from "graphql-resolvers";
-import bcrypt from "bcryptjs";
-import { IResolvers } from '@graphql-tools/utils';
+import { IResolvers } from "@graphql-tools/utils";
 
 import UserModel from "../../models/user";
 import UserSettingsModel from "../../models/userSettings";
 import { defaultSettings } from "./userSettings";
+import UserProfileModel from "../../models/user_profile";
+import { defaultProfile } from "./user_profile";
+
+const createUserTransaction = async (input) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Create user account
+    const opts = { session, new: true };
+    const [createdUser] = await UserModel.create([input], opts);
+
+    // Create user settings
+    await UserSettingsModel.create(
+      [{ user_id: createdUser._id, settings: JSON.stringify(defaultSettings) }],
+      opts
+    );
+
+    // Create user profile
+    await UserProfileModel.create(
+      [
+        {
+          user_id: createdUser._id,
+          server_id: null,
+          display_name: createdUser.username,
+          username: createdUser.username,
+          about_me: defaultProfile.about_me,
+          avatar_url: "",
+          banner_url: "",
+        },
+      ],
+      opts
+    );
+
+    await session.commitTransaction();
+    return createdUser;
+  } catch (error) {
+    await session.abortTransaction();
+    throw new UserInputError("Cannot create user !");
+  } finally {
+    session.endSession();
+  }
+};
 
 const userResolvers: IResolvers = {
   Query: {
@@ -58,19 +102,12 @@ const userResolvers: IResolvers = {
   },
   Mutation: {
     createUser: combineResolvers(async (_, { input }, { models }) => {
-      const user = await UserModel.create(input);
-
-      if (!user) {
+      try {
+        const user = await createUserTransaction(input);
+        return user;
+      } catch (err) {
         throw new UserInputError("Cannot create user !");
       }
-
-      // Create default settings
-      await UserSettingsModel.create({
-        userId: user.id,
-        settings: defaultSettings,
-      });
-
-      return user;
     }),
 
     updateRefreshToken: combineResolvers(async (_, { input }, { models }) => {

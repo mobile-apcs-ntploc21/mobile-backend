@@ -22,8 +22,33 @@ export const defaultSettings = JSON.stringify({
 
 const userSettingsResolvers: IResolvers = {
   Query: {
-    getUserSettings: async (_, { userId }) => {
-      const userSettings = await UserSettingsModel.findOne({ userId });
+    syncUserSettings: async (_, __, { user }) => {
+      try {
+        const users = await UserModel.find();
+        const userSettings = users.map(async (user) => {
+          const userSettings = await UserSettingsModel.findOne({
+            user_id: user._id,
+          });
+
+          if (!userSettings) {
+            const _defaultSettings = {
+              user_id: user._id,
+              settings: defaultSettings,
+            };
+
+            return await UserSettingsModel.create(_defaultSettings);
+          }
+
+          return userSettings;
+        });
+
+        return userSettings;
+      } catch (err) {
+        throw new UserInputError("Cannot sync user settings!");
+      }
+    },
+    getUserSettings: async (_, { user_id }) => {
+      const userSettings = await UserSettingsModel.findOne({ user_id });
       if (!userSettings) {
         throw new UserInputError("User settings not found!");
       }
@@ -32,18 +57,24 @@ const userSettingsResolvers: IResolvers = {
   },
   Mutation: {
     createUserSettings: async (_, { input }) => {
-      const { userId, settings } = input;
-      const user = await UserModel.findById(userId);
+      let { user_id, settings } = input;
+      if (!settings) {
+        settings = defaultSettings;
+      }
+      const user = await UserModel.findById(user_id);
       if (!user) {
         throw new UserInputError("User not found!");
       }
-      const userSettings = await UserSettingsModel.create({ userId, settings });
+      const userSettings = await UserSettingsModel.create({
+        user_id,
+        settings,
+      });
       return userSettings;
     },
     updateUserSettings: async (_, { input }) => {
-      const { userId, settings } = input;
+      const { user_id, settings } = input;
       const userSettings = await UserSettingsModel.findOneAndUpdate(
-        { userId },
+        { user_id },
         { settings },
         { new: true }
       );
@@ -52,16 +83,18 @@ const userSettingsResolvers: IResolvers = {
       }
       return userSettings;
     },
-    deleteUserSettings: async (_, { userId }) => {
-      const userSettings = await UserSettingsModel.findOneAndDelete({ userId });
+    deleteUserSettings: async (_, { user_id }) => {
+      const userSettings = await UserSettingsModel.findOneAndDelete({
+        user_id,
+      });
       if (!userSettings) {
         throw new UserInputError("User settings not found!");
       }
       return userSettings;
     },
-    restoreUserSettings: async (_, { userId }) => {
+    restoreUserSettings: async (_, { user_id }) => {
       const userSettings = await UserSettingsModel.findOneAndUpdate(
-        { userId },
+        { user_id },
         { settings: defaultSettings },
         { new: true }
       );
