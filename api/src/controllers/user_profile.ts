@@ -115,7 +115,23 @@ export const updateProfile = async (
   const serverId = (req.params?.serverId as string) ?? null;
 
   // Extract fields from req.body
-  const { display_name, about_me } = req.body;
+  const { display_name, about_me, avatar, banner } = req.body;
+  let avatar_url = null;
+  let banner_url = null;
+
+  if (avatar) {
+    avatar_url = await processImage(avatar, "avatars");
+    if (!avatar_url) {
+      return res.status(400).json({ message: "Failed to upload avatar." });
+    }
+  }
+
+  if (banner) {
+    banner_url = await processImage(banner, "banners");
+    if (!banner_url) {
+      return res.status(400).json({ message: "Failed to upload banner." });
+    }
+  }
 
   try {
     const response = await graphQLClient().request(
@@ -126,6 +142,8 @@ export const updateProfile = async (
           server_id: serverId,
           display_name,
           about_me,
+          avatar_url,
+          banner_url,
         },
       }
     );
@@ -136,77 +154,77 @@ export const updateProfile = async (
   }
 };
 
-export const uploadProfilePicture = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const userId = req.params.uid as string;
-  const serverId = (req.params?.serverId as string) ?? null;
-  const { image } = req.body;
+// export const uploadProfilePicture = async (
+//   req: express.Request,
+//   res: express.Response,
+//   next: express.NextFunction
+// ) => {
+//   const userId = req.params.uid as string;
+//   const serverId = (req.params?.serverId as string) ?? null;
+//   const { image } = req.body;
 
-  if (!image) {
-    return res.status(400).json({ message: "Image is required." });
-  }
+//   if (!image) {
+//     return res.status(400).json({ message: "Image is required." });
+//   }
 
-  try {
-    const imageUrl = await processImage(image, "avatars");
-    if (!imageUrl) {
-      return res.status(400).json({ message: "Failed to upload image." });
-    }
+//   try {
+//     const imageUrl = await processImage(image, "avatars");
+//     if (!imageUrl) {
+//       return res.status(400).json({ message: "Failed to upload image." });
+//     }
 
-    const response = await graphQLClient().request(
-      userProfileMutation.UPDATE_USER_PROFILE,
-      {
-        input: {
-          user_id: userId,
-          server_id: serverId,
-          avatar_url: imageUrl,
-        },
-      }
-    );
+//     const response = await graphQLClient().request(
+//       userProfileMutation.UPDATE_USER_PROFILE,
+//       {
+//         input: {
+//           user_id: userId,
+//           server_id: serverId,
+//           avatar_url: imageUrl,
+//         },
+//       }
+//     );
 
-    return res.status(200).json({ ...response });
-  } catch (error) {
-    return next(error);
-  }
-};
+//     return res.status(200).json({ ...response });
+//   } catch (error) {
+//     return next(error);
+//   }
+// };
 
-export const uploadProfileBanner = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const userId = req.params.uid as string;
-  const serverId = (req.params?.serverId as string) ?? null;
-  const { image } = req.body;
+// export const uploadProfileBanner = async (
+//   req: express.Request,
+//   res: express.Response,
+//   next: express.NextFunction
+// ) => {
+//   const userId = req.params.uid as string;
+//   const serverId = (req.params?.serverId as string) ?? null;
+//   const { image } = req.body;
 
-  if (!image) {
-    return res.status(400).json({ message: "Image is required." });
-  }
+//   if (!image) {
+//     return res.status(400).json({ message: "Image is required." });
+//   }
 
-  try {
-    const imageUrl = await processImage(image, "avatars");
-    if (!imageUrl) {
-      return res.status(400).json({ message: "Failed to upload image." });
-    }
+//   try {
+//     const imageUrl = await processImage(image, "avatars");
+//     if (!imageUrl) {
+//       return res.status(400).json({ message: "Failed to upload image." });
+//     }
 
-    const response = await graphQLClient().request(
-      userProfileMutation.UPDATE_USER_PROFILE,
-      {
-        input: {
-          user_id: userId,
-          server_id: serverId,
-          banner_url: imageUrl,
-        },
-      }
-    );
+//     const response = await graphQLClient().request(
+//       userProfileMutation.UPDATE_USER_PROFILE,
+//       {
+//         input: {
+//           user_id: userId,
+//           server_id: serverId,
+//           banner_url: imageUrl,
+//         },
+//       }
+//     );
 
-    return res.status(200).json({ ...response });
-  } catch (error) {
-    return next(error);
-  }
-};
+//     return res.status(200).json({ ...response });
+//   } catch (error) {
+//     return next(error);
+//   }
+// };
 
 export const deleteProfile = async (
   req: express.Request,

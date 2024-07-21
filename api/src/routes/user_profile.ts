@@ -16,19 +16,29 @@ userProfileRouter.get(
 // Create user profile
 userProfileRouter.post("/profile/:serverId", authMiddleware, up.createProfile);
 
-// Upload user profile picture
-userProfileRouter.patch(
-  "/profile/avatar",
-  authMiddleware,
-  up.uploadProfilePicture
-);
+// // Upload user profile picture
+// userProfileRouter.patch(
+//   "/profile/avatar",
+//   authMiddleware,
+//   up.uploadProfilePicture
+// );
+// userProfileRouter.patch(
+//   "/profile/avatar/:serverId",
+//   authMiddleware,
+//   up.uploadProfilePicture
+// );
 
-// Upload user profile banner
-userProfileRouter.patch(
-  "/profile/banner",
-  authMiddleware,
-  up.uploadProfileBanner
-);
+// // Upload user profile banner
+// userProfileRouter.patch(
+//   "/profile/banner",
+//   authMiddleware,
+//   up.uploadProfileBanner
+// );
+// userProfileRouter.patch(
+//   "/profile/banner/:serverId",
+//   authMiddleware,
+//   up.uploadProfileBanner
+// );
 
 // Update user profile (String based)
 userProfileRouter.patch("/profile/", authMiddleware, up.updateProfile);
