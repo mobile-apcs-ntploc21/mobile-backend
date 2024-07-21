@@ -121,6 +121,11 @@ export const createFileObject = (base64File: string, filename: string) => {
 
 export const compressImage = async (image: any) => {
   const { createReadStream, filename, mimetype } = await image;
+
+  if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
+    throw new Error("Invalid file type.");
+  }
+
   const stream = createReadStream();
   const buffer = await streamToBuffer(stream);
 

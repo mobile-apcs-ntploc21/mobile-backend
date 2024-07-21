@@ -40,11 +40,10 @@ const processImage = async (
   if (!image) return null;
 
   try {
-    const fileObject = createFileObject(image, "avatar.jpg");
+    const fileObject = createFileObject(image, "temp.jpg");
     const imageUrl = await uploadToS3(compressImage(fileObject), folder);
     return imageUrl;
   } catch (err) {
-    console.error(err);
     return null;
   }
 };
@@ -122,14 +121,18 @@ export const updateProfile = async (
   if (avatar) {
     avatar_url = await processImage(avatar, "avatars");
     if (!avatar_url) {
-      return res.status(400).json({ message: "Failed to upload avatar." });
+      return res
+        .status(400)
+        .json({ message: "Failed to upload avatar. Maybe check file type." });
     }
   }
 
   if (banner) {
     banner_url = await processImage(banner, "banners");
     if (!banner_url) {
-      return res.status(400).json({ message: "Failed to upload banner." });
+      return res
+        .status(400)
+        .json({ message: "Failed to upload banner.  Maybe check file type." });
     }
   }
 

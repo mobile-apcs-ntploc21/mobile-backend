@@ -24,8 +24,9 @@ app.use(mongoSanitize()); // Data sanitization against noSQL query injection
 app.use(xss()); // Data sanitization against XSS
 
 // Set body parser limit
-app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
-app.use(bodyParser.json({ limit: "50mb" }));
+const bodyParserJson = (limit: string) => bodyParser.json({ limit: limit });
+const bodyParserUrlencoded = (limit: string) =>
+  bodyParser.urlencoded({ extended: true, limit: limit });
 
 // Rate limit
 const limiter = rateLimit({
@@ -47,7 +48,13 @@ app.use(cors());
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/", authMiddleware, settingsRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
-app.use("/api/v1/", authMiddleware, userProfileRouter);
+app.use(
+  "/api/v1/",
+  authMiddleware,
+  bodyParserJson("10mb"),
+  bodyParserUrlencoded("10mb"),
+  userProfileRouter
+);
 
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
