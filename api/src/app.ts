@@ -12,6 +12,7 @@ import { authMiddleware } from "./utils/authMiddleware";
 import userRouter from "./routes/user";
 import friendRouter from "./routes/friend";
 import settingsRouter from "./routes/settings";
+import userStatusRouter from "./routes/user_status";
 
 dotenv.config({ path: "./config.env" });
 
@@ -43,6 +44,7 @@ app.use(express.json());
 app.use(cors());
 
 // Set default route
+app.use("/api/v1/user/status", userStatusRouter)
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", authMiddleware, settingsRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
