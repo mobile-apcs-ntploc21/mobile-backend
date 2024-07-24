@@ -120,7 +120,7 @@ export const UPDATE_USER_STATUS_TYPE = gql`
   mutation updateStatusType($user_id: ID!, $type: CustomStatus!) {
     updateStatusType(user_id: $user_id, type: $type) {
       user_id
-      status_text
+      type
     }
   }
 `;
