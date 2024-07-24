@@ -1,4 +1,4 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
 // Create user
 export const CREATE_USER = gql`
@@ -112,6 +112,24 @@ export const DELETE_RELATIONSHIP = gql`
       type
       created_at
       last_modified
+    }
+  }
+`;
+
+export const UPDATE_USER_STATUS_TYPE = gql`
+  mutation updateStatusType($user_id: ID!, $type: CustomStatus!) {
+    updateStatusType(user_id: $user_id, type: $type) {
+      user_id
+      status_text
+    }
+  }
+`;
+
+export const UPDATE_USER_STATUS_TEXT = gql`
+  mutation updateStatusText($user_id: ID!, $status_text: String!) {
+    updateStatusText(user_id: $user_id, status_text: $status_text) {
+      user_id
+      status_text
     }
   }
 `;
