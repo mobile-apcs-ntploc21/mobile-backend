@@ -6,6 +6,7 @@ const userProfileRouter = Router();
 
 // Get user profile
 userProfileRouter.get("/me", up.getProfile);
+userProfileRouter.get("/u/:username", up.getProfileByUsername);
 userProfileRouter.get("/:userId", up.getProfile);
 userProfileRouter.get("/:userId/:serverId", up.getProfile);
 

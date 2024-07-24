@@ -30,6 +30,7 @@ const gqlApollo = gql`
   extend type Query {
     syncUserProfile: [UserProfile]
     getUserProfile(user_id: ID!, server_id: ID): UserProfile
+    getUserProfileByUsername(username: String!): UserProfile
   }
 
   extend type Mutation {

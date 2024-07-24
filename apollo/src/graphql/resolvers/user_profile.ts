@@ -78,6 +78,16 @@ const userProfileApollo: IResolvers = {
 
       return userProfile || null;
     },
+
+    getUserProfileByUsername: async (_, { username }) => {
+      const user = await UserModel.findOne({ username });
+      if (!user) {
+        throw new UserInputError("User with that username not found.");
+      }
+
+      const userProfile = await UserProfileModel.findOne({ user_id: user._id });
+      return userProfile || null;
+    },
   },
   Mutation: {
     createUserProfile: async (_, args) => {

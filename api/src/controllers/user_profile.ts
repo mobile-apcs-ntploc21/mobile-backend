@@ -75,6 +75,37 @@ export const getProfile = async (
   }
 };
 
+export const getProfileByUsername = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const username = req.params?.username as string;
+
+  if (!username) {
+    return res.status(400).json({ message: "Username is required." });
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      userProfileQueries.GET_USER_PROFILE_BY_USERNAME,
+      {
+        username,
+      }
+    );
+
+    if (!response.getUserProfileByUsername) {
+      return res
+        .status(404)
+        .json({ message: "Profile with matching username not found." });
+    }
+
+    return res.status(200).json({ ...response.getUserProfileByUsername });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export const createProfile = async (
   req: express.Request,
   res: express.Response,

@@ -116,4 +116,18 @@ export const userProfileQueries = {
       }
     }
   `,
+
+  GET_USER_PROFILE_BY_USERNAME: gql`
+    query getUserProfileByUsername($username: String!) {
+      getUserProfileByUsername(username: $username) {
+        user_id
+        server_id
+        display_name
+        username
+        about_me
+        avatar_url
+        banner_url
+      }
+    }
+  `,
 };
