@@ -44,7 +44,7 @@ app.use(express.json());
 app.use(cors());
 
 // Set default route
-app.use("/api/v1/user/status", userStatusRouter)
+app.use("/api/v1/user/status", authMiddleware, userStatusRouter)
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", authMiddleware, settingsRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
