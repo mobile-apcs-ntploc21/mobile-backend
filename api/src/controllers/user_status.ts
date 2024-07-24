@@ -12,7 +12,7 @@ export const getCurrentUserStatus = async (
   next: NextFunction
 ) => {
   try {
-    const { uid } = req.params;
+    const { uid } = res.locals;
     const userStatus = await graphQLClient().request(GET_USER_STATUS, {
       user_id: uid,
     });
@@ -44,7 +44,7 @@ export const updateStatusType = async (
   next: NextFunction
 ) => {
   try {
-    const { uid: user_id } = req.params;
+    const { uid: user_id } = res.locals;
     const { type } = req.body;
     const { updateStatusType: response } = await graphQLClient().request(
       UPDATE_USER_STATUS_TYPE,
@@ -65,7 +65,7 @@ export const updateStatusText = async (
   next: NextFunction
 ) => {
   try {
-    const { uid: user_id } = req.params;
+    const { uid: user_id } = res.locals;
     const { status_text } = req.body;
     const { updateStatusText: response } = await graphQLClient().request(
       UPDATE_USER_STATUS_TEXT,
