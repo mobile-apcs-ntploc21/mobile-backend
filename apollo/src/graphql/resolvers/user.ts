@@ -5,10 +5,11 @@ import { combineResolvers } from "graphql-resolvers";
 import { IResolvers } from "@graphql-tools/utils";
 
 import UserModel from "../../models/user";
-import UserSettingsModel from "../../models/userSettings";
 import { defaultSettings } from "./userSettings";
-import UserProfileModel from "../../models/user_profile";
 import { defaultProfile } from "./user_profile";
+import UserSettingsModel from "../../models/userSettings";
+import UserProfileModel from "../../models/user_profile";
+import UserStatusModel from "../../models/user_status";
 
 const createUserTransaction = async (input) => {
   const session = await mongoose.startSession();
@@ -19,17 +20,21 @@ const createUserTransaction = async (input) => {
     const opts = { session, new: true };
     const [createdUser] = await UserModel.create([input], opts);
 
+    console.log(createdUser.id);
+
     // Create user settings
     await UserSettingsModel.create(
-      [{ user_id: createdUser._id, settings: JSON.stringify(defaultSettings) }],
+      [{ user_id: createdUser.id, settings: JSON.stringify(defaultSettings) }],
       opts
     );
+
+    console.log("User settings created");
 
     // Create user profile
     await UserProfileModel.create(
       [
         {
-          user_id: createdUser._id,
+          user_id: createdUser.id,
           server_id: null,
           display_name: createdUser.username,
           username: createdUser.username,
@@ -41,10 +46,24 @@ const createUserTransaction = async (input) => {
       opts
     );
 
+    console.log("User profile created");
+
+    // Create user status
+    await UserStatusModel.create(
+      [
+        {
+          user_id: createdUser.id,
+        },
+      ],
+      opts
+    );
+    console.log("User status created");
+
     await session.commitTransaction();
     return createdUser;
   } catch (error) {
     await session.abortTransaction();
+    console.error(error);
     throw new UserInputError("Cannot create user !");
   } finally {
     session.endSession();

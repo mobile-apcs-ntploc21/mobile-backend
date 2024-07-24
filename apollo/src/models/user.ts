@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
+
 import validator from "validator";
 
 interface IUser {

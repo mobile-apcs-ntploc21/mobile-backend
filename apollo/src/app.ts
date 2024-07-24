@@ -7,12 +7,12 @@ import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
 import { ApolloServer } from "apollo-server-express";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
-import http from "http";
 
+import http from "http";
 import { config } from "./config";
-import { apolloTypedefs } from "./graphql/typedefs";
-import { apolloResolvers } from "./graphql/resolvers";
 import startWsServer from "./wss";
+import { apiTypeDefs, wsTypeDefs } from "./graphql/typedefs";
+import { apiResolvers, wsResolvers } from "./graphql/resolvers";
 
 const startApp = async () => {
   const app = express();
@@ -36,13 +36,29 @@ const startApp = async () => {
   app.use(express.json());
   app.use(cors());
 
+  // Create Apollo Server for API
+  const apolloServerForAPI = new ApolloServer({
+    cache: "bounded",
+    typeDefs: apiTypeDefs,
+    resolvers: apiResolvers,
+    introspection: config.IS_DEV,
+  });
+  await apolloServerForAPI.start();
+  apolloServerForAPI.applyMiddleware({
+    app,
+    path: config.GRAPHQL_ROUTE,
+    cors: true,
+  });
+
   // Create WebSocket Server
   const wsCleanup = startWsServer(httpserver);
 
-  // Create Apollo Server
-  const apolloServer = new ApolloServer({
-    typeDefs: apolloTypedefs,
-    resolvers: apolloResolvers,
+  // Create Apollo Server Websocket
+  const apolloServerForWs = new ApolloServer({
+    cache: "bounded",
+    typeDefs: wsTypeDefs,
+    resolvers: wsResolvers,
+    introspection: config.IS_DEV,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer: httpserver }),
       {
@@ -56,10 +72,10 @@ const startApp = async () => {
       },
     ],
   });
-  await apolloServer.start();
-  apolloServer.applyMiddleware({
+  await apolloServerForWs.start();
+  apolloServerForWs.applyMiddleware({
     app,
-    path: config.GRAPHQL_ROUTE,
+    path: config.WEBSOCKET_ROUTE,
     cors: true,
   });
 

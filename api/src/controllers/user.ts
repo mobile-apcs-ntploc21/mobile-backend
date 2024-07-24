@@ -55,7 +55,7 @@ export const createUser = async (
   next: express.NextFunction
 ) => {
   try {
-    const { username, email, password, phone: phoneNumber } = req.body;
+    const { username, email, password, phone: phoneNumber, age } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({
@@ -102,7 +102,7 @@ export const createUser = async (
           email: email,
           password: hashedPassword,
           phone_number: phoneNumber,
-          age: 18,
+          age: age || 18,
         },
       }
     );

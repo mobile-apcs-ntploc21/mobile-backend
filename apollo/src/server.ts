@@ -1,8 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 
-console.log("Loading environment variables...");
-
 import mongoose, { ConnectOptions } from "mongoose";
 import startApp from "./app";
 import { config } from "./config";
