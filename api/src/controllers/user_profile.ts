@@ -55,7 +55,7 @@ export const getProfile = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const userId = (req.params?.userId as string) ?? req.params.uid;
+  const userId = (req.params?.userId as string) ?? res.locals.uid;
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {
@@ -80,8 +80,15 @@ export const createProfile = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const userId = req.params.uid as string;
+  const userId = res.locals.uid as string;
   const serverId = (req.params?.serverId as string) ?? null;
+
+  if (!userId) {
+    return res.status(500).json({
+      message:
+        "Server error: User ID is not assigned yet. Please contact the server owner.",
+    });
+  }
 
   // Extract fields from req.body
   const { display_name, about_me } = req.body;
@@ -110,8 +117,17 @@ export const updateProfile = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const userId = req.params.uid as string;
+  const userId = res.locals.uid as string;
   const serverId = (req.params?.serverId as string) ?? null;
+
+  console.log(userId);
+
+  if (!userId) {
+    return res.status(500).json({
+      message:
+        "Server error: User ID is not assigned yet. Please contact the server owner.",
+    });
+  }
 
   // Extract fields from req.body
   const { display_name, about_me, avatar, banner } = req.body;
@@ -234,7 +250,7 @@ export const deleteProfile = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const userId = req.params.uid as string;
+  const userId = res.locals.uid as string;
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {

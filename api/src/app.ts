@@ -49,7 +49,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/", authMiddleware, settingsRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
 app.use(
-  "/api/v1/",
+  "/api/v1/profile/",
   authMiddleware,
   bodyParserJson("10mb"),
   bodyParserUrlencoded("10mb"),
