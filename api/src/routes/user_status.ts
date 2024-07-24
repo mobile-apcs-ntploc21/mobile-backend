@@ -5,14 +5,13 @@ import {
   updateStatusText,
   updateStatusType,
 } from '../controllers/user_status';
-import { authMiddleware } from '../utils/authMiddleware';
 
 const userStatusRouter = Router();
 
-userStatusRouter.get('/', authMiddleware, getCurrentUserStatus);
-userStatusRouter.get('/:id', authMiddleware, getUserStatus);
+userStatusRouter.get('/', getCurrentUserStatus);
+userStatusRouter.get('/:id', getUserStatus);
 
-userStatusRouter.post('/type', authMiddleware, updateStatusType);
-userStatusRouter.post('/custom', authMiddleware, updateStatusText);
+userStatusRouter.post('/type', updateStatusType);
+userStatusRouter.post('/custom', updateStatusText);
 
 export default userStatusRouter;
