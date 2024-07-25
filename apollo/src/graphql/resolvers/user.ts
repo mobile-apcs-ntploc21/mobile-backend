@@ -1,18 +1,28 @@
-import { UserInputError } from 'apollo-server';
-import { combineResolvers } from 'graphql-resolvers';
-import bcrypt from 'bcryptjs';
-import { IResolvers } from '@graphql-tools/utils';
+import { UserInputError, AuthenticationError } from "apollo-server";
+import { combineResolvers } from "graphql-resolvers";
+import bcrypt from "bcryptjs";
+import { IResolvers } from "@graphql-tools/utils";
 
 import UserModel from "../../models/user";
 import UserSettingsModel from "../../models/userSettings";
 import { defaultSettings } from "./userSettings";
+
+const clearExpireTokens = async (user) => {
+  const currentTime = Date.now();
+  const tokens = user.refresh_tokens.filter(
+    (token) => currentTime - token.created_at <= 7 * 24 * 60 * 60 * 1000 // 7 days
+  );
+
+  user.refresh_tokens = tokens;
+  await user.save();
+};
 
 const userResolvers: IResolvers = {
   Query: {
     users: combineResolvers(async (_, __, { models }) => {
       const users = await models.UserModel.findAll();
       if (!users) {
-        throw new UserInputError('No user found !');
+        throw new UserInputError("No user found !");
       }
       return users;
     }),
@@ -53,15 +63,35 @@ const userResolvers: IResolvers = {
         return null;
       }
 
+      clearExpireTokens(user);
       return user;
     }),
+
+    logoutUser: combineResolvers(
+      async (_, { refresh_token, id }, { models }) => {
+        if (!id || !refresh_token) {
+          return false;
+        }
+
+        try {
+          await UserModel.updateOne(
+            { _id: id },
+            { $pull: { refresh_tokens: { token: refresh_token } } }
+          );
+
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+    ),
   },
   Mutation: {
     createUser: combineResolvers(async (_, { input }, { models }) => {
       const user = await UserModel.create(input);
 
       if (!user) {
-        throw new UserInputError('Cannot create user !');
+        throw new UserInputError("Cannot create user !");
       }
 
       // Create default settings
@@ -77,62 +107,23 @@ const userResolvers: IResolvers = {
       const user = await UserModel.findOne({ email: input.email });
 
       if (!user) {
-        throw new UserInputError('User not found !');
+        throw new UserInputError("User not found !");
       }
 
-      user.token = input.token;
-      await user.save();
+      clearExpireTokens(user);
+      await UserModel.updateOne(
+        { _id: user.id },
+        { $pull: { refresh_tokens: { token: input.old_token } } }
+      );
+
+      await UserModel.updateOne(
+        { _id: user.id },
+        { $push: { refresh_tokens: { token: input.token } } }
+      );
+
       return user;
     }),
   },
 };
 
 export default userResolvers;
-
-// Use to initialize missing user settings
-// const initializeMissingUserSettings = async () => {
-//   const users = await UserModel.find();
-
-//   for (const user of users) {
-//     let existingSettings = await UserSettingsModel.findOne({
-//       userId: user._id,
-//     });
-
-//     if (!existingSettings) {
-//       const newUserSettings = new UserSettingsModel({
-//         userId: user._id,
-//         settings: defaultSettings,
-//       });
-//       await newUserSettings.save();
-//       console.log(`Initialized settings for user: ${user._id}`);
-//     } else {
-//       // Parse the existing settings
-//       const parsedExistingSettings = JSON.parse(existingSettings.settings);
-//       const defaultSettingsParsed = JSON.parse(defaultSettings);
-
-//       // Find missing key in the existing settings
-//       const needsUpdate = Object.keys(defaultSettingsParsed).some(
-//         (key) => !(key in parsedExistingSettings)
-//       );
-
-//       if (!needsUpdate) {
-//         continue;
-//       }
-
-//       // Merge the existing settings with the default settings
-//       const mergedSettings = {
-//         ...defaultSettingsParsed,
-//         ...parsedExistingSettings,
-//       };
-
-//       // Update the existing settings with the merged settings
-//       existingSettings.settings = JSON.stringify(mergedSettings);
-//       await existingSettings.save();
-//       console.log(`Updated settings for user: ${user._id}`);
-//     }
-//   }
-// };
-
-// initializeMissingUserSettings()
-//   .then(() => console.log("Initialization complete"))
-//   .catch((err) => console.error("Error initializing settings:", err));
