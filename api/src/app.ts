@@ -44,7 +44,7 @@ app.use(cors());
 
 // Set default route
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/", authMiddleware, settingsRouter);
+app.use("/api/v1/settings", authMiddleware, settingsRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
 
 // Handle when go to undefined route
