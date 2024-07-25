@@ -1,21 +1,19 @@
-import express from 'express';
-import morgan from 'morgan';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import xss from 'xss-clean';
-import mongoSanitize from 'express-mongo-sanitize';
-import { ApolloServer } from 'apollo-server-express';
-import { ApolloServerPluginDrainHttpServer } from 'apollo-server-core';
-import { WebSocketServer } from 'ws';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { useServer } from 'graphql-ws/lib/use/ws';
+import express from "express";
+import morgan from "morgan";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import xss from "xss-clean";
+import mongoSanitize from "express-mongo-sanitize";
+import { ApolloServer } from "apollo-server-express";
+import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 
-import http from 'http';
-import { config } from './config';
-import startWsServer from './wss';
-import { apiTypeDefs, wsTypeDefs } from './graphql/typedefs';
-import { apiResolvers, wsResolvers } from './graphql/resolvers';
+import http from "http";
+import { config } from "./config";
+import startWsServer from "./wss";
+import { apiTypeDefs, wsTypeDefs } from "./graphql/typedefs";
+import { apiResolvers, wsResolvers } from "./graphql/resolvers";
+import { getUserIdByToken } from "./utils/auth";
 
 const startApp = async () => {
   const app = express();
@@ -33,7 +31,7 @@ const startApp = async () => {
   });
 
   // set environment
-  if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
+  if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
   // middleware
   app.use(express.json());
@@ -41,10 +39,21 @@ const startApp = async () => {
 
   // Create Apollo Server for API
   const apolloServerForAPI = new ApolloServer({
-    cache: 'bounded',
+    cache: "bounded",
     typeDefs: apiTypeDefs,
     resolvers: apiResolvers,
     introspection: config.IS_DEV,
+    context: ({ req, res }) => {
+      try {
+        const token = req.headers.authorization || "";
+        if (!token) return { req, res, user_id: null };
+
+        const user_id = getUserIdByToken(token);
+        return { req, res, user_id };
+      } catch (error) {
+        return { req, res, user_id: null };
+      }
+    },
   });
   await apolloServerForAPI.start();
   apolloServerForAPI.applyMiddleware({
@@ -58,7 +67,7 @@ const startApp = async () => {
 
   // Create Apollo Server Websocket
   const apolloServerForWs = new ApolloServer({
-    cache: 'bounded',
+    cache: "bounded",
     typeDefs: wsTypeDefs,
     resolvers: wsResolvers,
     introspection: config.IS_DEV,
