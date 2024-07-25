@@ -9,18 +9,18 @@ import {
 const settingsRouter = Router();
 
 // Get user settings
-settingsRouter.get("/settings/", authMiddleware, getSettings);
+settingsRouter.get("/", getSettings);
 
 // Create user settings
-// settingsRouter.post("/settings/", authMiddleware, createSettings);
+// settingsRouter.post("/", createSettings);
 
 // Update user settings
-settingsRouter.put("/settings/", authMiddleware, updateSettings);
+settingsRouter.put("/", updateSettings);
 
 // Restore user settings
-settingsRouter.put("/settings/reset/", authMiddleware, resetSettings);
+settingsRouter.put("/reset/", resetSettings);
 
 // Delete user settings
-// settingsRouter.delete("/settings/", authMiddleware, deleteSettings);
+// settingsRouter.delete("/", deleteSettings);
 
 export default settingsRouter;

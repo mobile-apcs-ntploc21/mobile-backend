@@ -7,7 +7,6 @@ export const GET_USER_BY_ID = gql`
       username
       email
       phone_number
-      token
     }
   }
 `;
@@ -19,7 +18,6 @@ export const GET_USER_BY_EMAIL = gql`
       username
       email
       phone_number
-      token
     }
   }
 `;
@@ -31,7 +29,6 @@ export const GET_USER_BY_USERNAME = gql`
       username
       email
       phone_number
-      token
     }
   }
 `;
@@ -47,6 +44,12 @@ export const LOGIN_USER = gql`
   }
 `;
 
+export const LOGOUT_USER = gql`
+  query logoutUser($refresh_token: String!, $user_id: ID!) {
+    logoutUser(refresh_token: $refresh_token, id: $user_id)
+  }
+`;
+
 export const settingsQueries = {
   GET_USER_SETTINGS: gql`
     query getUserSettings($userId: ID!) {
@@ -59,7 +62,10 @@ export const settingsQueries = {
 
 export const GET_RELATIONSHIP_TYPE = gql`
   query getRelationshipType($user_first_id: ID!, $user_second_id: ID!) {
-    getRelationshipType(user_first_id: $user_first_id, user_second_id: $user_second_id)
+    getRelationshipType(
+      user_first_id: $user_first_id
+      user_second_id: $user_second_id
+    )
   }
 `;
 
