@@ -2,9 +2,9 @@ import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
   type Server {
-    _id: ID!
-    ownerId: ID!
-    name: String!
+    id: ID
+    owner: ID
+    name: String
     photoUrl: String
     bannerUrl: String
     inviteCode: [InviteCode]
@@ -24,7 +24,7 @@ const gqlTypes = gql`
 
 const gqlAPI = gql`
   input CreateServerInput {
-    ownerId: ID!
+    owner_id: ID!
     name: String!
     photoUrl: String
     bannerUrl: String
@@ -58,6 +58,8 @@ const gqlAPI = gql`
 `;
 
 const gqlWs = gql`
+  scalar JSON
+
   union ServerUpdatePayload =
       UserPresenceUpdate
     | MemberUpdate
@@ -104,6 +106,10 @@ const gqlWs = gql`
   }
 
   extend type Subscription {
-    serverUpdated(server_id: ID!): Server
+    serverUpdated(server_id: ID!): JSON
   }
 `;
+
+const API = [gqlTypes, gqlAPI];
+const Ws = [gqlTypes, gqlWs];
+export default { API, Ws };

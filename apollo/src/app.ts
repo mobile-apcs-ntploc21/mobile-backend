@@ -48,9 +48,10 @@ const startApp = async () => {
         const token = req.headers.authorization || "";
         if (!token) return { req, res, user_id: null };
 
-        const user_id = await getUserIdByToken(token);
+        const user_id = await getUserIdByToken(token.split(" ")[1]);
         return { req, res, user_id };
       } catch (error) {
+        console.log(error);
         return { req, res, user_id: null };
       }
     },

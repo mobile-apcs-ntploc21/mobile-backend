@@ -5,11 +5,6 @@ import userSchema from "./user";
 import relationshipSchema from "./relationship";
 import { userStatusSchema_API, userStatusSchema_Ws } from "./user_status";
 import serverSchema from "./server";
-import userSettingsSchema from "./userSettings";
-import {
-  apolloTypedefs as userProfileApollo,
-  wsTypedefs as userProfileWs,
-} from "./user_profile";
 
 const linkedSchema = gql`
   type Query {
@@ -31,13 +26,10 @@ export const apiTypeDefs = mergeTypeDefs([
   relationshipSchema,
   userStatusSchema_API,
   serverSchema.API,
-  userSettingsSchema,
-  userProfileApollo,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
   linkedSchema,
   userStatusSchema_Ws,
   serverSchema.Ws,
-  userProfileWs,
 ]);
