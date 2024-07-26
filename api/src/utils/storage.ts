@@ -116,6 +116,35 @@ export const createFileObject = (base64File: string, filename: string) => {
   };
 };
 
+/**
+ * To process image (compress the image) and upload to S3
+ *
+ * @async
+ * @param {*} image
+ * @returns {string} image URL
+ */
+export const processImage = async (
+  image: any,
+  folder: string
+): Promise<string | null> => {
+  if (!image) return null;
+
+  try {
+    const fileObject = createFileObject(image, "temp.jpg");
+    const imageUrl = await uploadToS3(compressImage(fileObject), folder);
+    return imageUrl;
+  } catch (err) {
+    return null;
+  }
+};
+
+/**
+ * To compress the image and resize to 512x512
+ *
+ * @async
+ * @param {*} image - The image object file
+ * @returns {object} - The compressed image object
+ */
 export const compressImage = async (image: any) => {
   const { createReadStream, filename, mimetype } = await image;
 

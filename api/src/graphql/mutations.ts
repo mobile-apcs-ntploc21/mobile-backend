@@ -169,3 +169,59 @@ export const UPDATE_USER_STATUS_TEXT = gql`
     }
   }
 `;
+
+export const serverMutations = {
+  CREATE_SERVER: gql`
+    mutation createServer($input: CreateServerInput!) {
+      createServer(input: $input) {
+        id
+        owner
+        name
+        avatar_url
+        banner_url
+        totalMembers
+        totalEmojis
+      }
+    }
+  `,
+  UPDATE_SERVER: gql`
+    mutation updateServer($server_id: ID!, $input: UpdateServerInput!) {
+      updateServer(server_id: $server_id, input: $input) {
+        id
+        owner
+        name
+        avatar_url
+        banner_url
+        totalMembers
+        totalEmojis
+      }
+    }
+  `,
+  DELETE_SERVER: gql`
+    mutation deleteServer($server_id: ID!) {
+      deleteServer(server_id: $server_id)
+    }
+  `,
+
+  TRANSFER_OWNERSHIP: gql`
+    mutation transferOwnership($server_id: ID!, $user_id: ID!) {
+      transferOwnership(server_id: $server_id, user_id: $user_id)
+    }
+  `,
+
+  CREATE_INVITE_CODE: gql`
+    mutation createInviteCode($server_id: ID!, $input: CreateInviteCodeInput!) {
+      createInviteCode(server_id: $server_id, input: $input) {
+        url
+        expiredAt
+        maxUses
+        currentUses
+      }
+    }
+  `,
+  DELETE_INVITE_CODE: gql`
+    mutation deleteInviteCode($server_id: ID!, $url: String!) {
+      deleteInviteCode(server_id: $server_id, url: $url)
+    }
+  `,
+};

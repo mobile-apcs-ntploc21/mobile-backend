@@ -1,7 +1,7 @@
 import express from "express";
 import streamifier from "streamifier";
 
-import { uploadToS3, compressImage, createFileObject } from "../utils/storage";
+import { processImage } from "../utils/storage";
 import graphQLClient from "../utils/graphql";
 import { userProfileQueries } from "../graphql/queries";
 import { userProfileMutation } from "../graphql/mutations";
@@ -24,28 +24,6 @@ const getUserProfile = async (userId: string, serverId: string) => {
   );
 
   return response.getUserProfile;
-};
-
-/**
- * To process image (compress the image) and upload to S3
- *
- * @async
- * @param {*} image
- * @returns {string} image URL
- */
-const processImage = async (
-  image: any,
-  folder: string
-): Promise<string | null> => {
-  if (!image) return null;
-
-  try {
-    const fileObject = createFileObject(image, "temp.jpg");
-    const imageUrl = await uploadToS3(compressImage(fileObject), folder);
-    return imageUrl;
-  } catch (err) {
-    return null;
-  }
 };
 
 /* ======================================== */

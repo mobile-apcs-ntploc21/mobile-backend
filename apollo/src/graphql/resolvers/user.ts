@@ -20,15 +20,11 @@ const createUserTransaction = async (input) => {
     const opts = { session, new: true };
     const [createdUser] = await UserModel.create([input], opts);
 
-    console.log(createdUser.id);
-
     // Create user settings
     await UserSettingsModel.create(
       [{ user_id: createdUser.id, settings: JSON.stringify(defaultSettings) }],
       opts
     );
-
-    console.log("User settings created");
 
     // Create user profile
     await UserProfileModel.create(
@@ -46,8 +42,6 @@ const createUserTransaction = async (input) => {
       opts
     );
 
-    console.log("User profile created");
-
     // Create user status
     await UserStatusModel.create(
       [
@@ -57,7 +51,6 @@ const createUserTransaction = async (input) => {
       ],
       opts
     );
-    console.log("User status created");
 
     await session.commitTransaction();
     return createdUser;
