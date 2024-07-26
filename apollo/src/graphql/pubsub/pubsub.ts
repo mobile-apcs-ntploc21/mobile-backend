@@ -3,46 +3,51 @@ import { PubSub } from "graphql-subscriptions";
 
 const pubsub = new PubSub();
 
-export enum ServerEvents {
+export enum PubSubEvents {
   userProfileChanged = "USER_PROFILE_CHANGED",
   userStatusChanged = "USER_STATUS_CHANGED",
 
-  memberJoined = "MEMBER_JOINED",
-  memberLeft = "MEMBER_LEFT",
-  memberUpdated = "MEMBER_UPDATED",
-
-  emojiAdded = "EMOJI_ADDED",
-  emojiUpdated = "EMOJI_UPDATED",
-  emojiDeleted = "EMOJI_DELETED",
-
-  serverUpdated = "SERVER_UPDATED",
-  serverDeleted = "SERVER_DELETED",
-}
-
-export enum ChannelEvents {
   messageAdded = "MESSAGE_ADDED",
   messageDeleted = "MESSAGE_DELETED",
   messageEdited = "MESSAGE_EDITED",
 
   channelAdded = "CHANNEL_ADDED",
   channelDeleted = "CHANNEL_DELETED",
-  channelUpdated = "CHANNEL_UPDATED",
+
+  serverUpdated = "SERVER_UPDATED",
+  serverDeleted = "SERVER_DELETED",
 }
 
 /**
  * Publishes an event to the specified Pub/Sub channel.
  *
- * @param {string} eventName - The name of the event to publish.
+ * @param {PubSubEvents} eventName - The name of the event to publish.
+ * @param {(string | null)} id - Optional ID to specify a particular event channel; if null, the event is broadcast globally.
  * @param {*} data - The data to publish with the event.
  */
-export const publishEvent = (eventName: string, data: any) =>
-  pubsub.publish(eventName, data);
+export const publishEvent = (
+  eventName: PubSubEvents,
+  id: string | null,
+  data: any
+) => {
+  try {
+    // If id is not provided, broadcast as a global event
+    if (!id === null) {
+      pubsub.publish(eventName, data);
+    } else {
+      pubsub.publish(`${eventName}_${id}`, data);
+    }
+  } catch (error) {
+    console.error(`Error publishing event ${eventName}:`, error);
+  }
+};
 
-/**
- * Returns an async iterator for the specified Pub/Sub channels.
- *
- * @param {string[]} events - The Pub/Sub channels to listen to.
- * @returns {*} - The async iterator.
- */
-export const getAsyncIterator = (events: string[]) =>
-  pubsub.asyncIterator(events);
+export const getAsyncIterator = (event: PubSubEvents, id: string | null) => {
+  if (id === null) {
+    return pubsub.asyncIterator(event);
+  } else {
+    return pubsub.asyncIterator(`${event}_${id}`);
+  }
+};
+
+export default pubsub;

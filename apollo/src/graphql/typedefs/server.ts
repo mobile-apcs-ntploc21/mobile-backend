@@ -20,7 +20,9 @@ const gqlTypes = gql`
     maxUses: Int!
     currentUses: Int!
   }
+`;
 
+const gqlAPI = gql`
   input CreateServerInput {
     ownerId: ID!
     name: String!
@@ -33,18 +35,25 @@ const gqlTypes = gql`
     photoUrl: String
     bannerUrl: String
   }
-`;
 
-const gqlAPI = gql`
+  input CreateInviteCodeInput {
+    url: String!
+    expiredAt: String
+    maxUses: Int!
+  }
+
   extend type Query {
-    server(id: ID!): Server
-    servers(userId: ID!): [Server!]
+    server(server_id: ID!): Server
+    servers(user_id: ID!): [Server!]
   }
 
   extend type Mutation {
     createServer(input: CreateServerInput!): Server!
-    updateServer(id: ID!, input: UpdateServerInput!): Server!
-    deleteServer(id: ID!): Boolean
+    updateServer(server_id: ID!, input: UpdateServerInput!): Server!
+    deleteServer(server_id: ID!): Boolean
+
+    createInviteCode(server_id: ID!, input: CreateInviteCodeInput!): InviteCode!
+    deleteInviteCode(server_id: ID!, url: String!): Boolean
   }
 `;
 
@@ -55,17 +64,17 @@ const gqlWs = gql`
     | ServerSettingsUpdate
 
   type UserPresenceUpdate {
-    userId: ID!
+    user_id: ID!
     status: String!
   }
 
   type UserUpdate {
-    serverId: ID!
+    server_id: ID!
     profile: UserProfile!
   }
 
   type ServerSettingsUpdate {
-    serverId: ID!
+    server_id: ID!
     settings: ServerSettings!
   }
 
@@ -89,12 +98,12 @@ const gqlWs = gql`
   }
 
   type ServerUpdate {
-    serverId: ID!
+    server_id: ID!
     type: String!
     payload: ServerUpdatePayload!
   }
 
   extend type Subscription {
-    serverUpdated(id: ID!): Server
+    serverUpdated(server_id: ID!): Server
   }
 `;
