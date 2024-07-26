@@ -21,7 +21,8 @@ export const getSettings = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const currentUser = req.params.uid;
+  const currentUser = res.locals.uid;
+
   try {
     const settings = await getUserSettings(currentUser).catch(() => null);
 
@@ -45,7 +46,7 @@ export const createSettings = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const currentUser = req.params.uid as string;
+  const currentUser = res.locals.uid as string;
   const { settings } = req.body as { settings: string };
   let parsedSettings = null;
 
@@ -74,7 +75,7 @@ export const updateSettings = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const currentUser = req.params.uid as string;
+  const currentUser = res.locals.uid as string;
 
   try {
     const response = await graphQLClient().request(
@@ -101,7 +102,7 @@ export const deleteSettings = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const currentUser = req.params.uid;
+  const currentUser = res.locals.uid;
 
   try {
     const response = await graphQLClient().request(
@@ -122,7 +123,7 @@ export const resetSettings = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const currentUser = req.params.uid;
+  const currentUser = res.locals.uid;
 
   try {
     const response = await graphQLClient().request(

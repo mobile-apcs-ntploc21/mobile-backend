@@ -13,6 +13,7 @@ import { config } from "./config";
 import startWsServer from "./wss";
 import { apiTypeDefs, wsTypeDefs } from "./graphql/typedefs";
 import { apiResolvers, wsResolvers } from "./graphql/resolvers";
+import { getUserIdByToken } from "./utils/auth";
 
 const startApp = async () => {
   const app = express();
@@ -42,6 +43,17 @@ const startApp = async () => {
     typeDefs: apiTypeDefs,
     resolvers: apiResolvers,
     introspection: config.IS_DEV,
+    context: async ({ req, res }) => {
+      try {
+        const token = req.headers.authorization || "";
+        if (!token) return { req, res, user_id: null };
+
+        const user_id = await getUserIdByToken(token);
+        return { req, res, user_id };
+      } catch (error) {
+        return { req, res, user_id: null };
+      }
+    },
   });
   await apolloServerForAPI.start();
   apolloServerForAPI.applyMiddleware({

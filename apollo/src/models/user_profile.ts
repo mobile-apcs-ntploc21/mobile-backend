@@ -38,7 +38,6 @@ const userProfileSchema = new Schema<IUserProfile>(
       type: String,
       ref: "User",
       required: true,
-      unique: true,
     },
     about_me: {
       type: String,

@@ -2,8 +2,8 @@ version: '3'
 services:
   api:
     build: ./api
-    ports:
-      - '4001:4001'
+    networks:
+      - backend
     volumes:
       - ./api:/app
     command: npm start
@@ -11,10 +11,37 @@ services:
       - apollo
     environment:
       - GQL_SERVER_URL=http://apollo:4000/graphql
+      - NODE_ENV=${ENVIRONMENT}
+
   apollo:
     build: ./apollo
-    ports:
-      - '4000:4000'
+    networks:
+      - backend
     volumes:
       - ./apollo:/app
     command: npm start
+    environment:
+      - NODE_ENV=${ENVIRONMENT}
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/conf.d/nginx.conf.template
+      - ./entrypoint.sh:/docker-entrypoint.d/entrypoint.sh
+      - ./wait-for-it.sh:/wait-for-it.sh
+    ports:
+      - "80:80"
+    networks:
+      - backend
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: [ "/wait-for-it.sh api:4001 apollo:4000 -- /docker-entrypoint.d/entrypoint.sh" ]
+    depends_on:
+      - api
+      - apollo
+
+networks:
+  backend:

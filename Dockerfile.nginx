@@ -1,0 +1,7 @@
+# Use the official nginx base image
+FROM nginx:latest
+
+# Install netcat-openbsd
+RUN apt-get update && \
+    apt-get install -y netcat-openbsd && \
+    rm -rf /var/lib/apt/lists/*

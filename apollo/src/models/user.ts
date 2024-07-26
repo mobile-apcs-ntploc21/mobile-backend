@@ -1,6 +1,7 @@
 import mongoose, { model, Schema } from "mongoose";
 
 import validator from "validator";
+import UserStatusModel from "./user_status";
 
 interface IUser {
   username: string;
@@ -11,7 +12,7 @@ interface IUser {
   last_modified: Date;
   verified: boolean;
   age: number;
-  token: string;
+  refresh_tokens: string[];
 }
 
 const userSchema = new Schema<IUser>(
@@ -54,10 +55,14 @@ const userSchema = new Schema<IUser>(
       required: [true, "Please provide your age"],
       min: [13, "Age must be greater or equal to 13!"],
     },
-    token: {
-      type: String,
-      default: "",
-    },
+    refresh_tokens: [
+      {
+        token: { type: String, required: true },
+        device: { type: String, required: false },
+        created_at: { type: Date, default: Date.now },
+      },
+      { _id: false },
+    ],
   },
   { timestamps: true }
 );

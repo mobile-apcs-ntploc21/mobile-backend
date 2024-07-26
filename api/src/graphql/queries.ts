@@ -7,7 +7,6 @@ export const GET_USER_BY_ID = gql`
       username
       email
       phone_number
-      token
     }
   }
 `;
@@ -19,7 +18,6 @@ export const GET_USER_BY_EMAIL = gql`
       username
       email
       phone_number
-      token
     }
   }
 `;
@@ -31,7 +29,6 @@ export const GET_USER_BY_USERNAME = gql`
       username
       email
       phone_number
-      token
     }
   }
 `;
@@ -44,6 +41,12 @@ export const LOGIN_USER = gql`
       email
       phone_number
     }
+  }
+`;
+
+export const LOGOUT_USER = gql`
+  query logoutUser($refresh_token: String!, $user_id: ID!) {
+    logoutUser(refresh_token: $refresh_token, id: $user_id)
   }
 `;
 

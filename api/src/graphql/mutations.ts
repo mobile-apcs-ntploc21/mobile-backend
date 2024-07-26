@@ -20,7 +20,6 @@ export const UPDATE_REFRESH_TOKEN = gql`
     updateRefreshToken(input: $input) {
       id
       email
-      token
     }
   }
 `;

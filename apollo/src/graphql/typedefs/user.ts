@@ -10,7 +10,6 @@ export default gql`
     last_modified: String
     verified: Boolean
     age: Int
-    token: String
   }
 
   extend type Query {
@@ -19,6 +18,7 @@ export default gql`
     isLoggedIn: Boolean!
 
     loginUser(email: String!, password: String!): User
+    logoutUser(refresh_token: String, id: ID!): Boolean
     getUserById(id: ID!): User
     getUserByEmail(email: String!): User
     getUserByUsername(username: String!): User
@@ -40,6 +40,7 @@ export default gql`
 
   input UpdateRefreshTokenInput {
     email: String!
+    old_token: String
     token: String!
   }
 `;

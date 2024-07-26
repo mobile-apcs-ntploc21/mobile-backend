@@ -3,8 +3,9 @@ import graphQLClient from "../utils/graphql";
 import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
 import {
   GET_USER_BY_EMAIL,
-  LOGIN_USER,
   GET_USER_BY_USERNAME,
+  LOGIN_USER,
+  LOGOUT_USER,
 } from "../graphql/queries";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -193,6 +194,7 @@ export const loginUser = async (
 /**
  * @route /refresh - To refresh JWT token
  * Given a valid refresh token, return a new JWT token and refresh token
+ * Also remove the old refresh token from database
  *
  * @async
  * @param {express.Request} req
@@ -213,7 +215,9 @@ export const refresh = async (
     ) as jwt.JwtPayload;
     const user = await getUserByEmail(decodedToken.email);
 
-    if (!user || user.token !== refreshToken) {
+    console.log(user);
+
+    if (!user) {
       return res.status(401).json({
         message: "Invalid token",
       });
@@ -233,6 +237,7 @@ export const refresh = async (
     await graphQLClient().request(UPDATE_REFRESH_TOKEN, {
       input: {
         email: user.email,
+        old_token: refreshToken,
         token: newRefreshToken,
       },
     });
@@ -263,27 +268,7 @@ export const getMe = async (
   next: express.NextFunction
 ) => {
   try {
-    let token: string | undefined;
-
-    // Check if token is in header
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    } else {
-      return res.status(401).json({
-        status: "fail",
-        message: "You are not authorized to access this route",
-      });
-    }
-
-    if (!token) {
-      return res.status(401).json({
-        status: "fail",
-        message: "You are not authorized to access this route",
-      });
-    }
+    const token = res.locals.token;
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload;
     const user = await getUserByEmail(decoded.email);
@@ -296,6 +281,43 @@ export const getMe = async (
     }
 
     return res.status(200).json(user);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+/**
+ * To log out user, remove the current user refresh token from database
+ *
+ * @async
+ * @param {express.Request} req
+ * @param {express.Response} res
+ * @param {express.NextFunction} next
+ * @returns {unknown}
+ */
+export const logoutUser = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const { refreshToken } = req.body;
+    const user_id = res.locals.uid;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        message: "Missing required fields",
+      });
+    }
+
+    await graphQLClient().request(LOGOUT_USER, {
+      user_id: user_id,
+      refresh_token: refreshToken,
+    });
+
+    return res.status(200).json({
+      message: "Logout success",
+    });
   } catch (err) {
     return next(err);
   }
