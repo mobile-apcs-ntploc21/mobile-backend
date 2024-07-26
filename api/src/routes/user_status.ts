@@ -9,11 +9,11 @@ import {
 
 const userStatusRouter = Router();
 
-userStatusRouter.get('/', getCurrentUserStatus);
-userStatusRouter.get('/multiple', getMultipleUserStatus);
-userStatusRouter.get('/:id', getUserStatus);
+userStatusRouter.get('/status', getCurrentUserStatus);
+userStatusRouter.get('/statuses', getMultipleUserStatus);
+userStatusRouter.get('/status/:id', getUserStatus);
 
-userStatusRouter.post('/type', updateStatusType);
-userStatusRouter.post('/custom', updateStatusText);
+userStatusRouter.post('/status/type', updateStatusType);
+userStatusRouter.post('/status/custom', updateStatusText);
 
 export default userStatusRouter;
