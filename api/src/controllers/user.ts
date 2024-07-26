@@ -209,11 +209,9 @@ export const refresh = async (
     const { refreshToken } = req.body;
     const decodedToken = jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET
+      config.JWT_REFRESH_SECRET
     ) as jwt.JwtPayload;
     const user = await getUserByEmail(decodedToken.email);
-
-    console.log(user);
 
     if (!user) {
       return res.status(401).json({
@@ -268,7 +266,7 @@ export const getMe = async (
   try {
     const token = res.locals.token;
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload;
+    const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
     const user = await getUserByEmail(decoded.email);
 
     if (!user) {

@@ -15,6 +15,7 @@ import friendRouter from "./routes/friend";
 import settingsRouter from "./routes/settings";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
+import serverRouter from "./routes/server";
 
 dotenv.config({ path: "./config.env" });
 
@@ -51,6 +52,9 @@ app.use("/api/v1/", authMiddleware, userStatusRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
 app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 
+/// Server
+app.use("/api/v1/servers", serverRouter);
+
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
   res.status(404).json({
@@ -67,8 +71,7 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    console.error(err);
-
+    // console.error(err);
     res.set("Content-Type", "application/json");
     res.statusCode = 400;
     return res.json({

@@ -158,3 +158,40 @@ export const GET_MULTIPLE_USER_STATUS = gql`
     }
   }
 `;
+
+export const serverQueries = {
+  GET_SERVER_BY_ID: gql`
+    query server($server_id: ID!) {
+      server(server_id: $server_id) {
+        id
+        name
+        avatar_url
+        banner_url
+        totalMembers
+        totalEmojis
+      }
+    }
+  `,
+  GET_SERVERS_BY_USER_ID: gql`
+    query servers($user_id: ID!) {
+      servers(user_id: $user_id) {
+        id
+        name
+        avatar_url
+        banner_url
+        totalMembers
+        totalEmojis
+      }
+    }
+  `,
+  GET_INVITE_CODE: gql`
+    query getInviteCode($server_id: ID!) {
+      getInviteCode(server_id: $server_id) {
+        url
+        expiredAt
+        maxUses
+        currentUses
+      }
+    }
+  `,
+};
