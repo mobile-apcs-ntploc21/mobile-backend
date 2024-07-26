@@ -40,7 +40,7 @@ export default gql`
 
   input UpdateRefreshTokenInput {
     email: String!
-    old_token: String!
+    old_token: String
     token: String!
   }
 `;
