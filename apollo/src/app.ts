@@ -43,12 +43,12 @@ const startApp = async () => {
     typeDefs: apiTypeDefs,
     resolvers: apiResolvers,
     introspection: config.IS_DEV,
-    context: ({ req, res }) => {
+    context: async ({ req, res }) => {
       try {
         const token = req.headers.authorization || "";
         if (!token) return { req, res, user_id: null };
 
-        const user_id = getUserIdByToken(token);
+        const user_id = await getUserIdByToken(token);
         return { req, res, user_id };
       } catch (error) {
         return { req, res, user_id: null };
