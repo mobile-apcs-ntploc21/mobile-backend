@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import graphQLClient from '../utils/graphql';
-import { GET_USER_STATUS } from '../graphql/queries';
+import { GET_MULTIPLE_USER_STATUS, GET_USER_STATUS } from '../graphql/queries';
 import {
   UPDATE_USER_STATUS_TEXT,
   UPDATE_USER_STATUS_TYPE,
@@ -33,6 +33,25 @@ export const getUserStatus = async (
       user_id: id,
     });
     res.status(200).json(userStatus.getUserStatus);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMultipleUserStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { user_ids } = req.body;
+    const userStatuses = await graphQLClient().request(
+      GET_MULTIPLE_USER_STATUS,
+      {
+        user_ids,
+      }
+    );
+    res.status(200).json(userStatuses.getMultipleUserStatus);
   } catch (error) {
     next(error);
   }

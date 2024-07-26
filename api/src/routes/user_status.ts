@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getCurrentUserStatus,
+  getMultipleUserStatus,
   getUserStatus,
   updateStatusText,
   updateStatusType,
@@ -9,6 +10,7 @@ import {
 const userStatusRouter = Router();
 
 userStatusRouter.get('/', getCurrentUserStatus);
+userStatusRouter.get('/multiple', getMultipleUserStatus);
 userStatusRouter.get('/:id', getUserStatus);
 
 userStatusRouter.post('/type', updateStatusType);
