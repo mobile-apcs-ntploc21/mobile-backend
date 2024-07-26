@@ -134,3 +134,27 @@ export const userProfileQueries = {
     }
   `,
 };
+
+export const GET_USER_STATUS = gql`
+  query getUserStatus($user_id: ID!) {
+    getUserStatus(user_id: $user_id) {
+      user_id
+      type
+      last_seen
+      status_text
+      is_online
+    }
+  }
+`;
+
+export const GET_MULTIPLE_USER_STATUS = gql`
+  query getMultipleUserStatus($user_ids: [ID!]!) {
+    getMultipleUserStatus(user_ids: $user_ids) {
+      user_id
+      type
+      last_seen
+      status_text
+      is_online
+    }
+  }
+`;

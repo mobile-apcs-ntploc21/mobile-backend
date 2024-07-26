@@ -35,6 +35,7 @@ const schema = new Schema<UserStatus>({
   },
   status_text: {
     type: String,
+    maxlength: [140, "Status text must not exceed 140 characters!"],
     default: "",
   },
   is_online: {

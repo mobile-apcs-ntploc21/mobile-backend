@@ -14,6 +14,7 @@ import userRouter from "./routes/user";
 import friendRouter from "./routes/friend";
 import settingsRouter from "./routes/settings";
 import userProfileRouter from "./routes/user_profile";
+import userStatusRouter from "./routes/user_status";
 
 dotenv.config({ path: "./config.env" });
 
@@ -47,6 +48,7 @@ app.use(cors());
 // Set default route
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", authMiddleware, settingsRouter);
+app.use("/api/v1/", authMiddleware, userStatusRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
 app.use(
   "/api/v1/profile/",
