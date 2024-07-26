@@ -2,12 +2,12 @@ import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
   type Server {
-    id: ID
-    owner: ID
-    name: String
-    avatar_url: String
-    banner_url: String
-    invite_code: [InviteCode]
+    _id: ID!
+    ownerId: ID!
+    name: String!
+    photoUrl: String
+    bannerUrl: String
+    inviteCode: [InviteCode]
     totalMembers: Int
     totalEmojis: Int
     createdAt: String
@@ -20,60 +20,81 @@ const gqlTypes = gql`
     maxUses: Int!
     currentUses: Int!
   }
-`;
 
-const gqlAPI = gql`
   input CreateServerInput {
-    owner_id: ID!
+    ownerId: ID!
     name: String!
-    avatar_url: String
-    banner_url: String
+    photoUrl: String
+    bannerUrl: String
   }
 
   input UpdateServerInput {
     name: String
-    avatar_url: String
-    banner_url: String
+    photoUrl: String
+    bannerUrl: String
   }
+`;
 
-  input CreateInviteCodeInput {
-    url: String!
-    expiredAt: String
-    maxUses: Int!
-  }
-
+const gqlAPI = gql`
   extend type Query {
-    server(server_id: ID!): Server
-    servers(user_id: ID!): [Server!]
-
-    getInviteCode(server_id: ID!): [InviteCode]
+    server(id: ID!): Server
+    servers(userId: ID!): [Server!]
   }
 
   extend type Mutation {
     createServer(input: CreateServerInput!): Server!
-    updateServer(server_id: ID!, input: UpdateServerInput!): Server!
-    deleteServer(server_id: ID!): Boolean
-    transferOwnership(server_id: ID!, user_id: ID!): Boolean
-
-    createInviteCode(server_id: ID!, input: CreateInviteCodeInput!): InviteCode!
-    deleteInviteCode(server_id: ID!, url: String!): Boolean
+    updateServer(id: ID!, input: UpdateServerInput!): Server!
+    deleteServer(id: ID!): Boolean
   }
 `;
 
 const gqlWs = gql`
-  scalar JSON
+  union ServerUpdatePayload =
+      UserPresenceUpdate
+    | MemberUpdate
+    | ServerSettingsUpdate
+
+  type UserPresenceUpdate {
+    userId: ID!
+    status: String!
+  }
+
+  type UserUpdate {
+    serverId: ID!
+    profile: UserProfile!
+  }
+
+  type ServerSettingsUpdate {
+    serverId: ID!
+    settings: ServerSettings!
+  }
+
+  type UserProfile {
+    display_name: String!
+    photo_url: String
+    banner_url: String
+    about_me: String
+  }
+
+  type ServerSettings {
+    name: String!
+    photo_url: String
+    banner_url: String
+    invite_code: [InviteCode]
+  }
+
+  type ServerUpdatePayload {
+    type: String!
+    payload: ServerUpdatePayload
+  }
 
   type ServerUpdate {
-    server_id: ID!
+    serverId: ID!
     type: String!
-    payload: JSON
+    payload: ServerUpdatePayload!
   }
 
   extend type Subscription {
-    serverUpdated(server_id: ID!): ServerUpdate
+    serverUpdated(id: ID!): Server
   }
 `;
-
-const API = [gqlTypes, gqlAPI];
-const Ws = [gqlTypes, gqlWs];
-export default { API, Ws };
