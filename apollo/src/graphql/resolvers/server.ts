@@ -5,8 +5,7 @@ import { GraphQLJSON } from "graphql-scalars";
 
 import ServerModel from "../../models/server";
 import UserModel from "../../models/user";
-import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
-import { error } from "console";
+import { getAsyncIterator, publishEvent, PubSubEvents } from "../pubsub/pubsub";
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -16,7 +15,7 @@ const createServerTransaction = async (input) => {
   const serverInput = {
     owner: input.owner_id,
     name: input.name,
-    avatar_url: input.avatar_url,
+    photo_url: input.photo_url,
     banner_url: input.banner_url,
   };
 
@@ -28,6 +27,7 @@ const createServerTransaction = async (input) => {
     });
 
     // TODO: Add server member logic here
+    // TODO: Add server emoji logic here
 
     // Commit transaction
     await session.commitTransaction();
@@ -80,16 +80,6 @@ const serverAPI: IResolvers = {
       // TODO: Implement server fetching logic after we have "Server Member" model.
       return [];
     },
-    getInviteCode: async (_, { server_id }) => {
-      // TODO: Implement server fetching logic after we have "Server Member" model via user roles.
-      const server = await ServerModel.findById(server_id);
-
-      if (!server) {
-        throw new UserInputError("Server not found !");
-      }
-
-      return server.invite_code;
-    },
   },
   Mutation: {
     createServer: async (_, { input }) => {
@@ -108,6 +98,12 @@ const serverAPI: IResolvers = {
       }
     },
     updateServer: async (_, { server_id, input }, context) => {
+      // TODO: Add user role logic here to check if the user has authority to update the server
+      const user = await UserModel.findById(context.user_id);
+      if (!user) {
+        throw new AuthenticationError("User not found !");
+      }
+
       const __ = await ServerModel.findById(server_id);
       if (!__) {
         throw new UserInputError("Server not found !");
@@ -117,46 +113,37 @@ const serverAPI: IResolvers = {
         new: true,
       });
 
-      await publishEvent(ServerEvents.serverUpdated, {
-        type: ServerEvents.serverUpdated,
-        server_id: server_id,
-        data: {
-          ...server.toObject(),
-        },
+      await publishEvent(PubSubEvents.serverUpdated, {
+        type: PubSubEvents.serverUpdated,
+        id: server_id,
+        server,
       });
       return server;
     },
     deleteServer: async (_, { server_id }, context) => {
+      if (!context.user_id) {
+        throw new AuthenticationError("This route is unauthorized!");
+      }
+
+      const server = await ServerModel.findById(server_id);
+      if (!server) {
+        throw new UserInputError("Server not found !");
+      }
+      if (String(server.owner) !== context.user_id) {
+        // Check if the user is the owner of the server
+        throw new AuthenticationError("You are not the owner of the server !");
+      }
+
       const isDeleted = await deleteServerTransaction(server_id);
       if (isDeleted) {
-        await publishEvent(ServerEvents.serverUpdated, {
-          type: ServerEvents.serverDeleted,
-          server_id: server_id,
+        await publishEvent(PubSubEvents.serverDeleted, {
+          type: PubSubEvents.serverDeleted,
+          id: server_id,
         });
       }
 
       return isDeleted;
     },
-    transferOwnership: async (_, { server_id, user_id }, context) => {
-      const user = await UserModel.findById(user_id);
-      if (!user) {
-        throw new UserInputError("User not found !");
-      }
-
-      const server = await ServerModel.findById(server_id);
-      const owner = String(server?.owner) || null;
-      if (!server) {
-        throw new UserInputError("Server not found !");
-      }
-
-      if (user_id === owner) {
-        throw new UserInputError("You can't transfer ownership to yourself !");
-      }
-
-      await ServerModel.findByIdAndUpdate(server_id, { owner: user_id });
-      return true;
-    },
-
     createInviteCode: async (_, { server_id, input }) => {
       const server = await ServerModel.findById(server_id);
 
@@ -174,13 +161,9 @@ const serverAPI: IResolvers = {
       await ServerModel.updateOne(
         { _id: server_id },
         {
-          $push: { invite_code: inviteCode },
+          $push: { inviteCode },
         }
-      ).catch((error) => {
-        throw new UserInputError(
-          "Cannot add this invite code this time. The invite code may already exist or invalid."
-        );
-      });
+      );
 
       return inviteCode;
     },
@@ -194,7 +177,7 @@ const serverAPI: IResolvers = {
       await ServerModel.updateOne(
         { _id: server_id },
         {
-          $pull: { invite_code: { url } },
+          $pull: { inviteCode: { url } },
         }
       );
 
@@ -214,17 +197,31 @@ const serverWs: IResolvers = {
       },
       subscribe: withFilter(
         () => {
-          return getAsyncIterator([ServerEvents.serverUpdated]);
+          return getAsyncIterator([
+            PubSubEvents.serverUpdated,
+            PubSubEvents.serverDeleted,
+          ]);
         },
         (payload, variables, context) => {
+          // Initialize the data
+          const type = payload.type;
           const server_id = String(payload.server_id) || null;
           const variables_id = variables.server_id || null;
 
-          return server_id === variables_id;
+          // Handle different types of events
+          switch (type) {
+            case PubSubEvents.serverUpdated:
+              return server_id === variables_id;
+            case PubSubEvents.serverDeleted:
+              return server_id === variables_id;
+            // Add more cases here
+          }
+
+          return false;
         }
       ),
     },
   },
 };
 
-export default { API: serverAPI, Ws: serverWs };
+export default { serverAPI, serverWs };

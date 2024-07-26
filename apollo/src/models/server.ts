@@ -48,7 +48,6 @@ const serverSchema = new Schema<IServer>(
         url: {
           type: String,
           required: [true, "Invite code URL is required!"],
-          unique: true,
         },
         expiredAt: {
           type: Date,

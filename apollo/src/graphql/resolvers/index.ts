@@ -3,8 +3,6 @@ import { mergeResolvers } from "@graphql-tools/merge";
 import userResolver from "./user";
 import relationshipResolver from "./relationship";
 import { userStatusResolvers_API, userStatusResolvers_Ws } from "./user_status";
-import userSettingsResolvers from "./userSettings";
-import { userProfileApollo, userProfileWs } from "./user_profile";
 import serverResolver from "./server";
 import { dummyResolver_Ws } from "./dummy";
 
@@ -16,12 +14,11 @@ export const apiResolvers = mergeResolvers([
   userProfileApollo,
   userSettingsResolvers,
   userStatusResolvers_API,
-  serverResolver.API,
+  serverResolver.serverAPI,
 ]);
 
 export const wsResolvers = mergeResolvers([
   dummyResolver_Ws,
   userStatusResolvers_Ws,
-  serverResolver.Ws,
-  userProfileWs,
+  serverResolver.serverWs,
 ]);
