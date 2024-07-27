@@ -10,8 +10,6 @@ import sharp from "sharp";
 import streamifier from "streamifier";
 import config from "../config";
 
-const CDNLink = "cdn.ntploc21.xyz";
-
 // AWS S3 Config
 export const s3 = new S3Client({
   credentials: {
@@ -56,7 +54,7 @@ export const uploadToS3 = async (file: any, folder: string) => {
     }).done();
 
     // Convert to CDN link
-    return `https://${CDNLink}/${key}`;
+    return `https://${config.CDN_URL}/${key}`;
   } catch (err: any) {
     console.error(err.message);
     throw new Error(err.message);

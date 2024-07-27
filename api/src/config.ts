@@ -12,6 +12,7 @@ interface IConfig {
   AWS_SESSION_TOKEN?: string;
   AWS_REGION?: string;
   AWS_S3_BUCKET_NAME?: string;
+  CDN_URL?: string;
 
   GQL_SERVER_URL: string;
 }
@@ -31,6 +32,7 @@ const config: IConfig = {
   AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN,
   AWS_REGION: process.env.AWS_REGION,
   AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
+  CDN_URL: "cdn.ntploc21.xyz",
 
   GQL_SERVER_URL: process.env.GQL_SERVER_URL || "http://apollo:4000",
 };
