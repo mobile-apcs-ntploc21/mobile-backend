@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 export const GET_USER_BY_ID = gql`
   query getUserById($id: ID!) {
@@ -52,8 +52,8 @@ export const LOGOUT_USER = gql`
 
 export const settingsQueries = {
   GET_USER_SETTINGS: gql`
-    query getUserSettings($userId: ID!) {
-      getUserSettings(userId: $userId) {
+    query getUserSettings($user_id: ID!) {
+      getUserSettings(user_id: $user_id) {
         settings
       }
     }
@@ -104,6 +104,36 @@ export const GET_BLOCKED_USERS = gql`
     }
   }
 `;
+
+export const userProfileQueries = {
+  GET_USER_PROFILE: gql`
+    query getUserProfile($user_id: ID!, $server_id: ID) {
+      getUserProfile(user_id: $user_id, server_id: $server_id) {
+        user_id
+        server_id
+        display_name
+        username
+        about_me
+        avatar_url
+        banner_url
+      }
+    }
+  `,
+
+  GET_USER_PROFILE_BY_USERNAME: gql`
+    query getUserProfileByUsername($username: String!) {
+      getUserProfileByUsername(username: $username) {
+        user_id
+        server_id
+        display_name
+        username
+        about_me
+        avatar_url
+        banner_url
+      }
+    }
+  `,
+};
 
 export const GET_USER_STATUS = gql`
   query getUserStatus($user_id: ID!) {

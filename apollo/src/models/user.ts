@@ -67,51 +67,5 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Pre middlewares
-userSchema.pre("findOneAndDelete", async function (next) {
-  const docToDelete = await this.model.findOne(this.getQuery()).exec();
-  if (docToDelete) {
-    try {
-      await UserStatusModel.deleteOne({ user_id: docToDelete._id });
-    } catch (error) {
-      return next(error);
-    }
-  }
-  next();
-});
-
-// Post middlewares
-userSchema.post("save", async function (doc, next) {
-  if (doc.isNew) {
-    const newUserStatus = new UserStatusModel({
-      user_id: doc._id,
-    });
-
-    try {
-      await newUserStatus.save();
-    } catch (error) {
-      return next(error);
-    }
-  }
-});
-
 const UserModel = mongoose.model<IUser>("User", userSchema);
-
-// Migration script to clear old token
-const migrateUser = async () => {
-  try {
-    const users = await UserModel.find();
-
-    for (const user of users) {
-      user.refresh_tokens = [];
-      await user.save();
-    }
-
-    console.log("Migration success!");
-  } catch (error) {
-    console.log("Migration failed!");
-  }
-};
-// migrateUser();
-
 export default UserModel;

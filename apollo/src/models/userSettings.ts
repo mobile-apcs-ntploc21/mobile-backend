@@ -2,13 +2,13 @@ import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
 
 export interface IUserSettings {
-  userId: { type: Schema.Types.ObjectId };
+  user_id: { type: Schema.Types.ObjectId };
   settings: string;
 }
 
 const userSettingsSchema = new Schema<IUserSettings>(
   {
-    userId: {
+    user_id: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: [true, "User ID is required!"],

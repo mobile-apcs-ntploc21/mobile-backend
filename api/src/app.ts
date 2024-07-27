@@ -5,6 +5,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
+import bodyParser from "body-parser";
 import dotenv from "dotenv";
 
 import globalErrorHandler from "./controllers/error";
@@ -12,20 +13,20 @@ import { authMiddleware } from "./utils/authMiddleware";
 import userRouter from "./routes/user";
 import friendRouter from "./routes/friend";
 import settingsRouter from "./routes/settings";
+import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
 
 dotenv.config({ path: "./config.env" });
 
 const app = express();
 
-// SET SECURITY HTTP HEADER
-app.use(helmet());
+app.use(helmet()); // SET SECURITY HTTP HEADER
+app.use(mongoSanitize()); // Data sanitization against noSQL query injection
+app.use(xss()); // Data sanitization against XSS
 
-// Data sanitization against noSQL query injection
-app.use(mongoSanitize());
-
-// Data sanitization against XSS
-app.use(xss());
+// Set body parser limit
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Rate limit
 const limiter = rateLimit({
@@ -46,8 +47,9 @@ app.use(cors());
 // Set default route
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/settings", authMiddleware, settingsRouter);
-app.use("/api/v1/", authMiddleware, userStatusRouter)
+app.use("/api/v1/", authMiddleware, userStatusRouter);
 app.use("/api/v1/", authMiddleware, friendRouter);
+app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
@@ -65,6 +67,8 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
+    console.error(err);
+
     res.set("Content-Type", "application/json");
     res.statusCode = 400;
     return res.json({

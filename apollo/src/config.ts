@@ -12,18 +12,18 @@ interface IOptions {
 }
 
 const config: IOptions = {
-  HOST: process.env.HOST || 'localhost',
+  HOST: process.env.HOST || "localhost",
   PORT: process.env.PORT || 4000,
-  GRAPHQL_ROUTE: '/graphql',
-  GRAPHQL_ENDPOINT: '',
-  WEBSOCKET_ROUTE: '/subscriptions',
-  WEBSOCKET_ENDPOINT: '',
-  JWT_SECRET: process.env.JWT_SECRET || 'jwtsecret',
-  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || 'refreshsecret',
+  GRAPHQL_ROUTE: "/graphql",
+  GRAPHQL_ENDPOINT: "",
+  WEBSOCKET_ROUTE: "/subscriptions",
+  WEBSOCKET_ENDPOINT: "",
+  JWT_SECRET: process.env.JWT_SECRET || "jwtsecret",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "refreshsecret",
   PING_INTERVAL: process.env.PING_INTERVAL
     ? parseInt(process.env.PING_INTERVAL)
     : 30000,
-  IS_DEV: process.env.NODE_ENV === 'development',
+  IS_DEV: process.env.NODE_ENV ? process.env.NODE_ENV === "development" : true,
 };
 
 console.log(process.env.NODE_ENV);

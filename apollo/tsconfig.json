@@ -1,18 +1,24 @@
 {
-    "compilerOptions": {
-        "rootDirs": [
-            "src"
-        ],
-        "outDir": "dist",
-        "lib": [
-            "es2020"
-        ],
-        "target": "es2020",
-        "module": "CommonJS",
-        "moduleResolution": "Node",
-        "esModuleInterop": true,
-        "types": [
-            "node"
-        ]
+  "compilerOptions": {
+    "rootDirs": [
+      "src"
+    ],
+    "outDir": "dist",
+    "lib": [
+      "es2020"
+    ],
+    "target": "es2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "types": [
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
     }
+  }
 }

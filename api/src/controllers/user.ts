@@ -1,4 +1,7 @@
 import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
 import graphQLClient from "../utils/graphql";
 import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
 import {
@@ -7,27 +10,22 @@ import {
   LOGIN_USER,
   LOGOUT_USER,
 } from "../graphql/queries";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import config from "../config";
 
 // Generate JWT token
 const generateToken = (payload: any) => {
-  return jwt.sign(payload, process.env.JWT_SECRET || "please_add_secret", {
+  return jwt.sign(payload, config.JWT_SECRET, {
     algorithm: "HS256",
-    expiresIn: "1d",
+    expiresIn: config.JWT_EXPIRES_IN,
   });
 };
 
 // Generate refresh token
 const generateRefreshToken = (payload: any) => {
-  return jwt.sign(
-    payload,
-    process.env.REFRESH_TOKEN_SECRET || "please_add_secret",
-    {
-      algorithm: "HS256",
-      expiresIn: "7d",
-    }
-  );
+  return jwt.sign(payload, config.JWT_REFRESH_SECRET, {
+    algorithm: "HS256",
+    expiresIn: config.JWT_REFRESH_EXPIRES_IN,
+  });
 };
 
 // Get user by email
@@ -56,7 +54,7 @@ export const createUser = async (
   next: express.NextFunction
 ) => {
   try {
-    const { username, email, password, phone: phoneNumber } = req.body;
+    const { username, email, password, phone: phoneNumber, age } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({
@@ -103,7 +101,7 @@ export const createUser = async (
           email: email,
           password: hashedPassword,
           phone_number: phoneNumber,
-          age: 18,
+          age: age || 18,
         },
       }
     );
