@@ -206,7 +206,7 @@ const serverAPI: IResolvers = {
         }
       ).catch((error) => {
         throw new UserInputError(
-          "Cannot add this invite code this time. Please check the url if it is valid or not."
+          "Cannot add this invite code this time. The invite code may already exist or invalid."
         );
       });
 
