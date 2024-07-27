@@ -5,9 +5,9 @@ const gqlTypes = gql`
     id: ID
     owner: ID
     name: String
-    photoUrl: String
-    bannerUrl: String
-    inviteCode: [InviteCode]
+    photo_url: String
+    banner_url: String
+    invite_code: [InviteCode]
     totalMembers: Int
     totalEmojis: Int
     createdAt: String
@@ -26,14 +26,14 @@ const gqlAPI = gql`
   input CreateServerInput {
     owner_id: ID!
     name: String!
-    photoUrl: String
-    bannerUrl: String
+    photo_url: String
+    banner_url: String
   }
 
   input UpdateServerInput {
     name: String
-    photoUrl: String
-    bannerUrl: String
+    photo_url: String
+    banner_url: String
   }
 
   input CreateInviteCodeInput {
@@ -45,12 +45,15 @@ const gqlAPI = gql`
   extend type Query {
     server(server_id: ID!): Server
     servers(user_id: ID!): [Server!]
+
+    getInviteCode(server_id: ID!): [InviteCode]
   }
 
   extend type Mutation {
     createServer(input: CreateServerInput!): Server!
     updateServer(server_id: ID!, input: UpdateServerInput!): Server!
     deleteServer(server_id: ID!): Boolean
+    transferOwnership(server_id: ID!, user_id: ID!): Boolean
 
     createInviteCode(server_id: ID!, input: CreateInviteCodeInput!): InviteCode!
     deleteInviteCode(server_id: ID!, url: String!): Boolean

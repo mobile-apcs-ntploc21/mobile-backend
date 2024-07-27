@@ -6,15 +6,15 @@ import graphQLClient from "../utils/graphql";
 import { serverQueries } from "../graphql/queries";
 import { serverMutations } from "../graphql/mutations";
 
-const getServerOverview = async (server_id: string) => {
+const getServerOverview = async (serverId: string) => {
   const response = await graphQLClient().request(
     serverQueries.GET_SERVER_BY_ID,
     {
-      server_id,
+      server_id: serverId,
     }
   );
 
-  return response.server;
+  return response.getServerById;
 };
 
 const getServersByUserId = async (userId: string) => {
@@ -25,7 +25,7 @@ const getServersByUserId = async (userId: string) => {
     }
   );
 
-  return response.servers;
+  return response.getServersByUserId;
 };
 
 // ============================
@@ -35,14 +35,14 @@ export const getServer = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const server_id = req.params?.serverId as string;
+  const serverId = req.params?.serverId as string;
 
-  if (!server_id) {
+  if (!serverId) {
     return res.status(400).json({ message: "Server ID is required." });
   }
 
   try {
-    const server = await getServerOverview(server_id).catch(() => null);
+    const server = await getServerOverview(serverId).catch(() => null);
 
     if (!server) {
       return res.status(404).json({ message: "Server not found." });
@@ -59,10 +59,18 @@ export const getUserServers = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const user_id = res.locals.userId as string;
+  const userId = req.params?.userId as string;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
 
   try {
-    const servers = await getServersByUserId(user_id).catch(() => null);
+    const servers = await getServersByUserId(userId).catch(() => null);
+
+    if (!servers) {
+      return res.status(404).json({ message: "Servers not found." });
+    }
 
     return res.status(200).json({ ...servers });
   } catch (error) {
@@ -75,7 +83,7 @@ export const createServer = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { name, avatar, banner } = req.body;
+  const { name, image, banner } = req.body;
   const user_id = res.locals.uid;
 
   if (!name) {
@@ -85,12 +93,12 @@ export const createServer = async (
   }
 
   try {
-    let avatar_url = null;
+    let image_url = null;
     let banner_url = null;
 
-    if (avatar) {
-      const buffer = await streamifier.toBuffer(avatar);
-      avatar_url = await processImage(buffer, "servers");
+    if (image) {
+      const buffer = await streamifier.toBuffer(image);
+      image_url = await processImage(buffer, "servers");
     }
 
     if (banner) {
@@ -101,12 +109,10 @@ export const createServer = async (
     const response = await graphQLClient().request(
       serverMutations.CREATE_SERVER,
       {
-        input: {
-          name,
-          owner_id: user_id,
-          avatar_url: avatar_url,
-          banner_url: banner_url,
-        },
+        name,
+        owner_id: user_id,
+        image_url: image_url,
+        banner_url: banner_url,
       }
     );
 
@@ -123,34 +129,35 @@ export const updateServer = async (
 ) => {
   const server_id = req.params?.serverId as string;
   const user_token = res.locals.token;
-  const { name, avatar, banner } = req.body;
+  const { name, image, banner } = req.body;
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
   }
 
-  // TODO: Check user permissions
-
   try {
-    let input: { name?: string; avatar_url?: string; banner_url?: string };
+    let image_url = null;
+    let banner_url = null;
 
-    if (name) {
-      input.name = name;
-    }
-
-    if (avatar) {
-      input.avatar_url = await processImage(avatar, "avatars");
+    if (image) {
+      const buffer = await streamifier.toBuffer(image);
+      image_url = await processImage(buffer, "servers");
     }
 
     if (banner) {
-      input.banner_url = await processImage(banner, "banners");
+      const buffer = await streamifier.toBuffer(banner);
+      banner_url = await processImage(buffer, "servers");
     }
 
     const response = await graphQLClient(user_token).request(
       serverMutations.UPDATE_SERVER,
       {
         server_id: server_id,
-        input: input,
+        input: {
+          name,
+          image_url,
+          banner_url,
+        },
       }
     );
 
@@ -180,7 +187,7 @@ export const deleteServer = async (
       }
     );
 
-    return res.status(200).json({ message: "Server deleted successfully" });
+    return res.status(200).json({ ...response.deleteServer });
   } catch (error) {
     return next(error);
   }
@@ -192,7 +199,7 @@ export const transferOwnership = async (
   next: express.NextFunction
 ) => {
   const server_id = req.params?.serverId as string;
-  const { user_id } = req.body;
+  const user_id = req.params?.userId as string;
   const user_token = res.locals.token;
 
   if (!server_id || !user_id) {
@@ -216,35 +223,7 @@ export const transferOwnership = async (
       }
     );
 
-    return res
-      .status(200)
-      .json({ message: "Ownership transferred successfully" });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const getInviteCode = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const server_id = req.params?.serverId as string;
-  const user_token = res.locals.token;
-
-  if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
-  }
-
-  try {
-    const response = await graphQLClient(user_token).request(
-      serverQueries.GET_INVITE_CODE,
-      {
-        server_id: server_id,
-      }
-    );
-
-    return res.status(200).json({ ...response.getInviteCode });
+    return res.status(200).json({ ...response.transferOwnership });
   } catch (error) {
     return next(error);
   }
@@ -257,26 +236,20 @@ export const createInviteCode = async (
 ) => {
   const server_id = req.params?.serverId as string;
   const user_token = res.locals.token;
-  const { customUrl, expiredAt, maxUses } = req.body;
+  const { expiredAt, maxUses } = req.body;
   let url = null;
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
   }
 
-  // TODO: Generate a random URL
-  if (customUrl) {
-    url = `https://fbi.com/invite/${customUrl}`;
-  } else {
-    const base =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    url = "https://fbi.com/invite/";
-    for (let i = 0; i < 10; i++) {
-      url += base.charAt(Math.floor(Math.random() * base.length));
-    }
+  // Generate a random URL
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  for (let i = 0; i < 10; i++) {
+    url += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
-
-  // TODO: Check user permissions
 
   try {
     const response = await graphQLClient(user_token).request(
@@ -310,8 +283,6 @@ export const deleteInviteCode = async (
     return res.status(400).json({ message: "Server ID and URL are required." });
   }
 
-  // TODO: Check user permissions
-
   try {
     const response = await graphQLClient(user_token).request(
       serverMutations.DELETE_INVITE_CODE,
@@ -321,9 +292,7 @@ export const deleteInviteCode = async (
       }
     );
 
-    return res
-      .status(200)
-      .json({ message: "Invite code deleted successfully" });
+    return res.status(200).json({ ...response.deleteInviteCode });
   } catch (error) {
     return next(error);
   }

@@ -6,6 +6,7 @@ import { GraphQLJSON } from "graphql-scalars";
 import ServerModel from "../../models/server";
 import UserModel from "../../models/user";
 import { getAsyncIterator, publishEvent, PubSubEvents } from "../pubsub/pubsub";
+import { error } from "console";
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -80,6 +81,16 @@ const serverAPI: IResolvers = {
       // TODO: Implement server fetching logic after we have "Server Member" model.
       return [];
     },
+    getInviteCode: async (_, { server_id }) => {
+      // TODO: Implement server fetching logic after we have "Server Member" model via user roles.
+      const server = await ServerModel.findById(server_id);
+
+      if (!server) {
+        throw new UserInputError("Server not found !");
+      }
+
+      return server.invite_code;
+    },
   },
   Mutation: {
     createServer: async (_, { input }) => {
@@ -144,6 +155,35 @@ const serverAPI: IResolvers = {
 
       return isDeleted;
     },
+    transferOwnership: async (_, { server_id, user_id }, context) => {
+      if (!context.user_id) {
+        throw new AuthenticationError("This route is unauthorized!");
+      }
+
+      const server = await ServerModel.findById(server_id);
+      const owner = server?.owner || null;
+      if (!server) {
+        throw new UserInputError("Server not found !");
+      }
+      if (owner !== context.user_id) {
+        // Check if the user is the owner of the server
+        throw new AuthenticationError("You are not the owner of the server !");
+      }
+
+      const user = await UserModel.findById(user_id);
+      if (!user) {
+        throw new UserInputError("User not found !");
+      }
+
+      if (user_id === owner) {
+        throw new UserInputError("You can't transfer ownership to yourself !");
+      }
+
+      await ServerModel.findByIdAndUpdate(server_id, { owner: user_id });
+
+      return true;
+    },
+
     createInviteCode: async (_, { server_id, input }) => {
       const server = await ServerModel.findById(server_id);
 
@@ -161,9 +201,13 @@ const serverAPI: IResolvers = {
       await ServerModel.updateOne(
         { _id: server_id },
         {
-          $push: { inviteCode },
+          $push: { invite_code: inviteCode },
         }
-      );
+      ).catch((error) => {
+        throw new UserInputError(
+          "Cannot add this invite code this time. Please check the url if it is valid or not."
+        );
+      });
 
       return inviteCode;
     },
@@ -177,7 +221,7 @@ const serverAPI: IResolvers = {
       await ServerModel.updateOne(
         { _id: server_id },
         {
-          $pull: { inviteCode: { url } },
+          $pull: { invite_code: { url } },
         }
       );
 

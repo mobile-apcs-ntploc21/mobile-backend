@@ -25,14 +25,8 @@ const serverSchema = new Schema<IServer>(
     },
     name: {
       type: String,
-      validate: [
-        (name: string) => {
-          const minLength = 1;
-          const maxLength = 100;
-          return name.length >= minLength && name.length <= maxLength;
-        },
-        "Server name should be between 3 and 20 characters!",
-      ],
+      minlength: [1, "Server name must be at least 1 characters long!"],
+      maxlength: [100, "Server name must be at most 100 characters long!"],
       required: [true, "Server name is required!"],
     },
     photo_url: {
@@ -48,6 +42,8 @@ const serverSchema = new Schema<IServer>(
         url: {
           type: String,
           required: [true, "Invite code URL is required!"],
+          unique: true,
+          sparse: true,
         },
         expiredAt: {
           type: Date,

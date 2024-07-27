@@ -175,9 +175,9 @@ export const serverMutations = {
     mutation createServer($input: CreateServerInput!) {
       createServer(input: $input) {
         id
-        owner
+        owner_id
         name
-        avatar_url
+        photo_url
         banner_url
         totalMembers
         totalEmojis
@@ -185,12 +185,12 @@ export const serverMutations = {
     }
   `,
   UPDATE_SERVER: gql`
-    mutation updateServer($server_id: ID!, $input: UpdateServerInput!) {
-      updateServer(server_id: $server_id, input: $input) {
+    mutation updateServer($input: UpdateServerInput!) {
+      updateServer(input: $input) {
         id
-        owner
+        owner_id
         name
-        avatar_url
+        photo_url
         banner_url
         totalMembers
         totalEmojis
@@ -210,8 +210,8 @@ export const serverMutations = {
   `,
 
   CREATE_INVITE_CODE: gql`
-    mutation createInviteCode($server_id: ID!, $input: CreateInviteCodeInput!) {
-      createInviteCode(server_id: $server_id, input: $input) {
+    mutation createInviteCode($server_id: ID!) {
+      createInviteCode(server_id: $server_id) {
         url
         expiredAt
         maxUses
@@ -221,7 +221,12 @@ export const serverMutations = {
   `,
   DELETE_INVITE_CODE: gql`
     mutation deleteInviteCode($server_id: ID!, $url: String!) {
-      deleteInviteCode(server_id: $server_id, url: $url)
+      deleteInviteCode(server_id: $server_id, url: $url) {
+        url
+        expiredAt
+        maxUses
+        currentUses
+      }
     }
   `,
 };

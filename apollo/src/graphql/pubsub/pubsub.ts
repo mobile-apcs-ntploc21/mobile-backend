@@ -7,12 +7,17 @@ export enum PubSubEvents {
   userProfileChanged = "USER_PROFILE_CHANGED",
   userStatusChanged = "USER_STATUS_CHANGED",
 
+  memberJoined = "MEMBER_JOINED",
+  memberLeft = "MEMBER_LEFT",
+  memberUpdated = "MEMBER_UPDATED",
+
   messageAdded = "MESSAGE_ADDED",
   messageDeleted = "MESSAGE_DELETED",
   messageEdited = "MESSAGE_EDITED",
 
   channelAdded = "CHANNEL_ADDED",
   channelDeleted = "CHANNEL_DELETED",
+  channelUpdated = "CHANNEL_UPDATED",
 
   serverUpdated = "SERVER_UPDATED",
   serverDeleted = "SERVER_DELETED",
