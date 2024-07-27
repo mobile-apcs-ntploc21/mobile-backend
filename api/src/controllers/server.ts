@@ -264,7 +264,7 @@ export const createInviteCode = async (
 
   // TODO: Generate a random URL
   if (customUrl) {
-    url = customUrl;
+    url = `https://fbi.com/invite/${customUrl}`;
   } else {
     const base =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
