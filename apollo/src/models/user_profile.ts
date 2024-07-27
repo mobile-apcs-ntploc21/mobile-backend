@@ -62,5 +62,8 @@ const userProfileSchema = new Schema<IUserProfile>(
   { timestamps: true }
 );
 
+// Create a unique index for user_id and server_id
+userProfileSchema.index({ user_id: 1, server_id: 1 }, { unique: true });
+
 const UserProfileModel = model<IUserProfile>("User_Profile", userProfileSchema);
 export default UserProfileModel;

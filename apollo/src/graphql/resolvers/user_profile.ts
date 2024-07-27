@@ -101,23 +101,30 @@ const userProfileApollo: IResolvers = {
         banner_url,
       } = args.input;
 
-      const user = await UserModel.findOne({ _id: user_id });
-      if (!user) {
-        throw new UserInputError("User with that userId not found.");
+      try {
+        const user = await UserModel.findOne({ _id: user_id });
+        if (!user) {
+          throw new UserInputError("User with that user_id not found.");
+        }
+
+        const username = user.username;
+
+        const userProfile = await UserProfileModel.create({
+          user_id,
+          server_id: server_id || defaultProfile.server_id,
+          display_name: display_name || username,
+          username,
+          about_me: about_me || defaultProfile.about_me,
+          avatar_url: avatar_url || defaultProfile.avatar_url,
+          banner_url: banner_url || defaultProfile.banner_url,
+        });
+
+        return userProfile;
+      } catch (error) {
+        throw new UserInputError(
+          "Error creating user profile. Please check any duplicated field."
+        );
       }
-      const username = user.username;
-
-      const userProfile = await UserProfileModel.create({
-        user_id,
-        server_id: server_id || defaultProfile.server_id,
-        display_name: display_name || username,
-        username,
-        about_me: about_me || defaultProfile.about_me,
-        avatar_url: avatar_url || defaultProfile.avatar_url,
-        banner_url: banner_url || defaultProfile.banner_url,
-      });
-
-      return userProfile;
     },
 
     updateUserProfile: async (_, args) => {
@@ -142,7 +149,9 @@ const userProfileApollo: IResolvers = {
       );
 
       if (!userProfile) {
-        throw new UserInputError("User profile with that userId not found.");
+        throw new UserInputError(
+          "User profile with that userId and server_id not found."
+        );
       }
 
       pubsub.publish(
