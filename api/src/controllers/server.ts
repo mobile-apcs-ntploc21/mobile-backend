@@ -132,9 +132,11 @@ export const updateServer = async (
   // TODO: Check user permissions
 
   try {
-    let input: { name: string; avatar_url?: string; banner_url?: string } = {
-      name,
-    };
+    let input: { name?: string; avatar_url?: string; banner_url?: string };
+
+    if (name) {
+      input.name = name;
+    }
 
     if (avatar) {
       input.avatar_url = await processImage(avatar, "avatars");
