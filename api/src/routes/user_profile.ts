@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, Router } from "express";
 import { authMiddleware } from "../utils/authMiddleware";
+import bodyParser from "body-parser";
 import * as up from "../controllers/user_profile";
 
 const userProfileRouter = Router();

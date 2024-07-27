@@ -151,8 +151,6 @@ export const updateProfile = async (
   const userId = res.locals.uid as string;
   const serverId = (req.params?.serverId as string) ?? null;
 
-  console.log(userId);
-
   if (!userId) {
     return res.status(500).json({
       message:
