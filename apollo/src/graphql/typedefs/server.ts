@@ -5,7 +5,7 @@ const gqlTypes = gql`
     id: ID
     owner: ID
     name: String
-    photo_url: String
+    avatar_url: String
     banner_url: String
     invite_code: [InviteCode]
     totalMembers: Int
@@ -26,13 +26,13 @@ const gqlAPI = gql`
   input CreateServerInput {
     owner_id: ID!
     name: String!
-    photo_url: String
+    avatar_url: String
     banner_url: String
   }
 
   input UpdateServerInput {
     name: String
-    photo_url: String
+    avatar_url: String
     banner_url: String
   }
 
@@ -85,14 +85,14 @@ const gqlWs = gql`
 
   type UserProfile {
     display_name: String!
-    photo_url: String
+    avatar_url: String
     banner_url: String
     about_me: String
   }
 
   type ServerSettings {
     name: String!
-    photo_url: String
+    avatar_url: String
     banner_url: String
     invite_code: [InviteCode]
   }
