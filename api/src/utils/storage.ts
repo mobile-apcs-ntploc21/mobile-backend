@@ -8,21 +8,19 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import streamifier from "streamifier";
-import dotenv from "dotenv";
-
-dotenv.config({ path: "./config.env" });
+import config from "../config";
 
 const CDNLink = "cdn.ntploc21.xyz";
 
 // AWS S3 Config
 export const s3 = new S3Client({
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    sessionToken: process.env.AWS_SESSION_TOKEN,
+    accessKeyId: config.AWS_ACCESS_KEY_ID,
+    secretAccessKey: config.AWS_SECRET_ACCESS_KEY,
+    sessionToken: config.AWS_SESSION_TOKEN,
   },
 
-  region: process.env.AWS_REGION,
+  region: config.AWS_REGION,
 });
 
 export const streamToBuffer = (stream: any): Promise<Buffer> => {
@@ -40,6 +38,7 @@ export const uploadToS3 = async (file: any, folder: string) => {
     const stream = createReadStream();
     const buffer = await streamToBuffer(stream);
 
+    // Generate a unique key for the file
     const extension = filename.split(".").pop();
     const key = `${folder}/${uuidv4()}${extension ? `.${extension}` : ""}`;
 
