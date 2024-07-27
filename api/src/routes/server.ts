@@ -6,7 +6,7 @@ import * as serverCtrl from "../controllers/server";
 const serverRouter = Router();
 
 // Server CRUD operations routes
-serverRouter.get("/list/", authMiddleware, serverCtrl.getUserServers);
+serverRouter.get("/servers/", authMiddleware, serverCtrl.getUserServers);
 serverRouter.get("/:serverId", serverCtrl.getServer);
 
 serverRouter.post("/", authMiddleware, serverCtrl.createServer);

@@ -4,7 +4,7 @@ import validator from "validator";
 interface IServer {
   owner: { type: Schema.Types.ObjectId };
   name: string;
-  photo_url: string;
+  avatar_url: string;
   banner_url: string;
   invite_code: {
     url: string;
@@ -29,7 +29,7 @@ const serverSchema = new Schema<IServer>(
       maxlength: [100, "Server name must be at most 100 characters long!"],
       required: [true, "Server name is required!"],
     },
-    photo_url: {
+    avatar_url: {
       type: String,
       default: "",
     },

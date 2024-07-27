@@ -16,7 +16,7 @@ const createServerTransaction = async (input) => {
   const serverInput = {
     owner: input.owner_id,
     name: input.name,
-    photo_url: input.photo_url,
+    avatar_url: input.avatar_url,
     banner_url: input.banner_url,
   };
 
@@ -161,10 +161,11 @@ const serverAPI: IResolvers = {
       }
 
       const server = await ServerModel.findById(server_id);
-      const owner = server?.owner || null;
+      const owner = String(server?.owner) || null;
       if (!server) {
         throw new UserInputError("Server not found !");
       }
+
       if (owner !== context.user_id) {
         // Check if the user is the owner of the server
         throw new AuthenticationError("You are not the owner of the server !");
@@ -249,7 +250,7 @@ const serverWs: IResolvers = {
         (payload, variables, context) => {
           // Initialize the data
           const type = payload.type;
-          const server_id = String(payload.server_id) || null;
+          const server_id = String(payload.server?._id) || null;
           const variables_id = variables.server_id || null;
 
           // Handle different types of events
