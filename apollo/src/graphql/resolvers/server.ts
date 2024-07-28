@@ -126,8 +126,10 @@ const serverAPI: IResolvers = {
 
       await publishEvent(PubSubEvents.serverUpdated, {
         type: PubSubEvents.serverUpdated,
-        id: server_id,
-        server,
+        server_id: server_id,
+        data: {
+          ...server.toObject(),
+        },
       });
       return server;
     },
@@ -149,7 +151,7 @@ const serverAPI: IResolvers = {
       if (isDeleted) {
         await publishEvent(PubSubEvents.serverDeleted, {
           type: PubSubEvents.serverDeleted,
-          id: server_id,
+          server_id: server_id,
         });
       }
 
@@ -250,7 +252,7 @@ const serverWs: IResolvers = {
         (payload, variables, context) => {
           // Initialize the data
           const type = payload.type;
-          const server_id = String(payload.server?._id) || null;
+          const server_id = String(payload.server_id) || null;
           const variables_id = variables.server_id || null;
 
           // Handle different types of events
