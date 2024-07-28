@@ -4,7 +4,6 @@ import { AuthenticationError, UserInputError } from "apollo-server";
 
 import ServerEmojiModel from "../../models/serverEmoji";
 import ServerModel from "../../models/server";
-import UserModel from "../../models/user";
 import { getAsyncIterator, publishEvent, PubSubEvents } from "../pubsub/pubsub";
 
 /*
@@ -18,6 +17,7 @@ extend type Mutation {
 createServerEmoji(input: CreateServerEmojiInput!): ServerEmoji!
 updateServerEmoji(emoji_id: ID!, name: String!): ServerEmoji!
 deleteServerEmoji(emoji_id: ID!): Boolean
+hardDeleteServerEmoji(emoji_id: ID!): Boolean
 }
 */
 
@@ -49,6 +49,41 @@ const createEmojiTransaction = async (input) => {
   }
 };
 
+const deleteEmojiTransaction = async (emoji_id) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const new_name = `undefined_deleted_${Date.now()}_${Math.floor(
+      Math.random() * 1000
+    )}`; // Append timestamp to name
+
+    const emoji = await ServerEmojiModel.findByIdAndUpdate(
+      emoji_id,
+      { name: new_name, is_deleted: true },
+      { session, new: true }
+    );
+
+    // Decrement emoji count
+    await ServerModel.findByIdAndUpdate(
+      emoji.server_id,
+      {
+        $inc: { totalEmojis: -1 },
+      },
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return true;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error);
+  }
+};
+
 const serverEmojiAPI: IResolvers = {
   Query: {
     serverEmoji: async (_, { server_id, emoji_id }) => {
@@ -60,7 +95,7 @@ const serverEmojiAPI: IResolvers = {
           server_id,
         });
 
-        if (!emoji) {
+        if (!emoji || emoji.is_deleted) {
           throw new UserInputError("Emoji not found.");
         }
 
@@ -72,7 +107,10 @@ const serverEmojiAPI: IResolvers = {
     serverEmojis: async (_, { server_id }) => {
       // TODO: Check if user is in server
 
-      const emojis = await ServerEmojiModel.find({ server_id }).catch(
+      const emojis = await ServerEmojiModel.find({
+        server_id,
+        is_deleted: false,
+      }).catch(
         () => [] // Return empty array if no emojis found or server not found
       );
 
@@ -99,39 +137,19 @@ const serverEmojiAPI: IResolvers = {
         throw new Error(error);
       }
     },
-    updateServerEmoji: async (_, { emoji_id, name, is_deleted }, context) => {
+    updateServerEmoji: async (_, { emoji_id, name }, context) => {
       // Pre-check if user is authorized to update emoji. TODO: Add role check
       const user_id = context.user_id;
       if (!user_id) {
         throw new AuthenticationError("Unauthorized");
       }
 
-      const update: { name?: string; is_deleted?: boolean } = {
-        ...(name && { name }),
-        ...(is_deleted !== undefined && { is_deleted }),
-      };
-
       try {
         const emoji = await ServerEmojiModel.findByIdAndUpdate(
           emoji_id,
-          { ...update },
+          { name },
           { new: true }
         );
-
-        if (is_deleted) {
-          // Decrement emoji count
-          await ServerModel.findByIdAndUpdate(emoji.server_id, {
-            $inc: { totalEmojis: -1 },
-          });
-        }
-
-        publishEvent(PubSubEvents.emojiUpdated, {
-          server_id: emoji.server_id,
-          type: PubSubEvents.emojiUpdated,
-          data: {
-            ...emoji.toObject(),
-          },
-        });
 
         return emoji;
       } catch (error) {
@@ -139,9 +157,22 @@ const serverEmojiAPI: IResolvers = {
       }
     },
     deleteServerEmoji: async (_, { emoji_id }) => {
-      // Hard delete
+      // Soft delete an emoji
       try {
-        await ServerEmojiModel.findByIdAndDelete(emoji_id);
+        return deleteEmojiTransaction(emoji_id);
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    hardDeleteServerEmoji: async (_, { emoji_id }) => {
+      // Hard delete an emoji
+      try {
+        const emoji = await ServerEmojiModel.findByIdAndDelete(emoji_id);
+
+        // Decrement emoji count
+        await ServerModel.findByIdAndUpdate(emoji.server_id, {
+          $inc: { totalEmojis: -1 },
+        });
 
         return true;
       } catch (error) {

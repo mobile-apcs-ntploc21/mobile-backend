@@ -26,12 +26,9 @@ const gqlAPI = gql`
 
   extend type Mutation {
     createServerEmoji(input: CreateServerEmojiInput!): ServerEmoji!
-    updateServerEmoji(
-      emoji_id: ID!
-      name: String
-      is_deleted: Boolean
-    ): ServerEmoji!
+    updateServerEmoji(emoji_id: ID!, name: String!): ServerEmoji!
     deleteServerEmoji(emoji_id: ID!): Boolean
+    hardDeleteServerEmoji(emoji_id: ID!): Boolean
   }
 `;
 

@@ -28,7 +28,6 @@ const createServerTransaction = async (input) => {
     });
 
     // TODO: Add server member logic here
-    // TODO: Add server emoji logic here
 
     // Commit transaction
     await session.commitTransaction();
