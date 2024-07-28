@@ -95,7 +95,7 @@ const serverEmojiAPI: IResolvers = {
           server_id,
         });
 
-        if (!emoji || emoji.is_deleted) {
+        if (!emoji) {
           throw new UserInputError("Emoji not found.");
         }
 
