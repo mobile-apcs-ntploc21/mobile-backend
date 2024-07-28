@@ -244,27 +244,26 @@ const serverWs: IResolvers = {
       },
       subscribe: withFilter(
         () => {
-          return getAsyncIterator([
-            PubSubEvents.serverUpdated,
-            PubSubEvents.serverDeleted,
-          ]);
+          return getAsyncIterator(Object.values(PubSubEvents));
         },
         (payload, variables, context) => {
-          // Initialize the data
-          const type = payload.type;
-          const server_id = String(payload.server_id) || null;
-          const variables_id = variables.server_id || null;
+          return payload.server_id === variables.server_id;
 
-          // Handle different types of events
-          switch (type) {
-            case PubSubEvents.serverUpdated:
-              return server_id === variables_id;
-            case PubSubEvents.serverDeleted:
-              return server_id === variables_id;
-            // Add more cases here
-          }
+          // // Initialize the data
+          // const type = payload.type;
+          // const server_id = String(payload.server_id) || null;
+          // const variables_id = variables.server_id || null;
 
-          return false;
+          // // Handle different types of events
+          // switch (type) {
+          //   case PubSubEvents.serverUpdated:
+          //     return server_id === variables_id;
+          //   case PubSubEvents.serverDeleted:
+          //     return server_id === variables_id;
+          //   // Add more cases here
+          // }
+
+          // return false;
         }
       ),
     },
