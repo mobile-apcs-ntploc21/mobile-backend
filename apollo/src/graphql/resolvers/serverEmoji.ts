@@ -4,7 +4,7 @@ import { AuthenticationError, UserInputError } from "apollo-server";
 
 import ServerEmojiModel from "../../models/serverEmoji";
 import ServerModel from "../../models/server";
-import { getAsyncIterator, publishEvent, PubSubEvents } from "../pubsub/pubsub";
+import { publishEvent, PubSubEvents } from "../pubsub/pubsub";
 
 /*
 API GQL
@@ -132,7 +132,17 @@ const serverEmojiAPI: IResolvers = {
       }
 
       try {
-        return createEmojiTransaction(input);
+        const emoji = await createEmojiTransaction(input);
+
+        publishEvent(PubSubEvents.emojiAdded, {
+          type: PubSubEvents.emojiAdded,
+          server_id: input.server_id,
+          data: {
+            ...emoji.toObject(),
+          },
+        });
+
+        return emoji;
       } catch (error) {
         throw new Error(error);
       }
@@ -145,11 +155,23 @@ const serverEmojiAPI: IResolvers = {
       }
 
       try {
-        const emoji = await ServerEmojiModel.findByIdAndUpdate(
-          emoji_id,
+        const emoji = await ServerEmojiModel.findOneAndUpdate(
+          { _id: emoji_id, is_deleted: false },
           { name },
           { new: true }
         );
+
+        if (!emoji) {
+          throw new UserInputError("Emoji not found. Maybe it was deleted.");
+        }
+
+        publishEvent(PubSubEvents.emojiUpdated, {
+          type: PubSubEvents.emojiUpdated,
+          server_id: emoji.server_id,
+          data: {
+            ...emoji.toObject(),
+          },
+        });
 
         return emoji;
       } catch (error) {
@@ -159,7 +181,17 @@ const serverEmojiAPI: IResolvers = {
     deleteServerEmoji: async (_, { emoji_id }) => {
       // Soft delete an emoji
       try {
-        return deleteEmojiTransaction(emoji_id);
+        const is_deleted = await deleteEmojiTransaction(emoji_id);
+
+        publishEvent(PubSubEvents.emojiDeleted, {
+          type: PubSubEvents.emojiDeleted,
+          server_id: emoji_id,
+          data: {
+            emoji_id,
+          },
+        });
+
+        return is_deleted;
       } catch (error) {
         throw new Error(error);
       }

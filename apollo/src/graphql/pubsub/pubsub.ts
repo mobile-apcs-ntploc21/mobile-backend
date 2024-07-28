@@ -21,6 +21,7 @@ export enum PubSubEvents {
 
   emojiAdded = "EMOJI_ADDED",
   emojiUpdated = "EMOJI_UPDATED",
+  emojiDeleted = "EMOJI_DELETED",
 
   serverUpdated = "SERVER_UPDATED",
   serverDeleted = "SERVER_DELETED",

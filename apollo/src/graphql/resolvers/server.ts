@@ -246,7 +246,7 @@ const serverWs: IResolvers = {
           return getAsyncIterator(Object.values(PubSubEvents));
         },
         (payload, variables, context) => {
-          return payload.server_id === variables.server_id;
+          return String(payload?.server_id) === variables.server_id;
 
           // // Initialize the data
           // const type = payload.type;
