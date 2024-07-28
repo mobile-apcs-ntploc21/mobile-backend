@@ -19,6 +19,9 @@ export enum PubSubEvents {
   channelDeleted = "CHANNEL_DELETED",
   channelUpdated = "CHANNEL_UPDATED",
 
+  emojiAdded = "EMOJI_ADDED",
+  emojiUpdated = "EMOJI_UPDATED",
+
   serverUpdated = "SERVER_UPDATED",
   serverDeleted = "SERVER_DELETED",
 }
