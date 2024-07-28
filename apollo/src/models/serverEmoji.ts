@@ -1,3 +1,4 @@
+import server from "@/graphql/typedefs/server";
 import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
 
@@ -38,6 +39,17 @@ const serverEmojiSchema = new Schema<IServerEmoji>(
   },
   { timestamps: true }
 );
+
+// Compound unique index for server_id and name
+serverEmojiSchema.index({ server_id: 1, name: 1 }, { unique: true });
+
+// Validate image URL
+serverEmojiSchema.pre("validate", function (next) {
+  if (!validator.isURL(this.image_url)) {
+    next(new Error("Invalid image URL!"));
+  }
+  next();
+});
 
 const ServerEmoji = model<IServerEmoji>("ServerEmoji", serverEmojiSchema);
 

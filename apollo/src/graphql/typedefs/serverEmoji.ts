@@ -7,8 +7,7 @@ const gqlTypes = gql`
     name: String!
     image_url: String!
     uploader_id: ID!
-    createdAt: String
-    updatedAt: String
+    is_deleted: Boolean!
   }
 `;
 
@@ -17,6 +16,7 @@ const gqlAPI = gql`
     server_id: ID!
     name: String!
     image_url: String!
+    uploader_id: ID!
   }
 
   extend type Query {
