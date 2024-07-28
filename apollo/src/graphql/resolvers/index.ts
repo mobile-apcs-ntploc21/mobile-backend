@@ -4,6 +4,7 @@ import userResolver from "./user";
 import relationshipResolver from "./relationship";
 import { userStatusResolvers_API, userStatusResolvers_Ws } from "./user_status";
 import serverResolver from "./server";
+import serverEmoji from "./serverEmoji";
 import { dummyResolver_Ws } from "./dummy";
 
 // Merge all resolvers: Add more in the future if needed
@@ -14,7 +15,8 @@ export const apiResolvers = mergeResolvers([
   userProfileApollo,
   userSettingsResolvers,
   userStatusResolvers_API,
-  serverResolver.serverAPI,
+  serverResolver.API,
+  serverEmoji.API,
 ]);
 
 export const wsResolvers = mergeResolvers([

@@ -4,7 +4,14 @@ import { mergeTypeDefs } from "@graphql-tools/merge";
 import userSchema from "./user";
 import relationshipSchema from "./relationship";
 import { userStatusSchema_API, userStatusSchema_Ws } from "./user_status";
+import userSettingsSchema from "./userSettings";
+import {
+  apolloTypedefs as userProfileApollo,
+  wsTypedefs as userProfileWs,
+} from "./user_profile";
+
 import serverSchema from "./server";
+import serverEmoji from "./serverEmoji";
 
 const linkedSchema = gql`
   type Query {
@@ -25,7 +32,10 @@ export const apiTypeDefs = mergeTypeDefs([
   userSchema,
   relationshipSchema,
   userStatusSchema_API,
+  userSettingsSchema,
+  userProfileApollo,
   serverSchema.API,
+  serverEmoji.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
