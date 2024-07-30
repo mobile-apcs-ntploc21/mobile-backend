@@ -4,6 +4,7 @@ import { mergeTypeDefs } from "@graphql-tools/merge";
 import userSchema from "./user";
 import relationshipSchema from "./relationship";
 import { userStatusSchema_API, userStatusSchema_Ws } from "./user_status";
+import serverSchema from "./server";
 import userSettingsSchema from "./userSettings";
 import {
   apolloTypedefs as userProfileApollo,
@@ -32,6 +33,7 @@ export const apiTypeDefs = mergeTypeDefs([
   userSchema,
   relationshipSchema,
   userStatusSchema_API,
+  serverSchema.API,
   userSettingsSchema,
   userProfileApollo,
   serverSchema.API,
@@ -42,4 +44,5 @@ export const wsTypeDefs = mergeTypeDefs([
   linkedSchema,
   userStatusSchema_Ws,
   serverSchema.Ws,
+  userProfileWs,
 ]);
