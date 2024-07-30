@@ -66,7 +66,7 @@ const gqlWs = gql`
   type ServerUpdate {
     server_id: ID!
     type: String!
-    payload: JSON
+    data: JSON
   }
 
   extend type Subscription {
