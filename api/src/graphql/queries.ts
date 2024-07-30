@@ -195,3 +195,27 @@ export const serverQueries = {
     }
   `,
 };
+
+export const serverEmojiQueries = {
+  GET_SERVER_EMOJI: gql`
+    query serverEmoji($server_id: ID!, $emoji_id: ID!) {
+      serverEmoji(server_id: $server_id, emoji_id: $emoji_id) {
+        id
+        name
+        image_url
+        uploader_id
+      }
+    }
+  `,
+
+  GET_SERVER_EMOJIS: gql`
+    query serverEmojis($server_id: ID!) {
+      serverEmojis(server_id: $server_id) {
+        id
+        name
+        image_url
+        uploader_id
+      }
+    }
+  `,
+};

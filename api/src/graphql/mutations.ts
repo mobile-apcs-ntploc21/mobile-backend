@@ -225,3 +225,31 @@ export const serverMutations = {
     }
   `,
 };
+
+export const serverEmojiMutations = {
+  CREATE_SERVER_EMOJI: gql`
+    mutation createServerEmoji($input: CreateServerEmojiInput!) {
+      createServerEmoji(input: $input) {
+        id
+        name
+        image_url
+        uploader_id
+      }
+    }
+  `,
+  UPDATE_SERVER_EMOJI: gql`
+    mutation updateServerEmoji($emoji_id: ID!, $name: String!) {
+      updateServerEmoji(emoji_id: $emoji_id, name: $name) {
+        id
+        name
+        image_url
+        uploader_id
+      }
+    }
+  `,
+  DELETE_SERVER_EMOJI: gql`
+    mutation deleteServerEmoji($emoji_id: ID!) {
+      deleteServerEmoji(emoji_id: $emoji_id)
+    }
+  `,
+};
