@@ -10,8 +10,6 @@ import {
   apolloTypedefs as userProfileApollo,
   wsTypedefs as userProfileWs,
 } from "./user_profile";
-
-import serverSchema from "./server";
 import serverEmoji from "./serverEmoji";
 
 const linkedSchema = gql`
@@ -33,7 +31,6 @@ export const apiTypeDefs = mergeTypeDefs([
   userSchema,
   relationshipSchema,
   userStatusSchema_API,
-  serverSchema.API,
   userSettingsSchema,
   userProfileApollo,
   serverSchema.API,
