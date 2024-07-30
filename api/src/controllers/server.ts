@@ -89,13 +89,11 @@ export const createServer = async (
     let banner_url = null;
 
     if (avatar) {
-      const buffer = await streamifier.toBuffer(avatar);
-      avatar_url = await processImage(buffer, "servers");
+      avatar_url = await processImage(avatar, "servers");
     }
 
     if (banner) {
-      const buffer = await streamifier.toBuffer(banner);
-      banner_url = await processImage(buffer, "servers");
+      banner_url = await processImage(banner, "servers");
     }
 
     const response = await graphQLClient().request(
