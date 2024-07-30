@@ -5,7 +5,7 @@ import { GraphQLJSON } from "graphql-scalars";
 
 import ServerModel from "../../models/server";
 import UserModel from "../../models/user";
-import { getAsyncIterator, publishEvent, PubSubEvents } from "../pubsub/pubsub";
+import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
 import { error } from "console";
 
 const createServerTransaction = async (input) => {
@@ -108,12 +108,6 @@ const serverAPI: IResolvers = {
       }
     },
     updateServer: async (_, { server_id, input }, context) => {
-      // TODO: Add user role logic here to check if the user has authority to update the server
-      const user = await UserModel.findById(context.user_id);
-      if (!user) {
-        throw new AuthenticationError("User not found !");
-      }
-
       const __ = await ServerModel.findById(server_id);
       if (!__) {
         throw new UserInputError("Server not found !");
@@ -123,8 +117,8 @@ const serverAPI: IResolvers = {
         new: true,
       });
 
-      await publishEvent(PubSubEvents.serverUpdated, {
-        type: PubSubEvents.serverUpdated,
+      await publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.serverUpdated,
         server_id: server_id,
         data: {
           ...server.toObject(),
@@ -133,23 +127,10 @@ const serverAPI: IResolvers = {
       return server;
     },
     deleteServer: async (_, { server_id }, context) => {
-      if (!context.user_id) {
-        throw new AuthenticationError("This route is unauthorized!");
-      }
-
-      const server = await ServerModel.findById(server_id);
-      if (!server) {
-        throw new UserInputError("Server not found !");
-      }
-      if (String(server.owner) !== context.user_id) {
-        // Check if the user is the owner of the server
-        throw new AuthenticationError("You are not the owner of the server !");
-      }
-
       const isDeleted = await deleteServerTransaction(server_id);
       if (isDeleted) {
-        await publishEvent(PubSubEvents.serverDeleted, {
-          type: PubSubEvents.serverDeleted,
+        await publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.serverDeleted,
           server_id: server_id,
         });
       }
@@ -157,8 +138,9 @@ const serverAPI: IResolvers = {
       return isDeleted;
     },
     transferOwnership: async (_, { server_id, user_id }, context) => {
-      if (!context.user_id) {
-        throw new AuthenticationError("This route is unauthorized!");
+      const user = await UserModel.findById(user_id);
+      if (!user) {
+        throw new UserInputError("User not found !");
       }
 
       const server = await ServerModel.findById(server_id);
@@ -167,22 +149,11 @@ const serverAPI: IResolvers = {
         throw new UserInputError("Server not found !");
       }
 
-      if (owner !== context.user_id) {
-        // Check if the user is the owner of the server
-        throw new AuthenticationError("You are not the owner of the server !");
-      }
-
-      const user = await UserModel.findById(user_id);
-      if (!user) {
-        throw new UserInputError("User not found !");
-      }
-
       if (user_id === owner) {
         throw new UserInputError("You can't transfer ownership to yourself !");
       }
 
       await ServerModel.findByIdAndUpdate(server_id, { owner: user_id });
-
       return true;
     },
 
@@ -243,30 +214,17 @@ const serverWs: IResolvers = {
       },
       subscribe: withFilter(
         () => {
-          return getAsyncIterator(Object.values(PubSubEvents));
+          return getAsyncIterator([ServerEvents.serverUpdated]);
         },
         (payload, variables, context) => {
-          return String(payload?.server_id) === variables.server_id;
+          const server_id = String(payload.server_id) || null;
+          const variables_id = variables.server_id || null;
 
-          // // Initialize the data
-          // const type = payload.type;
-          // const server_id = String(payload.server_id) || null;
-          // const variables_id = variables.server_id || null;
-
-          // // Handle different types of events
-          // switch (type) {
-          //   case PubSubEvents.serverUpdated:
-          //     return server_id === variables_id;
-          //   case PubSubEvents.serverDeleted:
-          //     return server_id === variables_id;
-          //   // Add more cases here
-          // }
-
-          // return false;
+          return server_id === variables_id;
         }
       ),
     },
   },
 };
 
-export default { serverAPI, serverWs };
+export default { API: serverAPI, Ws: serverWs };
