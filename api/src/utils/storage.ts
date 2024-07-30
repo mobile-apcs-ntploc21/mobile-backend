@@ -98,13 +98,11 @@ const base64ToBuffer = (dataString: string) => {
 /**
  * Create a temporary file object to stream file
  *
- * @param {string} base64File
+ * @param {string} buffer
  * @param {string} filename
  * @returns {{ createReadStream: () => any; filename: string; mimetype: string; }}
  */
-export const createFileObject = (base64File: string, filename: string) => {
-  const buffer = base64ToBuffer(base64File);
-
+export const createFileObject = (buffer: any, filename: string) => {
   if (buffer instanceof Error) {
     throw new Error("Failed to convert base64 to buffer.");
   }
@@ -120,8 +118,9 @@ export const createFileObject = (base64File: string, filename: string) => {
  * To process image (compress the image) and upload to S3
  *
  * @async
- * @param {*} image
- * @returns {string} image URL
+ * @param {*} image - The image object file (base64)
+ * @param {string} folder - The folder to store the image
+ * @returns {Promise<string | null>} - The image URL
  */
 export const processImage = async (
   image: any,
@@ -130,7 +129,8 @@ export const processImage = async (
   if (!image) return null;
 
   try {
-    const fileObject = createFileObject(image, "temp.jpg");
+    const buffer = base64ToBuffer(image);
+    const fileObject = createFileObject(buffer, "temp.png");
     const imageUrl = await uploadToS3(compressImage(fileObject), folder);
     return imageUrl;
   } catch (err) {
@@ -160,7 +160,7 @@ export const compressImage = async (image: any) => {
       fit: "cover",
       position: "center",
     })
-    .jpeg()
+    .png()
     .toBuffer();
 
   return {
