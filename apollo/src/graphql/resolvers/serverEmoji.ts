@@ -1,10 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
-import {
-  AuthenticationError,
-  UserInputError,
-  ValidationError,
-} from "apollo-server";
+import { ApolloError, UserInputError, ValidationError } from "apollo-server";
 
 import ServerEmojiModel from "../../models/serverEmoji";
 import ServerModel from "../../models/server";
@@ -56,7 +52,7 @@ const deleteEmojiTransaction = async (emoji_id) => {
 
     const emoji = await ServerEmojiModel.findByIdAndUpdate(
       emoji_id,
-      { name: new_name, is_deleted: true },
+      { name: new_name, is_deleted: true, uploader_id: null },
       { session, new: true }
     );
 
@@ -99,8 +95,6 @@ const serverEmojiAPI: IResolvers = {
       }
     },
     serverEmojis: async (_, { server_id }) => {
-      // TODO: Check if user is in server
-
       const emojis = await ServerEmojiModel.find({
         server_id,
         is_deleted: false,

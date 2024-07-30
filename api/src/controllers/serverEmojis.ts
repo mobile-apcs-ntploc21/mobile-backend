@@ -1,6 +1,4 @@
 import express from "express";
-import { Error } from "mongoose";
-import { MongoError } from "mongodb";
 
 import { processImage } from "../utils/storage";
 import graphQLClient from "../utils/graphql";
@@ -28,6 +26,17 @@ const _getServerEmoji = async (server_id: string, emoji_id: string) => {
   );
 
   return response.serverEmoji;
+};
+
+const handleMongooseError = (error: any, error_code: number) => {
+  const errors = error?.response?.errors;
+  if (errors && errors.length > 0) {
+    const errorMessage = errors[0].message;
+    if (errorMessage.includes(error_code)) {
+      return true;
+    }
+  }
+  return false;
 };
 
 // ============================
@@ -122,11 +131,8 @@ export const createServerEmoji = async (
       .status(201)
       .json({ message: "Emoji created.", ...emoji.createServerEmoji });
   } catch (error) {
-    // Handle duplicate key error (11000)
-    if ((error?.response.errors[0].message).includes("E11000")) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Emoji name already exists." });
+    if (handleMongooseError(error, 11000)) {
+      return res.status(400).json({ message: "Emoji name already exists." });
     }
 
     return next(error);
@@ -161,11 +167,8 @@ export const updateServerEmoji = async (
 
     return res.status(200).json({ message: "Emoji updated." });
   } catch (error) {
-    // Handle duplicate key error (11000)
-    if ((error?.response.errors[0].message).includes("E11000")) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Emoji name already exists." });
+    if (handleMongooseError(error, 11000)) {
+      return res.status(400).json({ message: "Emoji name already exists." });
     }
 
     return next(error);
