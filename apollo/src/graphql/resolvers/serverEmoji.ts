@@ -1,29 +1,24 @@
 import mongoose from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
-import { AuthenticationError, UserInputError } from "apollo-server";
+import {
+  AuthenticationError,
+  UserInputError,
+  ValidationError,
+} from "apollo-server";
 
 import ServerEmojiModel from "../../models/serverEmoji";
 import ServerModel from "../../models/server";
-import { publishEvent, PubSubEvents } from "../pubsub/pubsub";
-
-/*
-API GQL
-extend type Query {
-serverEmoji(server_id: ID!, emoji_id: ID!): ServerEmoji
-serverEmojis(server_id: ID!): [ServerEmoji!]
-}
-
-extend type Mutation {
-createServerEmoji(input: CreateServerEmojiInput!): ServerEmoji!
-updateServerEmoji(emoji_id: ID!, name: String!): ServerEmoji!
-deleteServerEmoji(emoji_id: ID!): Boolean
-hardDeleteServerEmoji(emoji_id: ID!): Boolean
-}
-*/
+import { publishEvent, ServerEvents } from "../pubsub/pubsub";
 
 const createEmojiTransaction = async (input) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
+  // Check the total emojis exceeded the limit
+  const server = await ServerModel.findById(input.server_id).session(session);
+  if (server.totalEmojis >= 50) {
+    throw new ValidationError("Server emoji limit reached.");
+  }
 
   try {
     const opts = { session, new: true };
@@ -54,9 +49,10 @@ const deleteEmojiTransaction = async (emoji_id) => {
   session.startTransaction();
 
   try {
-    const new_name = `undefined_deleted_${Date.now()}_${Math.floor(
+    const new_name = `deleted_${Date.now()}_${Math.floor(
       Math.random() * 1000
-    )}`; // Append timestamp to name
+    )}`; // Create a new name for the emoji to avoid conflicts with names
+    // Example: deleted_1630000000000_123
 
     const emoji = await ServerEmojiModel.findByIdAndUpdate(
       emoji_id,
@@ -87,8 +83,6 @@ const deleteEmojiTransaction = async (emoji_id) => {
 const serverEmojiAPI: IResolvers = {
   Query: {
     serverEmoji: async (_, { server_id, emoji_id }) => {
-      // TODO: Check if user is in server
-
       try {
         const emoji = await ServerEmojiModel.findOne({
           _id: emoji_id,
@@ -119,12 +113,6 @@ const serverEmojiAPI: IResolvers = {
   },
   Mutation: {
     createServerEmoji: async (_, { input }, context) => {
-      // Pre-check if user is authorized to create emoji. TODO: Add role check
-      const user_id = context.user_id;
-      if (!user_id) {
-        throw new AuthenticationError("Unauthorized");
-      }
-
       // Check server exists
       const server = await ServerModel.findById(input.server_id);
       if (!server) {
@@ -134,8 +122,8 @@ const serverEmojiAPI: IResolvers = {
       try {
         const emoji = await createEmojiTransaction(input);
 
-        publishEvent(PubSubEvents.emojiAdded, {
-          type: PubSubEvents.emojiAdded,
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.emojiAdded,
           server_id: input.server_id,
           data: {
             ...emoji.toObject(),
@@ -148,12 +136,6 @@ const serverEmojiAPI: IResolvers = {
       }
     },
     updateServerEmoji: async (_, { emoji_id, name }, context) => {
-      // Pre-check if user is authorized to update emoji. TODO: Add role check
-      const user_id = context.user_id;
-      if (!user_id) {
-        throw new AuthenticationError("Unauthorized");
-      }
-
       try {
         const emoji = await ServerEmojiModel.findOneAndUpdate(
           { _id: emoji_id, is_deleted: false },
@@ -165,8 +147,8 @@ const serverEmojiAPI: IResolvers = {
           throw new UserInputError("Emoji not found. Maybe it was deleted.");
         }
 
-        publishEvent(PubSubEvents.emojiUpdated, {
-          type: PubSubEvents.emojiUpdated,
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.emojiUpdated,
           server_id: emoji.server_id,
           data: {
             ...emoji.toObject(),
@@ -179,12 +161,12 @@ const serverEmojiAPI: IResolvers = {
       }
     },
     deleteServerEmoji: async (_, { emoji_id }) => {
-      // Soft delete an emoji
+      // Soft delete an emoji (mark as deleted, the image is still in the database)
       try {
         const is_deleted = await deleteEmojiTransaction(emoji_id);
 
-        publishEvent(PubSubEvents.emojiDeleted, {
-          type: PubSubEvents.emojiDeleted,
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.emojiDeleted,
           server_id: emoji_id,
           data: {
             emoji_id,
