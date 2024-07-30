@@ -130,19 +130,11 @@ export const updateServer = async (
   // TODO: Check user permissions
 
   try {
-    let input: { name?: string; avatar_url?: string; banner_url?: string };
-
-    if (name) {
-      input.name = name;
-    }
-
-    if (avatar) {
-      input.avatar_url = await processImage(avatar, "avatars");
-    }
-
-    if (banner) {
-      input.banner_url = await processImage(banner, "banners");
-    }
+    let input: { name?: string; avatar_url?: string; banner_url?: string } = {
+      ...(name && { name }),
+      ...(avatar && { avatar_url: await processImage(avatar, "avatars") }),
+      ...(banner && { banner_url: await processImage(banner, "banners") }),
+    };
 
     const response = await graphQLClient(user_token).request(
       serverMutations.UPDATE_SERVER,
