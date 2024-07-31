@@ -6,28 +6,30 @@ import ServerEmojiModel from "../../models/serverEmoji";
 import ServerModel from "../../models/server";
 import { publishEvent, ServerEvents } from "../pubsub/pubsub";
 
-const createEmojiTransaction = async (input) => {
+const SERVER_MAX_EMOJI = 20;
+
+const createEmojiTransaction = async (input: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-
-  // Check the total emojis exceeded the limit
-  const server = await ServerModel.findById(input.server_id).session(session);
-  if (server.totalEmojis >= 50) {
-    throw new ValidationError("Server emoji limit reached.");
-  }
 
   try {
     const opts = { session, new: true };
     const emoji = await ServerEmojiModel.create([input], opts);
 
+    // Find the server and and check if it exists
+    const server = await ServerModel.findById(input.server_id).session(session);
+    if (!server) {
+      throw new UserInputError("Server not found.");
+    }
+
+    // Check if the server has reached the emoji limit
+    if (server.totalEmojis >= SERVER_MAX_EMOJI) {
+      throw new ValidationError("Server emoji limit reached.");
+    }
+
     // Increment emoji count
-    await ServerModel.findByIdAndUpdate(
-      input.server_id,
-      {
-        $inc: { totalEmojis: 1 },
-      },
-      opts
-    );
+    server.totalEmojis += 1;
+    await server.save({ session });
 
     await session.commitTransaction();
     session.endSession();
@@ -36,7 +38,7 @@ const createEmojiTransaction = async (input) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    throw new Error(error);
+    throw error;
   }
 };
 
