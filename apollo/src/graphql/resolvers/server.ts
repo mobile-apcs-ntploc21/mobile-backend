@@ -4,6 +4,7 @@ import { AuthenticationError, UserInputError } from "apollo-server";
 import { GraphQLJSON } from "graphql-scalars";
 
 import ServerModel from "../../models/server";
+import ServerEmoji from "../../models/serverEmoji";
 import UserModel from "../../models/user";
 import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
 import { error } from "console";
@@ -51,7 +52,9 @@ const deleteServerTransaction = async (server_id) => {
     await ServerModel.findByIdAndDelete(server_id, { session });
 
     // TODO: Remove all members from the server
+
     // TODO: Remove all emojis from the server
+    await ServerEmoji.deleteMany({ server_id }, { session });
 
     // Commit transaction
     await session.commitTransaction();
