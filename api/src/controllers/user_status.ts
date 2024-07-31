@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import graphQLClient from '../utils/graphql';
-import { GET_MULTIPLE_USER_STATUS, GET_USER_STATUS } from '../graphql/queries';
-import {
-  UPDATE_USER_STATUS_TEXT,
-  UPDATE_USER_STATUS_TYPE,
-} from '../graphql/mutations';
+import { userStatusQueries } from '../graphql/queries';
+import { userStatusMutations } from '../graphql/mutations';
 
 export const getCurrentUserStatus = async (
   req: Request,
@@ -13,9 +10,12 @@ export const getCurrentUserStatus = async (
 ) => {
   try {
     const { uid } = res.locals;
-    const userStatus = await graphQLClient().request(GET_USER_STATUS, {
-      user_id: uid,
-    });
+    const userStatus = await graphQLClient().request(
+      userStatusQueries.GET_USER_STATUS,
+      {
+        user_id: uid,
+      }
+    );
     res.status(200).json(userStatus.getUserStatus);
   } catch (error) {
     next(error);
@@ -29,9 +29,12 @@ export const getUserStatus = async (
 ) => {
   try {
     const { id } = req.params;
-    const userStatus = await graphQLClient().request(GET_USER_STATUS, {
-      user_id: id,
-    });
+    const userStatus = await graphQLClient().request(
+      userStatusQueries.GET_USER_STATUS,
+      {
+        user_id: id,
+      }
+    );
     res.status(200).json(userStatus.getUserStatus);
   } catch (error) {
     next(error);
@@ -46,7 +49,7 @@ export const getMultipleUserStatus = async (
   try {
     const { user_ids } = req.body;
     const userStatuses = await graphQLClient().request(
-      GET_MULTIPLE_USER_STATUS,
+      userStatusQueries.GET_MULTIPLE_USER_STATUS,
       {
         user_ids,
       }
@@ -66,7 +69,7 @@ export const updateStatusType = async (
     const { uid: user_id } = res.locals;
     const { type } = req.body;
     const { updateStatusType: response } = await graphQLClient().request(
-      UPDATE_USER_STATUS_TYPE,
+      userStatusMutations.UPDATE_USER_STATUS_TYPE,
       {
         user_id,
         type,
@@ -87,7 +90,7 @@ export const updateStatusText = async (
     const { uid: user_id } = res.locals;
     const { status_text } = req.body;
     const { updateStatusText: response } = await graphQLClient().request(
-      UPDATE_USER_STATUS_TEXT,
+      userStatusMutations.UPDATE_USER_STATUS_TEXT,
       {
         user_id,
         status_text,
