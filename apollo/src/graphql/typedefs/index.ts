@@ -1,16 +1,17 @@
-import { gql } from "apollo-server-express";
-import { mergeTypeDefs } from "@graphql-tools/merge";
+import { gql } from 'apollo-server-express';
+import { mergeTypeDefs } from '@graphql-tools/merge';
 
-import userSchema from "./user";
-import relationshipSchema from "./relationship";
-import { userStatusSchema_API, userStatusSchema_Ws } from "./user_status";
-import serverSchema from "./server";
-import userSettingsSchema from "./userSettings";
+import userSchema from './user';
+import relationshipSchema from './relationship';
+import { userStatusSchema_API, userStatusSchema_Ws } from './user_status';
+import serverSchema from './server';
+import serverMemberSchema from './server_member';
+import userSettingsSchema from './userSettings';
 import {
   apolloTypedefs as userProfileApollo,
   wsTypedefs as userProfileWs,
-} from "./user_profile";
-import serverEmoji from "./serverEmoji";
+} from './user_profile';
+import serverEmoji from './serverEmoji';
 
 const linkedSchema = gql`
   type Query {
@@ -33,6 +34,7 @@ export const apiTypeDefs = mergeTypeDefs([
   userStatusSchema_API,
   userSettingsSchema,
   userProfileApollo,
+  serverMemberSchema.API,
   serverSchema.API,
   serverEmoji.API,
 ]);

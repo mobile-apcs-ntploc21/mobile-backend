@@ -1,4 +1,4 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
 export const GET_USER_BY_ID = gql`
   query getUserById($id: ID!) {
@@ -135,29 +135,31 @@ export const userProfileQueries = {
   `,
 };
 
-export const GET_USER_STATUS = gql`
-  query getUserStatus($user_id: ID!) {
-    getUserStatus(user_id: $user_id) {
-      user_id
-      type
-      last_seen
-      status_text
-      is_online
+export const userStatusQueries = {
+  GET_USER_STATUS: gql`
+    query getUserStatus($user_id: ID!) {
+      getUserStatus(user_id: $user_id) {
+        user_id
+        type
+        last_seen
+        status_text
+        is_online
+      }
     }
-  }
-`;
+  `,
 
-export const GET_MULTIPLE_USER_STATUS = gql`
-  query getMultipleUserStatus($user_ids: [ID!]!) {
-    getMultipleUserStatus(user_ids: $user_ids) {
-      user_id
-      type
-      last_seen
-      status_text
-      is_online
+  GET_MULTIPLE_USER_STATUS: gql`
+    query getMultipleUserStatus($user_ids: [ID!]!) {
+      getMultipleUserStatus(user_ids: $user_ids) {
+        user_id
+        type
+        last_seen
+        status_text
+        is_online
+      }
     }
-  }
-`;
+  `,
+};
 
 export const serverQueries = {
   GET_SERVER_BY_ID: gql`
@@ -165,6 +167,7 @@ export const serverQueries = {
       server(server_id: $server_id) {
         id
         name
+        owner
         avatar_url
         banner_url
         totalMembers
@@ -192,6 +195,22 @@ export const serverQueries = {
         maxUses
         currentUses
       }
+    }
+  `,
+};
+
+export const serverMemberQueries = {
+  GET_SERVER_MEMBERS: gql`
+    query GetServerMembers($server_id: ID!) {
+      getServerMembers(server_id: $server_id) {
+        server_id
+        user_id
+      }
+    }
+  `,
+  CHECK_SERVER_MEMBER: gql`
+    query CheckServerMember($server_id: ID!, $user_id: ID!) {
+      checkServerMember(server_id: $server_id, user_id: $user_id)
     }
   `,
 };

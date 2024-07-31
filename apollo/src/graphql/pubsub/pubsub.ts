@@ -1,32 +1,35 @@
 // pubsub.ts
-import { PubSub } from "graphql-subscriptions";
+import { PubSub } from 'graphql-subscriptions';
 
 const pubsub = new PubSub();
 
 export enum ServerEvents {
-  userProfileChanged = "USER_PROFILE_CHANGED",
-  userStatusChanged = "USER_STATUS_CHANGED",
+  userProfileChanged = 'USER_PROFILE_CHANGED',
+  userStatusChanged = 'USER_STATUS_CHANGED',
 
-  memberJoined = "MEMBER_JOINED",
-  memberLeft = "MEMBER_LEFT",
-  memberUpdated = "MEMBER_UPDATED",
+  memberJoined = 'MEMBER_JOINED',
+  memberLeft = 'MEMBER_LEFT',
+  memberUpdated = 'MEMBER_UPDATED',
 
-  emojiAdded = "EMOJI_ADDED",
-  emojiUpdated = "EMOJI_UPDATED",
-  emojiDeleted = "EMOJI_DELETED",
+  emojiAdded = 'EMOJI_ADDED',
+  emojiUpdated = 'EMOJI_UPDATED',
+  emojiDeleted = 'EMOJI_DELETED',
 
-  serverUpdated = "SERVER_UPDATED",
-  serverDeleted = "SERVER_DELETED",
+  serverUpdated = 'SERVER_UPDATED',
+  serverDeleted = 'SERVER_DELETED',
+
+  memberAdded = 'MEMBER_ADDED',
+  memberRemoved = 'MEMBER_REMOVED',
 }
 
 export enum ChannelEvents {
-  messageAdded = "MESSAGE_ADDED",
-  messageDeleted = "MESSAGE_DELETED",
-  messageEdited = "MESSAGE_EDITED",
+  messageAdded = 'MESSAGE_ADDED',
+  messageDeleted = 'MESSAGE_DELETED',
+  messageEdited = 'MESSAGE_EDITED',
 
-  channelAdded = "CHANNEL_ADDED",
-  channelDeleted = "CHANNEL_DELETED",
-  channelUpdated = "CHANNEL_UPDATED",
+  channelAdded = 'CHANNEL_ADDED',
+  channelDeleted = 'CHANNEL_DELETED',
+  channelUpdated = 'CHANNEL_UPDATED',
 }
 
 /**

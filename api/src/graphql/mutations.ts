@@ -1,4 +1,4 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
 // Create user
 export const CREATE_USER = gql`
@@ -152,23 +152,25 @@ export const userProfileMutation = {
     }
   `,
 };
-export const UPDATE_USER_STATUS_TYPE = gql`
-  mutation updateStatusType($user_id: ID!, $type: CustomStatus!) {
-    updateStatusType(user_id: $user_id, type: $type) {
-      user_id
-      type
-    }
-  }
-`;
 
-export const UPDATE_USER_STATUS_TEXT = gql`
-  mutation updateStatusText($user_id: ID!, $status_text: String!) {
-    updateStatusText(user_id: $user_id, status_text: $status_text) {
-      user_id
-      status_text
+export const userStatusMutations = {
+  UPDATE_USER_STATUS_TYPE: gql`
+    mutation updateStatusType($user_id: ID!, $type: CustomStatus!) {
+      updateStatusType(user_id: $user_id, type: $type) {
+        user_id
+        type
+      }
     }
-  }
-`;
+  `,
+  UPDATE_USER_STATUS_TEXT: gql`
+    mutation updateStatusText($user_id: ID!, $status_text: String!) {
+      updateStatusText(user_id: $user_id, status_text: $status_text) {
+        user_id
+        status_text
+      }
+    }
+  `,
+};
 
 export const serverMutations = {
   CREATE_SERVER: gql`
@@ -222,6 +224,30 @@ export const serverMutations = {
   DELETE_INVITE_CODE: gql`
     mutation deleteInviteCode($server_id: ID!, $url: String!) {
       deleteInviteCode(server_id: $server_id, url: $url)
+    }
+  `,
+};
+
+export const serverMemberMutations = {
+  JOIN_SERVER: gql`
+    mutation JoinServer($url: String!, $user_id: ID!) {
+      joinServer(url: $url, user_id: $user_id) {
+        server_id
+        user_id
+      }
+    }
+  `,
+  ADD_SERVER_MEMBERS: gql`
+    mutation AddServerMembers($input: ServerMembersInput!) {
+      addServerMembers(input: $input) {
+        server_id
+        user_id
+      }
+    }
+  `,
+  REMOVE_SERVER_MEMBERS: gql`
+    mutation RemoveServerMembers($input: ServerMembersInput!) {
+      removeServerMembers(input: $input)
     }
   `,
 };
