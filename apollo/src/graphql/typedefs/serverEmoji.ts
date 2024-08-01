@@ -22,6 +22,7 @@ const gqlAPI = gql`
   extend type Query {
     serverEmoji(server_id: ID!, emoji_id: ID!): ServerEmoji
     serverEmojis(server_id: ID!): [ServerEmoji!]
+    countServerEmojis(server_id: ID!): Int!
   }
 
   extend type Mutation {
