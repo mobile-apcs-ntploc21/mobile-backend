@@ -218,4 +218,10 @@ export const serverEmojiQueries = {
       }
     }
   `,
+
+  COUNT_SERVER_EMOJIS: gql`
+    query countServerEmojis($server_id: ID!) {
+      countServerEmojis(server_id: $server_id)
+    }
+  `,
 };

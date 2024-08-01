@@ -28,6 +28,17 @@ const _getServerEmoji = async (server_id: string, emoji_id: string) => {
   return response.serverEmoji;
 };
 
+const _countServerEmojis = async (server_id: string) => {
+  const response = await graphQLClient().request(
+    serverEmojiQueries.COUNT_SERVER_EMOJIS,
+    {
+      server_id,
+    }
+  );
+
+  return response.countServerEmojis;
+};
+
 const handleMongooseError = (error: any, error_code: number) => {
   const errors = error?.response?.errors;
   if (errors && errors.length > 0) {
@@ -103,9 +114,11 @@ export const createServerEmoji = async (
   }
 
   try {
-    const emojis = await _getServerEmojis(serverId).catch(() => []);
+    const totalEmojis = await _countServerEmojis(serverId);
 
-    if (emojis.length >= 50) {
+    console.log(totalEmojis);
+
+    if (totalEmojis >= 20) {
       return res.status(400).json({ message: "Server emoji limit reached." });
     }
 

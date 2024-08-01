@@ -106,6 +106,14 @@ const serverEmojiAPI: IResolvers = {
 
       return emojis;
     },
+    countServerEmojis: async (_, { server_id }) => {
+      const server = await ServerModel.findById(server_id);
+      if (!server) {
+        throw new UserInputError("Server not found.");
+      }
+
+      return server.totalEmojis;
+    },
   },
   Mutation: {
     createServerEmoji: async (_, { input }, context) => {
