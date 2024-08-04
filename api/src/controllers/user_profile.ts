@@ -159,6 +159,19 @@ export const updateProfile = async (
     }
   }
 
+  // Prepare input object for GraphQL mutation
+  const input: {
+    display_name?: string;
+    about_me?: string;
+    avatar_url?: string;
+    banner_url?: string;
+  } = {
+    ...(display_name && { display_name }),
+    ...(about_me && { about_me }),
+    ...(avatar_url && { avatar_url }),
+    ...(banner_url && { banner_url }),
+  };
+
   try {
     const response = await graphQLClient().request(
       userProfileMutation.UPDATE_USER_PROFILE,
@@ -166,10 +179,7 @@ export const updateProfile = async (
         input: {
           user_id: userId,
           server_id: serverId,
-          display_name,
-          about_me,
-          avatar_url,
-          banner_url,
+          ...input,
         },
       }
     );

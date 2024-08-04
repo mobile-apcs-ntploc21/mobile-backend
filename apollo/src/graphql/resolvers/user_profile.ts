@@ -128,23 +128,17 @@ const userProfileApollo: IResolvers = {
     },
 
     updateUserProfile: async (_, args) => {
-      const {
-        user_id,
-        server_id,
-        display_name,
-        about_me,
-        avatar_url,
-        banner_url,
+      const { user_id, server_id } = args.input;
+      const input: {
+        display_name?: string;
+        about_me?: string;
+        avatar_url?: string;
+        banner_url?: string;
       } = args.input;
 
       const userProfile = await UserProfileModel.findOneAndUpdate(
         { user_id, server_id }, // Find the user profile by user_id and server_id
-        {
-          display_name,
-          about_me,
-          avatar_url,
-          banner_url,
-        },
+        input, // Update the user profile with the input
         { new: true }
       );
 
