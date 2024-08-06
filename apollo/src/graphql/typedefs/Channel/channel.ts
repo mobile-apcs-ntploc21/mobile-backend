@@ -50,14 +50,13 @@ const gqlAPI = gql`
     createChannel(server_id: ID!, input: createChannelInput!): Channel
     updateChannel(channel_id: ID!, input: updateChannelInput!): Channel
     deleteChannel(channel_id: ID!): Channel
-
-    addCategory(channel_id: ID!, category_id: ID!, new_position: Int): Channel
-    removeCategory(channel_id: ID!): Channel
+    hardDeleteChannel(channel_id: ID!): Channel
 
     addPrivateChannelID(channel_id: ID!, id: ID!, is_user: Boolean): Channel
     removePrivateChannelID(channel_id: ID!, id: ID!, is_user: Boolean): Channel
 
-    moveChannel(channel_id: ID!, new_position: Int): Channel
+    # Move channel to a new category
+    moveChannel(channel_id: ID!, category_id: ID, new_position: Int): Channel
   }
 `;
 
