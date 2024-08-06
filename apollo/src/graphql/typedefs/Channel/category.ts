@@ -41,6 +41,8 @@ const gqlAPI = gql`
     updateCategory(category_id: ID!, input: updateCategoryInput!): Category
     deleteCategory(category_id: ID!): Category
 
+    moveCategory(category_id: ID!, new_position: Int!): Category
+
     addPrivateCategoryID(category_id: ID!, id: ID!, is_user: Boolean): Category
     removePrivateCategoryID(
       category_id: ID!
@@ -49,3 +51,7 @@ const gqlAPI = gql`
     ): Category
   }
 `;
+
+const API = [gqlTypes, gqlAPI];
+
+export default { API };
