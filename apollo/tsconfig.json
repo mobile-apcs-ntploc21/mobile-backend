@@ -14,13 +14,10 @@
     "types": [
       "node"
     ],
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
       "@/*": [
-        "src/*"
-      ],
-      "@/models/*": [
-        "src/models/*"
+        "*"
       ]
     }
   }
