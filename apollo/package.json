@@ -4,8 +4,8 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "compile": "tsc",
-    "build": "tsc",
+    "compile": "tsc && tspath -f",
+    "build": "tsc && tspath -f",
     "start": "nodemon src/server.ts",
     "start:dev": "nodemon src/server.ts",
     "start:prod": "nodemon src/server.ts NODE_ENV=production"
@@ -52,6 +52,7 @@
     "@types/ws": "^8.5.11",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
+    "tspath": "^1.2.10",
     "typescript": "^5.5.2"
   }
 }
