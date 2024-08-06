@@ -21,7 +21,6 @@ const gqlTypes = gql`
 const gqlAPI = gql`
   input createCategoryInput {
     name: String!
-    server_id: ID!
     is_private: Boolean
   }
 
@@ -37,7 +36,7 @@ const gqlAPI = gql`
   }
 
   extend type Mutation {
-    createCategory(input: createCategoryInput!): Category
+    createCategory(server_id: ID!, input: createCategoryInput!): Category
     updateCategory(category_id: ID!, input: updateCategoryInput!): Category
     deleteCategory(category_id: ID!): Category
 
