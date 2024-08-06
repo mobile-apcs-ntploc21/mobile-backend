@@ -1,6 +1,6 @@
 import { gql } from "apollo-server-express";
 
-const gqlTypes = gql`
+const typeDefs = gql`
   type ChannelPermission {
     id: ID!
     channel_id: ID!
@@ -45,3 +45,5 @@ const gqlTypes = gql`
     deleteChannelPermission(channel_id: ID!): ChannelPermission
   }
 `;
+
+export default typeDefs;
