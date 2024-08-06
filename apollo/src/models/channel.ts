@@ -10,6 +10,7 @@ interface IChannel {
   name: string;
   description: string;
   last_message_id: { type: Schema.Types.ObjectId };
+  position: number;
 
   // Settings
   private: {
@@ -50,6 +51,10 @@ const channelSchema = new Schema<IChannel>(
       type: Schema.Types.ObjectId,
       ref: "Message",
       required: false,
+    },
+    position: {
+      type: Number,
+      required: [true, "Channel position is required!"],
     },
     private: {
       is_private: {
@@ -96,6 +101,7 @@ interface IChannelPermission {
   user_id: { type: Schema.Types.ObjectId };
 
   // Permissions
+  is_user: boolean;
   allow: string; // Bitwise
   deny: string; // Bitwise
 }
@@ -116,6 +122,10 @@ const channelPermissionSchema = new Schema<IChannelPermission>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: false,
+    },
+    is_user: {
+      type: Boolean,
+      default: false,
     },
     allow: {
       type: String,
