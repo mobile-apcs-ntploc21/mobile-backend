@@ -12,7 +12,7 @@ import {
   wsTypedefs as userProfileWs,
 } from "./user_profile";
 import serverEmoji from "./serverEmoji";
-import channel from "./channel";
+import channel from "./Channel/channel";
 
 const linkedSchema = gql`
   type Query {

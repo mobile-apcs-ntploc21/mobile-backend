@@ -28,7 +28,7 @@ const gqlTypes = gql`
 const gqlAPI = gql`
   input createChannelInput {
     name: String!
-    category_id: ID!
+    category_id: ID
     is_private: Boolean
   }
 
