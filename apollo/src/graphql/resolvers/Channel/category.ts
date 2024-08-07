@@ -4,8 +4,41 @@ import { PubSub, withFilter } from "graphql-subscriptions";
 import { AuthenticationError, UserInputError } from "apollo-server";
 
 import ServerModel from "../../../models/server";
+import ChannelModel from "../../../models/Channel/channel";
 import CategoryModel from "../../../models/Channel/category";
 import CategoryPermissionModel from "../../../models/Channel/category_permission";
+
+const deleteCategoryTransaction = async (category_id) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const opts = { session, new: true };
+
+  try {
+    const category = await CategoryModel.findById(category_id).session(session);
+
+    if (!category) {
+      throw new UserInputError("Category not found");
+    }
+
+    // Delete the category
+    await CategoryModel.findByIdAndDelete(category_id).session(session);
+
+    // Delete the category permissions
+    await CategoryPermissionModel.deleteMany({ category_id }).session(session);
+
+    // Set all the channels of the category to null
+    await ChannelModel.updateMany({ category_id }, { category_id: null }, opts);
+
+    session.commitTransaction();
+    session.endSession();
+
+    return true;
+  } catch (error) {
+    session.abortTransaction();
+    session.endSession();
+    throw new Error(error);
+  }
+};
 
 const resolvers: IResolvers = {
   Query: {
@@ -69,8 +102,8 @@ const resolvers: IResolvers = {
     },
     deleteCategory: async (_, { category_id }) => {
       try {
-        const category = await CategoryModel.findByIdAndDelete(category_id);
-        return category;
+        const result = await deleteCategoryTransaction(category_id);
+        return result;
       } catch (error) {
         throw new Error(error);
       }
