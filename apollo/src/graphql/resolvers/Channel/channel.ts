@@ -8,20 +8,23 @@ import ChannelModel from "../../../models/Channel/channel";
 import ChannelPermissionModel from "../../../models/Channel/channel_permission";
 import CategoryModel from "../../../models/Channel/category";
 
+const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
+
 const createChannelTransaction = async (server_id, input) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const opts = { session, new: true };
 
   const { name, category_id, is_private } = input;
-  let position = 0; // TODO: Get the last position from the category
+  let position = 0;
   try {
     if (!ServerModel.findById(server_id).session(session)) {
       throw new UserInputError("Server not found");
     }
 
+    // Calculate the last position of the category
     const category = await ChannelModel.find({ category_id }).session(session);
-    position = category.length;
+    position = category.length * POSITION_CONST;
 
     const channel = await ChannelModel.create(
       [
@@ -143,49 +146,78 @@ const channelAPI: IResolvers = {
 
       return channel;
     },
+
     moveChannel: async (_, { channel_id, category_id, new_position }) => {
-      // Check if the new position is valid
-      if (new_position === undefined || new_position < 0) {
-        throw new UserInputError("Invalid position or not provided.");
-      }
-
-      // First get the old position
-      let channel = await ChannelModel.findById(channel_id);
-      const old_position = channel?.position;
-
+      const channel = await ChannelModel.findById(channel_id);
       if (!channel) {
         throw new UserInputError("Channel not found");
       }
 
-      // Fetch all channels in the old category
-      let oldCategoryChannels = await ChannelModel.find({
-        category_id: channel.category_id,
-      });
-
-      // Update positions in the old category
-      for (let ch of oldCategoryChannels) {
-        if (ch.position > old_position) {
-          ch.position -= 1;
-          await ch.save();
-        }
+      if (
+        (await CategoryModel.findById(category_id)).server_id !==
+        channel.server_id
+      ) {
+        throw new UserInputError("Category not found in the current server.");
       }
 
-      // Fetch all channels in the new category
-      let newCategoryChannels = await ChannelModel.find({
-        category_id: category_id,
+      // Get all channel in the category and sort by position
+      const channels = await ChannelModel.find({ category_id }).sort({
+        position: 1,
       });
 
-      // Update positions in the new category
-      for (let ch of newCategoryChannels) {
-        if (ch.position >= new_position) {
-          ch.position += 1;
-          await ch.save();
+      // Normalize the new position
+      new_position = Math.min(new_position, channels.length);
+      new_position = Math.max(new_position, 0);
+
+      // Check current channel index is equal to new position
+      if (
+        new_position - 1 >= 0 &&
+        channels[new_position - 1]._id.toString() === channel_id
+      ) {
+        // Increment the new position by 1 to move the channel to the next position
+        new_position = new_position + 1;
+      }
+
+      // Find the previous and next channel
+      const previous_channel = channels[new_position - 1];
+      const next_channel = channels[new_position];
+
+      // Check if the channel is already in the correct position
+      if (
+        (previous_channel && previous_channel._id.toString() === channel_id) ||
+        (next_channel && next_channel._id.toString() === channel_id)
+      ) {
+        return channel;
+      }
+
+      // Calculate the position of the channel
+      let position = 0;
+      if (previous_channel && next_channel) {
+        // If the channel is in the middle
+
+        // Normalize if the gap is too small
+        if (next_channel.position - previous_channel.position <= 10) {
+          channels.forEach(async (channel, index) => {
+            channel.position = index * POSITION_CONST;
+            await channel.save();
+          });
         }
+
+        position = (previous_channel.position + next_channel.position) / 2;
+      } else if (previous_channel) {
+        // If the channel is at the end
+        position = previous_channel.position + POSITION_CONST;
+      } else if (next_channel) {
+        // If the channel is at the beginning
+        position = next_channel.position - POSITION_CONST;
+      } else {
+        // If the channel is the only channel in the category
+        position = 0;
       }
 
       // Update the channel
-      channel.position = new_position;
       channel.category_id = category_id;
+      channel.position = position;
       await channel.save();
 
       return channel;
