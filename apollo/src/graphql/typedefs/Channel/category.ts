@@ -26,7 +26,6 @@ const gqlAPI = gql`
 
   input updateCategoryInput {
     name: String
-    position: Int
     is_private: Boolean
   }
 
