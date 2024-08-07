@@ -108,14 +108,14 @@ const channelAPI: IResolvers = {
         { new: true }
       );
 
-      return channel;
+      return true;
     },
     hardDeleteChannel: async (_, { channel_id }) => {
       // This is a hard delete
       try {
         const channel = await ChannelModel.findByIdAndDelete(channel_id);
 
-        return channel;
+        return true;
       } catch (error) {
         throw new UserInputError("Channel not found");
       }

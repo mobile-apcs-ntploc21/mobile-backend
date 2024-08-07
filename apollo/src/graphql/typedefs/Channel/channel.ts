@@ -49,8 +49,8 @@ const gqlAPI = gql`
   extend type Mutation {
     createChannel(server_id: ID!, input: createChannelInput!): Channel
     updateChannel(channel_id: ID!, input: updateChannelInput!): Channel
-    deleteChannel(channel_id: ID!): Channel
-    hardDeleteChannel(channel_id: ID!): Channel
+    deleteChannel(channel_id: ID!): Boolean
+    hardDeleteChannel(channel_id: ID!): Boolean
 
     addPrivateChannelID(channel_id: ID!, id: ID!, is_user: Boolean): Channel
     removePrivateChannelID(channel_id: ID!, id: ID!, is_user: Boolean): Channel

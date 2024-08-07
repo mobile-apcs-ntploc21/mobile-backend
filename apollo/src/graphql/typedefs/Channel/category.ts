@@ -38,7 +38,7 @@ const gqlAPI = gql`
   extend type Mutation {
     createCategory(server_id: ID!, input: createCategoryInput!): Category
     updateCategory(category_id: ID!, input: updateCategoryInput!): Category
-    deleteCategory(category_id: ID!): Category
+    deleteCategory(category_id: ID!): Boolean
 
     moveCategory(category_id: ID!, new_position: Int!): Category
 
