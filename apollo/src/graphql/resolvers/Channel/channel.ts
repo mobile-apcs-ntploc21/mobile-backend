@@ -7,6 +7,11 @@ import ServerModel from "../../../models/server";
 import ChannelModel from "../../../models/Channel/channel";
 import ChannelPermissionModel from "../../../models/Channel/channel_permission";
 import CategoryModel from "../../../models/Channel/category";
+import {
+  getAsyncIterator,
+  publishEvent,
+  ServerEvents,
+} from "../../pubsub/pubsub";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
@@ -87,7 +92,13 @@ const channelAPI: IResolvers = {
     createChannel: async (_, { server_id, input }) => {
       const channel = await createChannelTransaction(server_id, input);
 
-      console.log(channel);
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.channelAdded,
+        server_id: server_id,
+        data: {
+          ...channel.toObject(),
+        },
+      });
 
       return channel;
     },
@@ -97,6 +108,14 @@ const channelAPI: IResolvers = {
         { $set: input },
         { new: true }
       );
+
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.channelUpdated,
+        server_id: channel.server_id,
+        data: {
+          ...channel.toObject(),
+        },
+      });
 
       return channel;
     },
@@ -108,12 +127,22 @@ const channelAPI: IResolvers = {
         { new: true }
       );
 
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.channelDeleted,
+        server_id: channel.server_id,
+      });
+
       return true;
     },
     hardDeleteChannel: async (_, { channel_id }) => {
       // This is a hard delete
       try {
         const channel = await ChannelModel.findByIdAndDelete(channel_id);
+
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.channelDeleted,
+          server_id: channel.server_id,
+        });
 
         return true;
       } catch (error) {
@@ -212,6 +241,15 @@ const channelAPI: IResolvers = {
       channel.category_id = category_id;
       channel.position = position;
       await channel.save();
+
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.channelUpdated,
+        server_id: channel.server_id,
+        data: {
+          ...channels,
+          ...channel.toObject(),
+        },
+      });
 
       return channel;
     },
