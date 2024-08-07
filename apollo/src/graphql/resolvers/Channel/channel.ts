@@ -9,6 +9,7 @@ import ChannelPermissionModel from "../../../models/Channel/channel_permission";
 import CategoryModel from "../../../models/Channel/category";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
+const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
 
 const createChannelTransaction = async (server_id, input) => {
   const session = await mongoose.startSession();
@@ -153,9 +154,10 @@ const channelAPI: IResolvers = {
         throw new UserInputError("Channel not found");
       }
 
+      const category = await CategoryModel.findById(category_id);
       if (
-        (await CategoryModel.findById(category_id)).server_id !==
-        channel.server_id
+        category &&
+        String(category.server_id) !== String(channel.server_id)
       ) {
         throw new UserInputError("Category not found in the current server.");
       }
@@ -164,19 +166,11 @@ const channelAPI: IResolvers = {
       const channels = await ChannelModel.find({ category_id }).sort({
         position: 1,
       });
+      // Remove the current channel from the list
+      channels.filter((c) => c._id.toString() !== channel_id);
 
       // Normalize the new position
-      new_position = Math.min(new_position, channels.length);
-      new_position = Math.max(new_position, 0);
-
-      // Check current channel index is equal to new position
-      if (
-        new_position - 1 >= 0 &&
-        channels[new_position - 1]._id.toString() === channel_id
-      ) {
-        // Increment the new position by 1 to move the channel to the next position
-        new_position = new_position + 1;
-      }
+      new_position = Math.max(0, Math.min(new_position, channels.length));
 
       // Find the previous and next channel
       const previous_channel = channels[new_position - 1];
@@ -194,16 +188,15 @@ const channelAPI: IResolvers = {
       let position = 0;
       if (previous_channel && next_channel) {
         // If the channel is in the middle
+        position = (previous_channel.position + next_channel.position) / 2;
 
         // Normalize if the gap is too small
-        if (next_channel.position - previous_channel.position <= 10) {
+        if (next_channel.position - previous_channel.position <= POSITION_GAP) {
           channels.forEach(async (channel, index) => {
             channel.position = index * POSITION_CONST;
             await channel.save();
           });
         }
-
-        position = (previous_channel.position + next_channel.position) / 2;
       } else if (previous_channel) {
         // If the channel is at the end
         position = previous_channel.position + POSITION_CONST;
