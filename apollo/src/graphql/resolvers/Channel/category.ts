@@ -8,6 +8,9 @@ import ChannelModel from "../../../models/Channel/channel";
 import CategoryModel from "../../../models/Channel/category";
 import CategoryPermissionModel from "../../../models/Channel/category_permission";
 
+const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the category
+const POSITION_GAP = 10; // This is the minimum gap between the position of the categories
+
 const deleteCategoryTransaction = async (category_id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -69,9 +72,7 @@ const resolvers: IResolvers = {
         const categories = await CategoryModel.find({
           server_id: server_id,
         });
-        if (categories.length > 0) {
-          position = categories.length;
-        }
+        position = categories.length * POSITION_CONST;
 
         // Create the category
         const category = await CategoryModel.create({
@@ -112,34 +113,54 @@ const resolvers: IResolvers = {
     moveCategory: async (_, { category_id, new_position }) => {
       try {
         const category = await CategoryModel.findById(category_id);
-
         if (!category) {
           throw new UserInputError("Category not found");
         }
 
-        const old_position = category.position;
+        const categories = await CategoryModel.find({
+          server_id: category.server_id,
+        });
+        categories.filter((c) => c._id !== category_id);
 
-        // Increment or decrement the position of the categories
-        if (old_position < new_position) {
-          await CategoryModel.updateMany(
-            {
-              server_id: category.server_id,
-              position: { $gt: old_position, $lte: new_position },
-            },
-            { $inc: { position: -1 } }
-          );
-        } else {
-          await CategoryModel.updateMany(
-            {
-              server_id: category.server_id,
-              position: { $lt: old_position, $gte: new_position },
-            },
-            { $inc: { position: 1 } }
-          );
+        // Normalize the new position
+        new_position = Math.max(0, Math.min(new_position, categories.length));
+
+        // Find the previous and next category
+        const previous_category = categories[new_position - 1];
+        const next_category = categories[new_position];
+
+        // Check if the channel is already in the correct position
+        if (
+          (previous_category &&
+            previous_category._id.toString() === category_id) ||
+          (next_category && next_category._id.toString() === category_id)
+        ) {
+          return category;
+        }
+
+        // Calculate the new position
+        let position = 0;
+        if (previous_category && next_category) {
+          position = (previous_category.position + next_category.position) / 2;
+
+          // Normalize the position if the gap is too small
+          if (
+            next_category.position - previous_category.position <
+            POSITION_GAP
+          ) {
+            categories.forEach(async (category, index) => {
+              category.position = index * POSITION_CONST;
+              await category.save();
+            });
+          }
+        } else if (previous_category) {
+          position = previous_category.position + POSITION_CONST;
+        } else if (next_category) {
+          position = next_category.position - POSITION_CONST;
         }
 
         // Update the position of the category
-        category.position = new_position;
+        category.position = position;
         await category.save();
 
         return category;
