@@ -25,10 +25,12 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
       opts
     );
 
-    // Decrease server total members
-    const server = await ServerModel.findById(server_id).session(session);
-    server.totalMembers--;
-    await server.save();
+    // Decrease server total members (if exists in server members)
+    if (_) {
+      const server = await ServerModel.findById(server_id).session(session);
+      server.totalMembers--;
+      await server.save();
+    }
 
     await session.commitTransaction();
     return createdBan;
@@ -46,8 +48,14 @@ const resolvers: IResolvers = {
     getServerBan: async (_, { server_id, user_id }) => {
       try {
         const serverBan = await ServerBansModel.findOne({
-          _id: { server: server_id, user: user_id },
+          "_id.server": server_id,
+          "_id.user": user_id,
         });
+
+        if (!serverBan) {
+          return null;
+        }
+
         return {
           server: serverBan._id.server,
           user: serverBan._id.user,
