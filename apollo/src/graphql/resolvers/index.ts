@@ -15,6 +15,7 @@ import serverMemberResolver from "./server_member";
 import channelResolver from "./Channel/channel";
 import categoryResolver from "./Channel/category";
 import channelPermissionResolver from "./Channel/channel_permission";
+import categoryPermissionResolver from "./Channel/category_permission";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -31,6 +32,7 @@ export const apiResolvers = mergeResolvers([
   channelResolver.API,
   categoryResolver,
   channelPermissionResolver,
+  categoryPermissionResolver,
 ]);
 
 export const wsResolvers = mergeResolvers([
