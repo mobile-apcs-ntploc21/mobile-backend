@@ -11,6 +11,55 @@ import CategoryPermissionModel from "../../../models/Channel/category_permission
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the category
 const POSITION_GAP = 10; // This is the minimum gap between the position of the categories
 
+const createCategoryTransaction = async (server_id, input) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const opts = { session, new: true };
+
+  try {
+    // Get the last position of the categories
+    let position = 0;
+    const categories = await CategoryModel.find({ server_id }).session(session);
+    position = categories.length * POSITION_CONST;
+
+    // Create the category
+    const category = await CategoryModel.create(
+      [
+        {
+          server_id,
+          name: input.name,
+          position,
+          private: {
+            is_private: input.is_private,
+          },
+        },
+      ],
+      opts
+    );
+
+    // Create the category permissions for @everyone
+    await CategoryPermissionModel.create(
+      [
+        {
+          category_id: category[0]._id,
+          server_role_id: null,
+          is_user: false,
+        },
+      ],
+      opts
+    );
+
+    session.commitTransaction();
+    session.endSession();
+
+    return category[0];
+  } catch (error) {
+    session.abortTransaction();
+    session.endSession();
+    throw new Error(error);
+  }
+};
+
 const deleteCategoryTransaction = async (category_id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -63,32 +112,7 @@ const resolvers: IResolvers = {
     },
   },
   Mutation: {
-    createCategory: async (_, { server_id, input }) => {
-      const { name, is_private } = input;
-
-      try {
-        // Get the last position of the categories
-        let position = 0;
-        const categories = await CategoryModel.find({
-          server_id: server_id,
-        });
-        position = categories.length * POSITION_CONST;
-
-        // Create the category
-        const category = await CategoryModel.create({
-          server_id,
-          name,
-          position,
-          private: {
-            is_private: is_private,
-          },
-        });
-
-        return category;
-      } catch (error) {
-        throw new Error(error);
-      }
-    },
+    createCategory: async (_, { server_id, input }) => {},
     updateCategory: async (_, { category_id, input }) => {
       try {
         const category = await CategoryModel.findByIdAndUpdate(
