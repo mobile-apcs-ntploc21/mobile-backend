@@ -2,7 +2,7 @@ import mongoose, { Schema, model } from "mongoose";
 
 /// Category Permission
 interface ICategoryPermission {
-  channel_id: { type: Schema.Types.ObjectId };
+  category_id: { type: Schema.Types.ObjectId };
   server_role_id: { type: Schema.Types.ObjectId };
   user_id: { type: Schema.Types.ObjectId };
 
@@ -14,10 +14,10 @@ interface ICategoryPermission {
 
 const channelPermissionSchema = new Schema<ICategoryPermission>(
   {
-    channel_id: {
+    category_id: {
       type: Schema.Types.ObjectId,
-      ref: "Channel",
-      required: [true, "Channel ID is required!"],
+      ref: "Category",
+      required: [true, "Category ID is required!"],
     },
     server_role_id: {
       type: Schema.Types.ObjectId,
