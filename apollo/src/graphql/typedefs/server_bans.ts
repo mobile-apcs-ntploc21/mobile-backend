@@ -3,7 +3,7 @@ import { gql } from "apollo-server-express";
 const gqlTypes = gql`
   type ServerBan {
     server: ID
-    user: IDA
+    user: ID
   }
 `;
 

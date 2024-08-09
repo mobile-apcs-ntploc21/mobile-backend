@@ -23,4 +23,4 @@ const serverBanSchema = new Schema<IServerBan>(
 
 const ServerBan = mongoose.model("ServerBan", serverBanSchema);
 
-export { ServerBan };
+export default ServerBan;
