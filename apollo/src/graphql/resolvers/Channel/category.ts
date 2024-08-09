@@ -80,12 +80,12 @@ const deleteCategoryTransaction = async (category_id) => {
     // Set all the channels of the category to null
     await ChannelModel.updateMany({ category_id }, { category_id: null }, opts);
 
-    session.commitTransaction();
+    await session.commitTransaction();
     session.endSession();
 
     return true;
   } catch (error) {
-    session.abortTransaction();
+    await session.abortTransaction();
     session.endSession();
     throw new Error(error);
   }
