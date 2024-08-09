@@ -4,24 +4,24 @@ import graphQLClient from "../utils/graphql";
 import { serverBansQueries } from "../graphql/queries";
 import { serverBansMutations } from "../graphql/mutations";
 
-const _getServerBan = async (server_id: string, user_id: string) => {
+const _getServerBan = async (serverId: string, userId: string) => {
   const response = await graphQLClient().request(
     serverBansQueries.GET_SERVER_BAN,
     {
-      server_id,
-      user_id,
+      server_id: serverId,
+      user_id: userId,
     }
   );
 
   return response.getServerBan;
 };
 
-const _getServerBans = async (server_id: string, limit: number) => {
+const _getServerBans = async (serverId: string, limit: number) => {
   const response = await graphQLClient().request(
     serverBansQueries.GET_SERVER_BANS,
     {
-      server_id,
-      limit,
+      server_id: serverId,
+      limit: limit,
     }
   );
 
@@ -37,16 +37,23 @@ export const getServerBan = async (
 ) => {
   // TODO: Check user has permission to view ban
 
-  const { server_id, user_id } = req.params;
+  const { serverId, userId } = req.params;
 
-  if (!server_id || !user_id) {
+  if (!serverId || !userId) {
     return res.status(400).json({
-      message: "Missing server_id or user_id",
+      message: "Missing serverId or userId",
     });
   }
 
   try {
-    const serverBan = await _getServerBan(server_id, user_id);
+    const serverBan = await _getServerBan(serverId, userId);
+
+    if (!serverBan) {
+      return res.status(404).json({
+        message: "Ban not found",
+      });
+    }
+
     return res.status(200).json(serverBan);
   } catch (error) {
     return res.status(500).json({
@@ -62,17 +69,17 @@ export const getServerBans = async (
 ) => {
   // TODO: Check user has permission to view bans
 
-  const { server_id } = req.params;
+  const { serverId } = req.params;
   const { limit } = req.query;
 
-  if (!server_id) {
+  if (!serverId) {
     return res.status(400).json({
-      message: "Missing server_id",
+      message: "Missing serverId",
     });
   }
 
   try {
-    const serverBans = await _getServerBans(server_id, Number(limit) || 1000);
+    const serverBans = await _getServerBans(serverId, Number(limit) || 1000);
     return res.status(200).json(serverBans);
   } catch (error) {
     return res.status(500).json({
@@ -88,11 +95,11 @@ export const createServerBan = async (
 ) => {
   // TODO: Check user has permission to ban
 
-  const { server_id, user_id } = req.body;
+  const { serverId, userId } = req.params;
 
-  if (!server_id || !user_id) {
+  if (!serverId || !userId) {
     return res.status(400).json({
-      message: "Missing server_id or user_id",
+      message: "Missing serverId or userId",
     });
   }
 
@@ -100,8 +107,8 @@ export const createServerBan = async (
     const response = await graphQLClient().request(
       serverBansMutations.CREATE_SERVER_BAN,
       {
-        server_id: server_id,
-        user_id: user_id,
+        server_id: serverId,
+        user_id: userId,
       }
     );
 
@@ -120,19 +127,20 @@ export const createServerBulkBan = async (
 ) => {
   // TODO: Check user has permission to ban
 
-  // We assume that user_ids is an array of user IDs
-  const { server_id, user_ids } = req.body;
+  // We assume that userIds is an array of user IDs
+  const { serverId } = req.params;
+  const { userIds } = req.body;
 
-  if (!server_id || !user_ids) {
+  if (!serverId || !userIds) {
     return res.status(400).json({
-      message: "Missing server_id or user_ids field",
+      message: "Missing serverId or userIds field",
     });
   }
 
-  // Check if user_ids is an array
-  if (!Array.isArray(user_ids)) {
+  // Check if userIds is an array
+  if (!Array.isArray(userIds)) {
     return res.status(400).json({
-      message: "User IDs must be an array. I.e. user_ids: ['id1', 'id2'].",
+      message: "User IDs must be an array. I.e. userIds: ['id1', 'id2'].",
     });
   }
 
@@ -140,8 +148,8 @@ export const createServerBulkBan = async (
     const response = await graphQLClient().request(
       serverBansMutations.CREATE_SERVER_BULK_BAN,
       {
-        server_id: server_id,
-        user_ids: user_ids,
+        server_id: serverId,
+        user_ids: userIds,
       }
     );
 
@@ -158,11 +166,11 @@ export const deleteServerBan = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { server_id, user_id } = req.body;
+  const { serverId, userId } = req.params;
 
-  if (!server_id || !user_id) {
+  if (!serverId || !userId) {
     return res.status(400).json({
-      message: "Missing server_id or user_id",
+      message: "Missing serverId or userId",
     });
   }
 
@@ -170,12 +178,12 @@ export const deleteServerBan = async (
     const response = await graphQLClient().request(
       serverBansMutations.DELETE_SERVER_BAN,
       {
-        server_id: server_id,
-        user_id: user_id,
+        server_id: serverId,
+        user_id: userId,
       }
     );
 
-    return res.status(200).json(response.deleteServerBan);
+    return res.status(204);
   } catch (error) {
     return res.status(500).json({
       message: "Internal Server Error",
