@@ -2,13 +2,14 @@ import { IResolvers } from "@graphql-tools/utils";
 import { AuthenticationError, UserInputError } from "apollo-server";
 import { GraphQLJSON } from "graphql-scalars";
 
-import { ServerBan } from "../../models/server_bans";
+import ServerBansModel from "../../models/server_bans";
+import ServerMemberModel from "../../models/server_member";
 
 const resolvers: IResolvers = {
   Query: {
     getServerBan: async (_, { server_id, user_id }) => {
       try {
-        const serverBan = await ServerBan.findOne({
+        const serverBan = await ServerBansModel.findOne({
           server: server_id,
           user: user_id,
         });
@@ -19,7 +20,7 @@ const resolvers: IResolvers = {
     },
     getServerBans: async (_, { server_id, limit }) => {
       try {
-        const serverBans = await ServerBan.find({ server: server_id })
+        const serverBans = await ServerBansModel.find({ server: server_id })
           .limit(limit)
           .sort({ createdAt: -1 });
         return serverBans;
@@ -31,10 +32,16 @@ const resolvers: IResolvers = {
   Mutation: {
     createServerBan: async (_, { server_id, user_id }) => {
       try {
-        const serverBan = await ServerBan.create({
+        const serverBan = await ServerBansModel.create({
           server: server_id,
           user: user_id,
         });
+
+        // Remove user from server members
+        await ServerMemberModel.findOneAndDelete({
+          _id: { server_id, user_id },
+        });
+
         return serverBan;
       } catch (error) {
         throw error;
@@ -42,9 +49,15 @@ const resolvers: IResolvers = {
     },
     createServerBulkBan: async (_, { server_id, user_ids }) => {
       try {
-        const serverBans = await ServerBan.insertMany(
+        const serverBans = await ServerBansModel.insertMany(
           user_ids.map((user_id) => ({ server: server_id, user: user_id }))
         );
+
+        // Remove users from server members
+        await ServerMemberModel.deleteMany({
+          _id: { $in: user_ids.map((user_id) => ({ server_id, user_id })) },
+        });
+
         return serverBans;
       } catch (error) {
         throw error;
@@ -52,7 +65,7 @@ const resolvers: IResolvers = {
     },
     deleteServerBan: async (_, { server_id, user_id }) => {
       try {
-        const serverBan = await ServerBan.findOneAndDelete({
+        const serverBan = await ServerBansModel.findOneAndDelete({
           server: server_id,
           user: user_id,
         });
