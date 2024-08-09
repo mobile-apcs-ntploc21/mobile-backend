@@ -1,11 +1,10 @@
 import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
-import { PubSub, withFilter } from "graphql-subscriptions";
-import { AuthenticationError, UserInputError } from "apollo-server";
 
 import ServerModel from "../../../models/server";
 import ChannelModel from "../../../models/Channel/channel";
 import ChannelPermissionModel from "../../../models/Channel/channel_permission";
+import { ServerEvents, publishEvent } from "../../../graphql/pubsub/pubsub";
 
 const resolvers: IResolvers = {
   Query: {
@@ -30,6 +29,7 @@ const resolvers: IResolvers = {
           channel_id,
           ...input,
         });
+
         return permission;
       } catch (error) {
         throw new Error(error);
@@ -49,6 +49,7 @@ const resolvers: IResolvers = {
           input,
           { new: true }
         );
+
         return permission;
       } catch (error) {
         throw new Error(error);
@@ -66,6 +67,7 @@ const resolvers: IResolvers = {
         }
 
         await ChannelPermissionModel.findByIdAndDelete(id);
+
         return true;
       } catch (error) {
         throw new Error(error);

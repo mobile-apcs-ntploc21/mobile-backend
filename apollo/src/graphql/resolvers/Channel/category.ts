@@ -1,12 +1,11 @@
 import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
-import { PubSub, withFilter } from "graphql-subscriptions";
 import { AuthenticationError, UserInputError } from "apollo-server";
 
-import ServerModel from "../../../models/server";
 import ChannelModel from "../../../models/Channel/channel";
 import CategoryModel from "../../../models/Channel/category";
 import CategoryPermissionModel from "../../../models/Channel/category_permission";
+import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the category
 const POSITION_GAP = 10; // This is the minimum gap between the position of the categories
@@ -114,6 +113,16 @@ const resolvers: IResolvers = {
   Mutation: {
     createCategory: async (_, { server_id, input }) => {
       const category = await createCategoryTransaction(server_id, input);
+
+      // Publish the event
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.categoryAdded,
+        server_id: server_id,
+        data: {
+          ...category.toObject(),
+        },
+      });
+
       return category;
     },
     updateCategory: async (_, { category_id, input }) => {
@@ -123,6 +132,20 @@ const resolvers: IResolvers = {
           input,
           { new: true }
         );
+
+        if (!category) {
+          throw new UserInputError("Category not found");
+        }
+
+        // Publish the event
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.categoryUpdated,
+          server_id: category.server_id,
+          data: {
+            ...category.toObject(),
+          },
+        });
+
         return category;
       } catch (error) {
         throw new Error(error);
@@ -131,7 +154,14 @@ const resolvers: IResolvers = {
     deleteCategory: async (_, { category_id }) => {
       try {
         const result = await deleteCategoryTransaction(category_id);
-        return result;
+
+        // Publish the event
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.categoryDeleted,
+          server_id: category_id,
+        });
+
+        return true;
       } catch (error) {
         throw new Error(error);
       }
@@ -189,6 +219,16 @@ const resolvers: IResolvers = {
         // Update the position of the category
         category.position = position;
         await category.save();
+
+        // Publish the event
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.categoryUpdated,
+          server_id: category.server_id,
+          data: {
+            ...categories,
+            ...category.toObject(),
+          },
+        });
 
         return category;
       } catch (error) {

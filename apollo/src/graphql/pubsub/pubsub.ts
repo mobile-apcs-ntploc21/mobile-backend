@@ -24,6 +24,10 @@ export enum ServerEvents {
   channelAdded = "CHANNEL_ADDED",
   channelDeleted = "CHANNEL_DELETED",
   channelUpdated = "CHANNEL_UPDATED",
+
+  categoryAdded = "CATEGORY_ADDED",
+  categoryDeleted = "CATEGORY_DELETED",
+  categoryUpdated = "CATEGORY_UPDATED",
 }
 
 export enum ChannelEvents {
