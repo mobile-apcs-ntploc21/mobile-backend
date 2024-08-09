@@ -27,6 +27,9 @@ const createChannelTransaction = async (server_id, input) => {
     if (!ServerModel.findById(server_id).session(session)) {
       throw new UserInputError("Server not found");
     }
+    if (!CategoryModel.findById(category_id).session(session)) {
+      throw new UserInputError("Category not found");
+    }
 
     // Calculate the last position of the category
     const category = await ChannelModel.find({ category_id }).session(session);
@@ -138,6 +141,9 @@ const channelAPI: IResolvers = {
       // This is a hard delete
       try {
         const channel = await ChannelModel.findByIdAndDelete(channel_id);
+        const channel_permissions = await ChannelPermissionModel.deleteMany({
+          channel_id,
+        });
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelDeleted,
