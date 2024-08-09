@@ -21,6 +21,11 @@ const resolvers: IResolvers = {
   Mutation: {
     createChannelPermission: async (_, { channel_id, input }) => {
       try {
+        const channel = await ChannelModel.findById(channel_id);
+        if (!channel) {
+          throw new Error("Channel not found!");
+        }
+
         const permission = await ChannelPermissionModel.create({
           channel_id,
           ...input,
@@ -32,6 +37,13 @@ const resolvers: IResolvers = {
     },
     updateChannelPermission: async (_, { channel_id, input }) => {
       try {
+        const channelPermission = await ChannelPermissionModel.findById(
+          channel_id
+        );
+        if (!channelPermission) {
+          throw new Error("Channel Permission not found!");
+        }
+
         const permission = await ChannelPermissionModel.findOneAndUpdate(
           { channel_id },
           input,
@@ -42,12 +54,19 @@ const resolvers: IResolvers = {
         throw new Error(error);
       }
     },
-    deleteChannelPermission: async (_, { channel_id }) => {
+    deleteChannelPermission: async (_, { id }) => {
       try {
-        const permission = await ChannelPermissionModel.findOneAndDelete({
-          channel_id,
-        });
-        return permission;
+        // Check if permission is @everyone
+        const permission = await ChannelPermissionModel.findById(id);
+        if (
+          permission.server_role_id === null &&
+          permission.is_user === false
+        ) {
+          throw new Error("Cannot delete @everyone permission");
+        }
+
+        await ChannelPermissionModel.findByIdAndDelete(id);
+        return true;
       } catch (error) {
         throw new Error(error);
       }
