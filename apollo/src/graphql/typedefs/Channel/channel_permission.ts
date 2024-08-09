@@ -42,7 +42,7 @@ const typeDefs = gql`
       input: UpdateChannelPermissionInput!
     ): ChannelPermission
 
-    deleteChannelPermission(channel_id: ID!): ChannelPermission
+    deleteChannelPermission(id: ID!): Boolean
   }
 `;
 
