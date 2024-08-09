@@ -46,10 +46,11 @@ const resolvers: IResolvers = {
       try {
         // Check if permission is @everyone
         const permission = await CategoryPermissionModel.findById(id);
-        if (
-          permission.server_role_id === null &&
-          permission.is_user === false
-        ) {
+        if (!permission) {
+          throw new Error("Permission not found!");
+        }
+
+        if (!permission.server_role_id && permission.is_user === false) {
           throw new Error("Cannot delete @everyone permission");
         }
 
