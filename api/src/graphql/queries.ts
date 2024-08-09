@@ -263,88 +263,21 @@ export const serverEmojiQueries = {
   `,
 };
 
-export const serverRoleQueries = {
-  GET_SERVER_ROLE: gql`
-    query getServerRole($role_id: ID!) {
-      getServerRole(role_id: $role_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
+export const serverBansQueries = {
+  GET_SERVER_BAN: gql`
+    query getServerBan($server_id: ID!, $user_id: ID!) {
+      getServerBan(server_id: $server_id, user_id: $user_id) {
+        server
+        user
       }
     }
   `,
 
-  GET_SERVER_ROLES: gql`
-    query getServerRoles($server_id: ID!) {
-      getServerRoles(server_id: $server_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-
-  GET_DEFAULT_SERVER_ROLE: gql`
-    query getDefaultServerRole($server_id: ID!) {
-      getDefaultServerRole(server_id: $server_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-
-  GET_SERVER_ROLE_USERS: gql`
-    query getUsersAssignedWithRole($role_id: ID!) {
-      getUsersAssignedWithRole(role_id: $role_id) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-      }
-    }
-  `,
-
-  GET_ROLES_ASSIGNED_WITH_USER: gql`
-    query getRolesAssignedWithUser($user_id: ID!, $server_id: ID!) {
-      getRolesAssignedWithUser(user_id: $user_id, server_id: $server_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
+  GET_SERVER_BANS: gql`
+    query getServerBans($server_id: ID!, $limit: Int) {
+      getServerBans(server_id: $server_id, limit: $limit) {
+        server
+        user
       }
     }
   `,
