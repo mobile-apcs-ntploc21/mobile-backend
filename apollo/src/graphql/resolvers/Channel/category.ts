@@ -38,7 +38,7 @@ const createCategoryTransaction = async (server_id, input) => {
     );
 
     // Create the category permissions for @everyone
-    await CategoryPermissionModel.create(
+    const category_permission = await CategoryPermissionModel.create(
       [
         {
           category_id: category[0]._id,
@@ -49,12 +49,12 @@ const createCategoryTransaction = async (server_id, input) => {
       opts
     );
 
-    session.commitTransaction();
+    await session.commitTransaction();
     session.endSession();
 
     return category[0];
   } catch (error) {
-    session.abortTransaction();
+    await session.abortTransaction();
     session.endSession();
     throw new Error(error);
   }
@@ -112,7 +112,10 @@ const resolvers: IResolvers = {
     },
   },
   Mutation: {
-    createCategory: async (_, { server_id, input }) => {},
+    createCategory: async (_, { server_id, input }) => {
+      const category = await createCategoryTransaction(server_id, input);
+      return category;
+    },
     updateCategory: async (_, { category_id, input }) => {
       try {
         const category = await CategoryModel.findByIdAndUpdate(
