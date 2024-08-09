@@ -1,12 +1,12 @@
-import serverModel from '../../../models/servers/server';
-import ServerMemberModel from '../../../models/servers/server_member';
-import { IResolvers } from '@graphql-tools/utils';
-import { UserInputError } from 'apollo-server-core';
-import { ObjectId, Schema } from 'mongoose';
-import { publishEvent, ServerEvents } from '../../pubsub/pubsub';
-import user from '../../typedefs/user';
-import ServerRoleModel from "../../../models/servers/server_role";
-import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
+import serverModel from "../../models/server";
+import ServerMemberModel from "../../models/server_member";
+import ServerBansModel from "../../models/server_bans";
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError, ForbiddenError } from "apollo-server-core";
+import { ObjectId, Schema } from "mongoose";
+import { publishEvent, ServerEvents } from "../pubsub/pubsub";
+
+import user from "../typedefs/user";
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -21,7 +21,7 @@ interface InviteCode {
 }
 
 const validateInviteCode = async (url: string) => {
-  if (!url) throw new Error('Invite code URL is required');
+  if (!url) throw new Error("Invite code URL is required");
 
   const response = await serverModel.findOne({
     invite_code: {
@@ -29,16 +29,16 @@ const validateInviteCode = async (url: string) => {
     },
   });
 
-  if (!response) throw new Error('This server does not have any invite codes');
+  if (!response) throw new Error("This server does not have any invite codes");
 
   const inviteCodes = response.invite_code;
   const index = inviteCodes.findIndex((code: InviteCode) => code.url === url);
   const inviteCode = inviteCodes[index];
 
   if (inviteCode.expiredAt && new Date(inviteCode.expiredAt) < new Date())
-    throw new Error('Invite code has expired');
+    throw new Error("Invite code has expired");
   if (inviteCode.maxUses > 0 && inviteCode.currentUses >= inviteCode.maxUses)
-    throw new Error('Invite code has reached its maximum uses');
+    throw new Error("Invite code has reached its maximum uses");
 
   return {
     server: response,
@@ -64,7 +64,17 @@ const addServerMemberTransaction = async ({
 
   try {
     if (!validateUsers(user_ids))
-      throw new UserInputError('Invalid server member input!');
+      throw new UserInputError("Invalid server member input!");
+
+    // Check if user has been banned in the server.
+    if (
+      !(await ServerBansModel.find({
+        server: server_id,
+        user: { $in: user_ids },
+      }))
+    ) {
+      throw new ForbiddenError("One of the user member in the list is banned!");
+    }
 
     const res = await ServerMemberModel.insertMany(
       user_ids.map((user_id) => ({
@@ -111,24 +121,24 @@ const removeServerMemberTransaction = async ({
 
   try {
     if (!validateUsers(user_ids))
-      throw new UserInputError('Invalid server member input!');
+      throw new UserInputError("Invalid server member input!");
 
     const server = await serverModel.findById(server_id);
-    if (!server) throw new UserInputError('Server not found!');
+    if (!server) throw new UserInputError("Server not found!");
 
     if (
       user_ids.some((user_id) => server.owner.toString() === user_id.toString())
     )
-      throw new UserInputError('Owner cannot be removed!');
+      throw new UserInputError("Owner cannot be removed!");
 
     const res = await ServerMemberModel.deleteMany({
       $or: user_ids.map((user_id) => ({
-        '_id.server_id': server_id,
-        '_id.user_id': user_id,
+        "_id.server_id": server_id,
+        "_id.user_id": user_id,
       })),
     });
 
-    if (res.deletedCount === 0) throw new UserInputError('Member not found!');
+    if (res.deletedCount === 0) throw new UserInputError("Member not found!");
 
     await serverModel.updateOne(
       { _id: server_id },
@@ -152,6 +162,10 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
 
   try {
     const { server, inviteIndex } = await validateInviteCode(url);
+
+    // Check if user has been banned in the server.
+    if (!(await ServerBansModel.exists({ server: server._id, user: user_id })))
+      throw new ForbiddenError("User is banned!");
 
     const newdoc = {
       server_id: server._id,
@@ -190,7 +204,7 @@ const API: IResolvers = {
     getServerMembers: async (_, { server_id }) => {
       try {
         const res = await ServerMemberModel.find({
-          '_id.server_id': server_id,
+          "_id.server_id": server_id,
         });
         return res.map((member) => member._id);
       } catch (error) {
@@ -201,8 +215,8 @@ const API: IResolvers = {
       try {
         return (
           (await ServerMemberModel.exists({
-            '_id.server_id': server_id,
-            '_id.user_id': user_id,
+            "_id.server_id": server_id,
+            "_id.user_id": user_id,
           })) !== null
         );
       } catch (error) {
@@ -213,8 +227,8 @@ const API: IResolvers = {
   Mutation: {
     joinServer: async (_, { url, user_id }) => {
       try {
-        if (!url) throw new UserInputError('Invite url is required!');
-        if (!user_id) throw new UserInputError('User ID is required!');
+        if (!url) throw new UserInputError("Invite url is required!");
+        if (!user_id) throw new UserInputError("User ID is required!");
 
         return await joinServerTransaction(url, user_id);
       } catch (error) {
