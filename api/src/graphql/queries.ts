@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 export const GET_USER_BY_ID = gql`
   query getUserById($id: ID!) {
@@ -241,6 +241,26 @@ export const serverEmojiQueries = {
   COUNT_SERVER_EMOJIS: gql`
     query countServerEmojis($server_id: ID!) {
       countServerEmojis(server_id: $server_id)
+    }
+  `,
+};
+
+export const serverBansQueries = {
+  GET_SERVER_BAN: gql`
+    query getServerBan($server_id: ID!, $user_id: ID!) {
+      getServerBan(server_id: $server_id, user_id: $user_id) {
+        server
+        user
+      }
+    }
+  `,
+
+  GET_SERVER_BANS: gql`
+    query getServerBans($server_id: ID!, $limit: Int) {
+      getServerBans(server_id: $server_id, limit: $limit) {
+        server
+        user
+      }
     }
   `,
 };
