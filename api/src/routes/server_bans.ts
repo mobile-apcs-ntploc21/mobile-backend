@@ -10,7 +10,10 @@ serverBansRouter.get(
   serverBansController.getServerBan
 );
 
-serverBansRouter.put("/:serverId/bans", serverBansController.createServerBan);
+serverBansRouter.put(
+  "/:serverId/bans/:userId",
+  serverBansController.createServerBan
+);
 serverBansRouter.post(
   "/:serverId/bulk-ban",
   serverBansController.createServerBulkBan
