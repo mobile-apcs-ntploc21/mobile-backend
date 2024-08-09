@@ -58,7 +58,7 @@ app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 /// Server
 app.use("/api/v1/servers", serverRouter);
 app.use("/api/v1/servers", serverEmojiRouter);
-app.use("api/v1/servers", authMiddleware, serverBansRouter);
+app.use("/api/v1/servers", authMiddleware, serverBansRouter);
 
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
