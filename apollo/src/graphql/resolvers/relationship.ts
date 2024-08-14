@@ -1,5 +1,5 @@
-import { IResolvers } from '@graphql-tools/utils';
-import RelationshipModel from "../../models/relationship";
+import {IResolvers} from '@graphql-tools/utils';
+import RelationshipModel, {RelationshipType} from "../../models/relationship";
 import UserModel from "../../models/user";
 
 const relationshipResolvers: IResolvers = {
@@ -16,8 +16,8 @@ const relationshipResolvers: IResolvers = {
         getAllFriends: async (_, { user_id }) => {
             const relationships = await RelationshipModel.find({
                 $or: [
-                    { '_id.user_first_id': user_id, type: 'FRIEND' },
-                    { '_id.user_second_id': user_id, type: 'FRIEND' },
+                    { '_id.user_first_id': user_id, type: RelationshipType.FRIEND },
+                    { '_id.user_second_id': user_id, type: RelationshipType.FRIEND },
                 ],
             });
 
@@ -34,8 +34,8 @@ const relationshipResolvers: IResolvers = {
         getReceivedFriendRequests: async (_, { user_id }) => {
             const relationships = await RelationshipModel.find({
                 $or: [
-                    { '_id.user_second_id': user_id, type: 'PENDING_FIRST_SECOND' },
-                    { '_id.user_first_id': user_id, type: 'PENDING_SECOND_FIRST' },
+                    { '_id.user_second_id': user_id, type: RelationshipType.PENDING_FIRST_SECOND },
+                    { '_id.user_first_id': user_id, type: RelationshipType.PENDING_SECOND_FIRST },
                 ],
             });
 
@@ -52,8 +52,8 @@ const relationshipResolvers: IResolvers = {
         getSentFriendRequests: async (_, { user_id }) => {
             const relationships = await RelationshipModel.find({
                 $or: [
-                    { '_id.user_first_id': user_id, type: 'PENDING_FIRST_SECOND' },
-                    { '_id.user_second_id': user_id, type: 'PENDING_SECOND_FIRST' },
+                    { '_id.user_first_id': user_id, type: RelationshipType.PENDING_FIRST_SECOND },
+                    { '_id.user_second_id': user_id, type: RelationshipType.PENDING_SECOND_FIRST },
                 ],
             });
 
@@ -72,8 +72,8 @@ const relationshipResolvers: IResolvers = {
         getBlockedUsers: async (_, { user_id }) => {
             const relationships = await RelationshipModel.find({
                 $or: [
-                    { '_id.user_first_id': user_id, type: 'BLOCK_FIRST_SECOND' },
-                    { '_id.user_second_id': user_id, type: 'BLOCK_SECOND_FIRST' },
+                    { '_id.user_first_id': user_id, type: RelationshipType.BLOCK_FIRST_SECOND },
+                    { '_id.user_second_id': user_id, type: RelationshipType.BLOCK_SECOND_FIRST },
                 ],
             });
 
