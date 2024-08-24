@@ -1,5 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
-import ModelNames from './../../modelNames';
+import ModelNames from "./../../modelNames";
 import validator from "validator";
 
 interface IChannel {

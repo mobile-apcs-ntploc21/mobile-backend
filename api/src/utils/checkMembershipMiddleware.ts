@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import { serverMemberQueries } from '../graphql/queries';
+import { Request, Response, NextFunction } from "express";
+import graphQLClient from "../utils/graphql";
+import { serverMemberQueries } from "../graphql/queries";
 
 export const checkMembershipMiddleware = async (
   req: Request,
@@ -13,7 +13,7 @@ export const checkMembershipMiddleware = async (
   if (!serverId)
     return res
       .status(400)
-      .json({ status: 'fail', message: 'Server ID is required.' });
+      .json({ status: "fail", message: "Server ID is required." });
 
   try {
     const flag = await graphQLClient().request(
@@ -25,8 +25,8 @@ export const checkMembershipMiddleware = async (
     );
     if (flag === null || !flag.checkServerMember)
       return res.status(403).json({
-        status: 'fail',
-        message: 'You are not a member of this server',
+        status: "fail",
+        message: "You are not a member of this server",
       });
 
     res.locals.server_id = serverId;
