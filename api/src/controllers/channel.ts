@@ -178,6 +178,11 @@ export const updateChannel = async (
     return res.status(400).json({ message: "Channel ID is required." });
   }
 
+  const channel = await _getChannel(channel_id).catch(() => null);
+  if (!channel || channel.server_id !== server_id) {
+    return res.status(404).json({ message: "Channel not found." });
+  }
+
   try {
     const channel = await graphQLClient().request(
       channelMutations.UPDATE_CHANNEL,
@@ -205,10 +210,20 @@ export const deleteChannel = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
+  const server_id = req.params?.serverId;
   const channel_id = req.params?.channelId;
+
+  if (!server_id) {
+    return res.status(400).json({ message: "Server ID is required." });
+  }
 
   if (!channel_id) {
     return res.status(400).json({ message: "Channel ID is required." });
+  }
+
+  const channel = await _getChannel(channel_id).catch(() => null);
+  if (!channel || channel.server_id !== server_id) {
+    return res.status(404).json({ message: "Channel not found." });
   }
 
   try {
@@ -259,6 +274,15 @@ export const moveChannel = async (
 
   if (!channel_id) {
     return res.status(400).json({ message: "Channel ID is required." });
+  }
+
+  if (!new_position) {
+    return res.status(400).json({ message: "New position is required." });
+  }
+
+  const channel = await _getChannel(channel_id).catch(() => null);
+  if (!channel || channel.server_id !== server_id) {
+    return res.status(404).json({ message: "Channel not found." });
   }
 
   try {
