@@ -13,10 +13,6 @@
     "start:dev": "concurrently \"npm run start:api:dev\" \"npm run start:apollo:dev\""
   },
   "dependencies": {
-    "concurrently": "^7.6.0",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "tsconfig-paths": "^4.2.0"
+    "concurrently": "^7.6.0"
   }
 }
