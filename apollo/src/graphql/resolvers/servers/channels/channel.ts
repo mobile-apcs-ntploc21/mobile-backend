@@ -31,14 +31,17 @@ const createChannelTransaction = async (server_id, input) => {
     }
 
     // Calculate the last position of the category
-    const category = await ChannelModel.find({ category_id }).session(session);
+    const category = await ChannelModel.find({
+      server_id,
+      category_id,
+    }).session(session);
     position = category.length * POSITION_CONST;
 
     const channel = await ChannelModel.create(
       [
         {
           server_id,
-          category_id,
+          category_id: ({ category_id } && category_id) || null,
           name,
           position,
           private: {

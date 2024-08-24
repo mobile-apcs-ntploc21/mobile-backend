@@ -304,7 +304,7 @@ export const serverEmojiMutations = {
 export const channelMutations = {
   // Channels
   CREATE_CHANNEL: gql`
-    mutation createChannel($server_id: ID!, $input: CreateChannelInput!) {
+    mutation createChannel($server_id: ID!, $input: createChannelInput!) {
       createChannel(server_id: $server_id, input: $input) {
         id
         server_id
@@ -314,11 +314,14 @@ export const channelMutations = {
         private {
           is_private
         }
+        is_nsfw
+        is_archived
+        is_deleted
       }
     }
   `,
   UPDATE_CHANNEL: gql`
-    mutation updateChannel($channel_id: ID!, $input: UpdateChannelInput!) {
+    mutation updateChannel($channel_id: ID!, $input: updateChannelInput!) {
       updateChannel(channel_id: $channel_id, input: $input) {
         id
         server_id
@@ -328,6 +331,9 @@ export const channelMutations = {
         private {
           is_private
         }
+        is_nsfw
+        is_archived
+        is_deleted
       }
     }
   `,
@@ -403,6 +409,9 @@ export const channelMutations = {
         private {
           is_private
         }
+        is_nsfw
+        is_archived
+        is_deleted
       }
     }
   `,
