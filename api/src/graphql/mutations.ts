@@ -300,394 +300,149 @@ export const serverEmojiMutations = {
   `,
 };
 
-export const serverBansMutations = {
-  CREATE_SERVER_BAN: gql`
-    mutation createServerBan($server_id: ID!, $user_id: ID!) {
-      createServerBan(server_id: $server_id, user_id: $user_id) {
+// Channels (and its Permission) Mutation
+export const channelMutations = {
+  // Channels
+  CREATE_CHANNEL: gql`
+    mutation createChannel($server_id: ID!, $input: CreateChannelInput!) {
+      createChannel(server_id: $server_id, input: $input) {
+        id
         server_id
-        user_id
+        category_id
+        name
+        position
+        private {
+          is_private
+        }
       }
     }
   `,
-  CREATE_SERVER_BULK_BAN: gql`
-    mutation createServerBulkBan($server_id: ID!, $user_ids: [ID]!) {
-      createServerBulkBan(server_id: $server_id, user_ids: $user_ids) {
+  UPDATE_CHANNEL: gql`
+    mutation updateChannel($channel_id: ID!, $input: UpdateChannelInput!) {
+      updateChannel(channel_id: $channel_id, input: $input) {
+        id
         server_id
-        user_id
+        category_id
+        name
+        position
+        private {
+          is_private
+        }
       }
     }
   `,
-  DELETE_SERVER_BAN: gql`
-    mutation deleteServerBan($server_id: ID!, $user_id: ID!) {
-      deleteServerBan(server_id: $server_id, user_id: $user_id)
+  DELETE_CHANNEL: gql`
+    mutation deleteChannel($channel_id: ID!) {
+      deleteChannel(channel_id: $channel_id)
     }
   `,
-  CREATE_SERVER_KICK: gql`
-    mutation createServerKick($server_id: ID!, $user_id: ID!) {
-      createServerKick(server_id: $server_id, user_id: $user_id)
+  HARD_DELETE_CHANNEL: gql`
+    mutation hardDeleteChannel($channel_id: ID!) {
+      hardDeleteChannel(channel_id: $channel_id)
+    }
+  `,
+
+  // Private Channel
+  ADD_PRIVATE_CHANNEL_ID: gql`
+    mutation addPrivateChannelID(
+      $channel_id: ID!
+      $id: ID!
+      $is_user: Boolean!
+    ) {
+      addPrivateChannelID(channel_id: $channel_id, id: $id, is_user: $is_user) {
+        id
+        server_id
+        category_id
+        name
+        position
+        private {
+          is_private
+        }
+      }
+    }
+  `,
+  REMOVE_PRIVATE_CHANNEL_ID: gql`
+    mutation removePrivateChannelID(
+      $channel_id: ID!
+      $id: ID!
+      $is_user: Boolean!
+    ) {
+      removePrivateChannelID(
+        channel_id: $channel_id
+        id: $id
+        is_user: $is_user
+      ) {
+        id
+        server_id
+        category_id
+        name
+        position
+        private {
+          is_private
+        }
+      }
+    }
+  `,
+
+  MOVE_CHANNEL: gql`
+    mutation moveChannel(
+      $channel_id: ID!
+      $category_id: ID
+      $new_position: Int
+    ) {
+      moveChannel(
+        channel_id: $channel_id
+        category_id: $category_id
+        new_position: $new_position
+      ) {
+        id
+        server_id
+        category_id
+        name
+        position
+        private {
+          is_private
+        }
+      }
+    }
+  `,
+
+  // Channel Permissions
+  CREATE_CHANNEL_PERMISSION: gql`
+    mutation createChannelPermission(
+      $channel_id: ID!
+      $input: CreateChannelPermissionInput!
+    ) {
+      createChannelPermission(channel_id: $channel_id, input: $input) {
+        id
+        channel_id
+        server_role_id
+        user_id
+        is_user
+        allow
+        deny
+      }
+    }
+  `,
+  UPDATE_CHANNEL_PERMISSION: gql`
+    mutation updateChannelPermission(
+      $channel_id: ID!
+      $input: UpdateChannelPermissionInput!
+    ) {
+      updateChannelPermission(channel_id: $channel_id, input: $input) {
+        id
+        channel_id
+        server_role_id
+        user_id
+        is_user
+        allow
+        deny
+      }
+    }
+  `,
+  DELETE_CHANNEL_PERMISSION: gql`
+    mutation deleteChannelPermission($id: ID!) {
+      deleteChannelPermission(id: $id)
     }
   `,
 };
-
-export const serverRoleMutations = {
-  CREATE_SERVER_ROLE: gql`
-    mutation createServerRole($server_id: ID!, $input: CreateServerRoleInput!) {
-      createServerRole(server_id: $server_id, input: $input) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  UPDATE_SERVER_ROLE: gql`
-    mutation updateServerRole($role_id: ID!, $input: UpdateServerRoleInput!) {
-      updateServerRole(role_id: $role_id, input: $input) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  UPDATE_DEFAULT_SERVER_ROLE: gql`
-    mutation updateDefaultServerRole(
-      $server_id: ID!
-      $input: UpdateServerRoleInput!
-    ) {
-      updateDefaultServerRole(server_id: $server_id, input: $input) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  DELETE_SERVER_ROLE: gql`
-    mutation deleteServerRole($role_id: ID!) {
-      deleteServerRole(role_id: $role_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-
-  ADD_USER_TO_ROLE: gql`
-    mutation addUserToRole($role_id: ID!, $user_id: ID!) {
-      addUserToRole(role_id: $role_id, user_id: $user_id) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-      }
-    }
-  `,
-
-  REMOVE_USER_FROM_ROLE: gql`
-    mutation removeUserFromRole($role_id: ID!, $user_id: ID!) {
-      removeUserFromRole(role_id: $role_id, user_id: $user_id) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-      }
-    }
-  `,
-};
-
-export const serverCategoryPermissionMutations = {
-  CREATE_CATEGORY_ROLE_PERMISSION: gql`
-    mutation createCategoryRolePermission(
-      $role_id: ID!
-      $category_id: ID!
-      $permissions: String!
-    ) {
-      createCategoryRolePermission(
-        role_id: $role_id
-        category_id: $category_id
-        permissions: $permissions
-      ) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  CREATE_CATEGORY_USER_PERMISSION: gql`
-    mutation createCategoryUserPermission(
-      $user_id: ID!
-      $category_id: ID!
-      $permissions: String!
-    ) {
-      createCategoryUserPermission(
-        user_id: $user_id
-        category_id: $category_id
-        permissions: $permissions
-      ) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-        permissions
-      }
-    }
-  `,
-  UPDATE_CATEGORY_ROLE_PERMISSION: gql`
-    mutation updateCategoryRolePermission(
-      $role_id: ID!
-      $category_id: ID!
-      $permissions: String!
-    ) {
-      updateCategoryRolePermission(
-        role_id: $role_id
-        category_id: $category_id
-        permissions: $permissions
-      ) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  UPDATE_CATEGORY_USER_PERMISSION: gql`
-    mutation updateCategoryUserPermission(
-      $user_id: ID!
-      $category_id: ID!
-      $permissions: String!
-    ) {
-      updateCategoryUserPermission(
-        user_id: $user_id
-        category_id: $category_id
-        permissions: $permissions
-      ) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-        permissions
-      }
-    }
-  `,
-  DELETE_CATEGORY_ROLE_PERMISSION: gql`
-    mutation deleteCategoryRolePermission(
-      $role_id: ID!
-      $category_id: ID!
-    ) {
-      deleteCategoryRolePermission(role_id: $role_id, category_id: $category_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  DELETE_CATEGORY_USER_PERMISSION: gql`
-    mutation deleteCategoryUserPermission(
-      $user_id: ID!
-      $category_id: ID!
-    ) {
-      deleteCategoryUserPermission(user_id: $user_id, category_id: $category_id) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-        permissions
-      }
-    }
-  `,
-}
-
-export const serverChannelPermissionMutations = {
-  CREATE_CHANNEL_ROLE_PERMISSION: gql`
-    mutation createChannelRolePermission(
-      $role_id: ID!
-      $channel_id: ID!
-      $permissions: String!
-    ) {
-      createChannelRolePermission(
-        role_id: $role_id
-        channel_id: $channel_id
-        permissions: $permissions
-      ) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  CREATE_CHANNEL_USER_PERMISSION: gql`
-    mutation createChannelUserPermission(
-      $user_id: ID!
-      $channel_id: ID!
-      $permissions: String!
-    ) {
-      createChannelUserPermission(
-        user_id: $user_id
-        channel_id: $channel_id
-        permissions: $permissions
-      ) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-        permissions
-      }
-    }
-  `,
-  UPDATE_CHANNEL_ROLE_PERMISSION: gql`
-    mutation updateChannelRolePermission(
-      $role_id: ID!
-      $channel_id: ID!
-      $permissions: String!
-    ) {
-      updateChannelRolePermission(
-        role_id: $role_id
-        channel_id: $channel_id
-        permissions: $permissions
-      ) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  UPDATE_CHANNEL_USER_PERMISSION: gql`
-    mutation updateChannelUserPermission(
-      $user_id: ID!
-      $channel_id: ID!
-      $permissions: String!
-    ) {
-      updateChannelUserPermission(
-        user_id: $user_id
-        channel_id: $channel_id
-        permissions: $permissions
-      ) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-        permissions
-      }
-    }
-  `,
-  DELETE_CHANNEL_ROLE_PERMISSION: gql`
-    mutation deleteChannelRolePermission(
-      $role_id: ID!
-      $channel_id: ID!
-    ) {
-      deleteChannelRolePermission(role_id: $role_id, channel_id: $channel_id) {
-        id
-        server_id
-        name
-        color
-        allow_anyone_mention
-        position
-        permissions
-        is_admin
-        default
-        last_modified
-        number_of_users
-      }
-    }
-  `,
-  DELETE_CHANNEL_USER_PERMISSION: gql`
-    mutation deleteChannelUserPermission(
-      $user_id: ID!
-      $channel_id: ID!
-    ) {
-      deleteChannelUserPermission(user_id: $user_id, channel_id: $channel_id) {
-        id
-        username
-        display_name
-        avatar_url
-        banner_url
-        about_me
-        permissions
-      }
-    }
-  `,
-}
-
