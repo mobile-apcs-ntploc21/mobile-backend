@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import ModelNames from "./modelNames";
 
 export enum CustomStatus {
   ONLINE = "ONLINE",
@@ -45,6 +46,6 @@ const schema = new Schema<UserStatus>({
   },
 });
 
-const UserStatusModel = model<UserStatus>("User_Status", schema);
+const UserStatusModel = model<UserStatus>(ModelNames.UserStatus, schema);
 
 export default UserStatusModel;

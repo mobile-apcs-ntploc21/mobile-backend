@@ -1,6 +1,7 @@
 import server from "@/graphql/typedefs/server";
 import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
+import ModelNames from "./modelNames";
 
 interface IServerEmoji {
   server_id: Schema.Types.ObjectId;
@@ -51,6 +52,9 @@ serverEmojiSchema.pre("validate", function (next) {
   next();
 });
 
-const ServerEmoji = model<IServerEmoji>("ServerEmoji", serverEmojiSchema);
+const ServerEmoji = model<IServerEmoji>(
+  ModelNames.Server_Emoji,
+  serverEmojiSchema
+);
 
 export default ServerEmoji;

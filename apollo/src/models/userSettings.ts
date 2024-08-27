@@ -1,5 +1,6 @@
 import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
+import ModelNames from "./modelNames";
 
 export interface IUserSettings {
   user_id: { type: Schema.Types.ObjectId };
@@ -22,5 +23,8 @@ const userSettingsSchema = new Schema<IUserSettings>(
   { timestamps: true, id: false }
 );
 
-const UserSettingsModel = model<IUserSettings>("settings", userSettingsSchema);
+const UserSettingsModel = model<IUserSettings>(
+  ModelNames.UserSetting,
+  userSettingsSchema
+);
 export default UserSettingsModel;

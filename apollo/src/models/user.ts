@@ -2,6 +2,7 @@ import mongoose, { model, Schema } from "mongoose";
 
 import validator from "validator";
 import UserStatusModel from "./user_status";
+import ModelNames from "./modelNames";
 
 interface IUser {
   username: string;
@@ -67,5 +68,5 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-const UserModel = mongoose.model<IUser>("User", userSchema);
+const UserModel = mongoose.model<IUser>(ModelNames.User, userSchema);
 export default UserModel;
