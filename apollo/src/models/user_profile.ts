@@ -1,5 +1,6 @@
 import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
+import ModelNames from "./modelNames";
 
 interface IUserProfile {
   user_id: mongoose.Types.ObjectId;
@@ -15,12 +16,12 @@ const userProfileSchema = new Schema<IUserProfile>(
   {
     user_id: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: ModelNames.User,
       required: [true, "User ID is required"],
     },
     server_id: {
       type: Schema.Types.ObjectId,
-      ref: "Server",
+      ref: ModelNames.Server,
       required: false,
       default: null,
     },
@@ -65,5 +66,8 @@ const userProfileSchema = new Schema<IUserProfile>(
 // Create a unique index for user_id and server_id
 userProfileSchema.index({ user_id: 1, server_id: 1 }, { unique: true });
 
-const UserProfileModel = model<IUserProfile>("User_Profile", userProfileSchema);
+const UserProfileModel = model<IUserProfile>(
+  ModelNames.UserProfile,
+  userProfileSchema
+);
 export default UserProfileModel;

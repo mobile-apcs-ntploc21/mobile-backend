@@ -1,11 +1,12 @@
 enum ModelNames {
-  User = 'User',
-  Server = 'Server',
-  Server_Member = 'Server_Member',
-  Relationship = 'Relationship',
-  UserProfile = 'User_Profile',
-  UserStatus = 'User_Status',
-  UserSetting = 'settings',
+  User = "user",
+  Server = "servers",
+  Server_Member = "server_members",
+  Server_Emoji = "server_emojis",
+  Relationship = "relationships",
+  UserProfile = "user_profiles",
+  UserStatus = "user_status",
+  UserSetting = "settings",
 }
 
 export default ModelNames;
