@@ -59,7 +59,7 @@ export const getUserServers = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const user_id = res.locals.userId as string;
+  const user_id = res.locals.uid as string;
 
   try {
     const servers = await getServersByUserId(user_id).catch(() => null);

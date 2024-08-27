@@ -1,13 +1,13 @@
-import { IResolvers } from '@graphql-tools/utils';
-import { PubSub, withFilter } from 'graphql-subscriptions';
-import { AuthenticationError, UserInputError } from 'apollo-server';
-import { GraphQLJSON } from 'graphql-scalars';
+import { IResolvers } from "@graphql-tools/utils";
+import { PubSub, withFilter } from "graphql-subscriptions";
+import { AuthenticationError, UserInputError } from "apollo-server";
+import { GraphQLJSON } from "graphql-scalars";
 
-import ServerModel from '../../models/server';
-import ServerEmoji from '../../models/serverEmoji';
-import UserModel from '../../models/user';
-import { getAsyncIterator, publishEvent, ServerEvents } from '../pubsub/pubsub';
-import ServerMemberModel from '../../models/server_member';
+import ServerModel from "../../models/server";
+import ServerEmoji from "../../models/serverEmoji";
+import UserModel from "../../models/user";
+import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
+import ServerMemberModel from "../../models/server_member";
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -85,21 +85,28 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError('Server not found !');
+        throw new UserInputError("Server not found !");
       }
 
       return server;
     },
     servers: async (_, { user_id }) => {
-      // TODO: Implement server fetching logic after we have "Server Member" model.
-      return [];
+      const serverId = await ServerMemberModel.find({ user_id }).select(
+        "server_id"
+      );
+
+      const servers = await ServerModel.find({
+        _id: { $in: serverId.map((server) => server._id.server_id) },
+      });
+
+      return servers;
     },
     getInviteCode: async (_, { server_id }) => {
       // TODO: Implement server fetching logic after we have "Server Member" model via user roles.
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError('Server not found !');
+        throw new UserInputError("Server not found !");
       }
 
       return server.invite_code;
@@ -111,7 +118,7 @@ const serverAPI: IResolvers = {
       try {
         const user = await UserModel.findById(input.owner_id);
         if (!user) {
-          throw new UserInputError('User not found !');
+          throw new UserInputError("User not found !");
         }
 
         const server = await createServerTransaction(input);
@@ -124,7 +131,7 @@ const serverAPI: IResolvers = {
     updateServer: async (_, { server_id, input }, context) => {
       const __ = await ServerModel.findById(server_id);
       if (!__) {
-        throw new UserInputError('Server not found !');
+        throw new UserInputError("Server not found !");
       }
 
       const server = await ServerModel.findByIdAndUpdate(server_id, input, {
@@ -154,13 +161,13 @@ const serverAPI: IResolvers = {
     transferOwnership: async (_, { server_id, user_id }, context) => {
       const user = await UserModel.findById(user_id);
       if (!user) {
-        throw new UserInputError('User not found !');
+        throw new UserInputError("User not found !");
       }
 
       const server = await ServerModel.findById(server_id);
       const owner = String(server?.owner) || null;
       if (!server) {
-        throw new UserInputError('Server not found !');
+        throw new UserInputError("Server not found !");
       }
 
       if (user_id === owner) {
@@ -175,7 +182,7 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError('Server not found !');
+        throw new UserInputError("Server not found !");
       }
 
       const inviteCode = {
@@ -192,7 +199,7 @@ const serverAPI: IResolvers = {
         }
       ).catch((error) => {
         throw new UserInputError(
-          'Cannot add this invite code this time. The invite code may already exist or invalid.'
+          "Cannot add this invite code this time. The invite code may already exist or invalid."
         );
       });
 
@@ -202,7 +209,7 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError('Server not found !');
+        throw new UserInputError("Server not found !");
       }
 
       await ServerModel.updateOne(
