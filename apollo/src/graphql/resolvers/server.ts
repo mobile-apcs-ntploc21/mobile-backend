@@ -8,6 +8,7 @@ import ServerEmoji from "../../models/serverEmoji";
 import UserModel from "../../models/user";
 import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
 import ServerMemberModel from "../../models/server_member";
+import mongoose from "mongoose";
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -29,6 +30,11 @@ const createServerTransaction = async (input) => {
       new: true,
     });
 
+    // Get the number of servers the user is a member of
+    const servers = await ServerMemberModel.find({
+      "_id.user_id": input.owner_id,
+    });
+
     await ServerMemberModel.create(
       [
         {
@@ -36,6 +42,8 @@ const createServerTransaction = async (input) => {
             server_id: server.id,
             user_id: input.owner_id,
           },
+          is_favorite: false,
+          position: servers.length,
         },
       ],
       { session }
@@ -91,15 +99,47 @@ const serverAPI: IResolvers = {
       return server;
     },
     servers: async (_, { user_id }) => {
-      const serverId = await ServerMemberModel.find({ user_id }).select(
-        "server_id"
-      );
-
-      const servers = await ServerModel.find({
-        _id: { $in: serverId.map((server) => server._id.server_id) },
+      // Find the server ids that the user is a member of
+      const serverMembers = await ServerMemberModel.find({
+        "_id.user_id": user_id,
       });
 
-      return servers;
+      // Get the server ids
+      const serverIds = serverMembers.map(
+        (serverMember) => serverMember._id.server_id
+      );
+
+      // Find the servers
+      const servers = await ServerModel.find({ _id: { $in: serverIds } });
+
+      // Map servers with is_favorite and position
+      const serversWithExtraInfo = servers.map((server) => {
+        // Find the server member info
+        const serverMember = serverMembers.find(
+          (serverMember) =>
+            String(serverMember._id.server_id) === String(server._id)
+        );
+
+        // If found, return the server with is_favorite and position
+        if (serverMember) {
+          return {
+            ...server.toObject(),
+            id: server._id,
+            is_favorite: serverMember.is_favorite,
+            position: serverMember.position,
+          };
+        }
+
+        // Otherwise, assign default falue
+        return {
+          ...server.toObject(),
+          id: server._id,
+          is_favorite: false,
+          position: 0,
+        };
+      });
+
+      return serversWithExtraInfo;
     },
     getInviteCode: async (_, { server_id }) => {
       // TODO: Implement server fetching logic after we have "Server Member" model via user roles.
@@ -220,6 +260,52 @@ const serverAPI: IResolvers = {
       );
 
       return true;
+    },
+
+    setFavoriteServer: async (_, { user_id, server_id, is_favorite }) => {
+      const server = await ServerMemberModel.findOneAndUpdate(
+        {
+          "_id.server_id": server_id,
+          "_id.user_id": user_id,
+        },
+        { is_favorite },
+        { new: true }
+      );
+
+      if (!server) {
+        throw new UserInputError("Server not found !");
+      }
+
+      return server;
+    },
+    moveServer: async (_, { user_id, input }) => {
+      // input is an array of server_id and position to be updated
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        for (const server of input) {
+          const server_id = server.server_id;
+          const position = server.position;
+
+          await ServerMemberModel.updateOne(
+            {
+              "_id.server_id": server_id,
+              "_id.user_id": user_id,
+            },
+            { position },
+            { session }
+          );
+        }
+
+        await session.commitTransaction();
+        return true;
+      } catch (error) {
+        await session.abortTransaction();
+        return false;
+      } finally {
+        session.endSession();
+      }
     },
   },
 };
