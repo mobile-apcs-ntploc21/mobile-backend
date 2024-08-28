@@ -409,6 +409,10 @@ export const setFavoriteServer = async (
       input
     );
 
+    if (!response) {
+      return res.status(400).json({ message: "Failed to update favorite." });
+    }
+
     return res.status(200).json({ message: "Server favorite updated" });
   } catch (error) {
     return next(error);
