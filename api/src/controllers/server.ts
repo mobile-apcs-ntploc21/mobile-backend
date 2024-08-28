@@ -64,6 +64,14 @@ export const getUserServers = async (
   try {
     const servers = await getServersByUserId(user_id).catch(() => null);
 
+    // Sort servers by position
+    servers.sort((a: any, b: any) => a.position - b.position);
+
+    // Indexing the position
+    servers.forEach((server: any, index: number) => {
+      server.position = index;
+    });
+
     return res.status(200).json({ ...servers });
   } catch (error) {
     return next(error);
@@ -325,6 +333,72 @@ export const deleteInviteCode = async (
     return res
       .status(200)
       .json({ message: "Invite code deleted successfully" });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const moveServer = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  // Get array of servers { server_id, position }
+  const { servers } = req.body;
+  const user_id = res.locals.uid;
+
+  if (!servers) {
+    return res.status(400).json({ message: "Servers are required." });
+  }
+
+  if (!user_id) {
+    return res.status(400).json({ message: "User ID is required." });
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      serverMutations.MOVE_SERVER,
+      {
+        user_id: user_id,
+        input: servers,
+      }
+    );
+
+    if (!response) {
+      return res.status(400).json({ message: "Failed to move servers." });
+    }
+
+    return res.status(200).json({ message: "Servers moved successfully" });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const setFavoriteServer = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { server_id, is_favorite } = req.body;
+  const user_id = res.locals.uid;
+
+  if (!server_id || is_favorite === undefined) {
+    return res
+      .status(400)
+      .json({ message: "Server ID and is_favorite are required." });
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      serverMutations.SET_FAVORITE_SERVER,
+      {
+        user_id: user_id,
+        server_id: server_id,
+        is_favorite: is_favorite,
+      }
+    );
+
+    return res.status(200).json({ ...response.setFavoriteServer });
   } catch (error) {
     return next(error);
   }

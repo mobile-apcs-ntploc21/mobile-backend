@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 // Create user
 export const CREATE_USER = gql`
@@ -224,6 +224,26 @@ export const serverMutations = {
   DELETE_INVITE_CODE: gql`
     mutation deleteInviteCode($server_id: ID!, $url: String!) {
       deleteInviteCode(server_id: $server_id, url: $url)
+    }
+  `,
+
+  MOVE_SERVER: gql`
+    mutation moveServer($user_id: ID!, $input: [MoveServerInput!]!) {
+      moveServer(user_id: $user_id, input: $input)
+    }
+  `,
+
+  SET_FAVORITE_SERVER: gql`
+    mutation setFavoriteServer(
+      $user_id: ID!
+      $server_id: ID!
+      $is_favorite: Boolean!
+    ) {
+      setFavoriteServer(
+        user_id: $user_id
+        server_id: $server_id
+        is_favorite: $is_favorite
+      )
     }
   `,
 };
