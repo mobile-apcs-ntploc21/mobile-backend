@@ -237,7 +237,7 @@ export const serverMutations = {
     mutation setFavoriteServer(
       $user_id: ID!
       $server_id: ID!
-      $is_favorite: Boolean!
+      $is_favorite: Boolean
     ) {
       setFavoriteServer(
         user_id: $user_id
