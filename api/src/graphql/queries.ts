@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 export const GET_USER_BY_ID = gql`
   query getUserById($id: ID!) {
@@ -184,6 +184,8 @@ export const serverQueries = {
         banner_url
         totalMembers
         totalEmojis
+        is_favorite
+        position
       }
     }
   `,
