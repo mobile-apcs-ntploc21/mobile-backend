@@ -35,6 +35,11 @@ serverRouter.get("/list/", authMiddleware, serverCtrl.getUserServers);
 serverRouter.get("/:serverId", serverCtrl.getServer);
 
 serverRouter.put("/move", authMiddleware, serverCtrl.moveServer);
+serverRouter.patch(
+  "/:serverId/favorite",
+  authMiddleware,
+  serverCtrl.setFavoriteServer
+);
 
 serverRouter.post("/", authMiddleware, serverCtrl.createServer);
 serverRouter.put("/:serverId", authMiddleware, serverCtrl.updateServer);
@@ -60,13 +65,6 @@ serverRouter.post(
   "/:serverId/transfer-ownership",
   authMiddleware,
   serverCtrl.transferOwnership
-);
-
-// Set favorite
-serverRouter.patch(
-  "/:serverId/favorite",
-  authMiddleware,
-  serverCtrl.setFavoriteServer
 );
 
 export default serverRouter;

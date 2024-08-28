@@ -379,26 +379,37 @@ export const setFavoriteServer = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { server_id, is_favorite } = req.body;
+  console.log("setFavoriteServer");
+  const is_favorite = req.body?.is_favorite ?? undefined;
+  const server_id = req.params?.serverId;
   const user_id = res.locals.uid;
 
-  if (!server_id || is_favorite === undefined) {
+  if (!server_id) {
     return res
       .status(400)
       .json({ message: "Server ID and is_favorite are required." });
   }
 
   try {
+    const input: {
+      user_id: string;
+      server_id: string;
+      is_favorite?: boolean;
+    } = {
+      user_id,
+      server_id,
+    };
+
+    if (is_favorite !== undefined) {
+      input.is_favorite = is_favorite;
+    }
+
     const response = await graphQLClient().request(
       serverMutations.SET_FAVORITE_SERVER,
-      {
-        user_id: user_id,
-        server_id: server_id,
-        is_favorite: is_favorite,
-      }
+      input
     );
 
-    return res.status(200).json({ ...response.setFavoriteServer });
+    return res.status(200).json({ message: "Server favorite updated" });
   } catch (error) {
     return next(error);
   }

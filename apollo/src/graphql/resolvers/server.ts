@@ -263,20 +263,33 @@ const serverAPI: IResolvers = {
     },
 
     setFavoriteServer: async (_, { user_id, server_id, is_favorite }) => {
-      const server = await ServerMemberModel.findOneAndUpdate(
+      if (is_favorite === undefined) {
+        // Toggle favorite
+        const serverMember = await ServerMemberModel.findOne({
+          "_id.server_id": server_id,
+          "_id.user_id": user_id,
+        });
+
+        if (!serverMember) {
+          throw new UserInputError("Server not found !");
+        }
+
+        is_favorite = !serverMember.is_favorite;
+      }
+
+      const server = await ServerMemberModel.updateOne(
         {
           "_id.server_id": server_id,
           "_id.user_id": user_id,
         },
-        { is_favorite },
-        { new: true }
+        { is_favorite: is_favorite }
       );
 
       if (!server) {
         throw new UserInputError("Server not found !");
       }
 
-      return server;
+      return true;
     },
     moveServer: async (_, { user_id, input }) => {
       // input is an array of server_id and position to be updated
