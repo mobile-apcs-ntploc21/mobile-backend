@@ -5,11 +5,16 @@ const gqlTypes = gql`
     id: ID
     owner: ID
     name: String
+
     avatar_url: String
     banner_url: String
     invite_code: [InviteCode]
     totalMembers: Int
     totalEmojis: Int
+
+    is_favorite: Boolean
+    position: Int
+
     createdAt: String
     updatedAt: String
   }
@@ -42,6 +47,11 @@ const gqlAPI = gql`
     maxUses: Int!
   }
 
+  input MoveServerInput {
+    server_id: ID!
+    position: Int!
+  }
+
   extend type Query {
     server(server_id: ID!): Server
     servers(user_id: ID!): [Server!]
@@ -57,6 +67,13 @@ const gqlAPI = gql`
 
     createInviteCode(server_id: ID!, input: CreateInviteCodeInput!): InviteCode!
     deleteInviteCode(server_id: ID!, url: String!): Boolean
+
+    setFavoriteServer(
+      user_id: ID!
+      server_id: ID!
+      is_favorite: Boolean
+    ): Boolean
+    moveServer(user_id: ID!, input: [MoveServerInput!]!): Boolean
   }
 `;
 
