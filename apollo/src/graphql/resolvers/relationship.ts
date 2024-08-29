@@ -1,8 +1,13 @@
 import {IResolvers} from '@graphql-tools/utils';
 import RelationshipModel, {RelationshipType} from "../../models/relationship";
-import UserModel from "../../models/user";
+import UserProfileModel from "../../models/user_profile";
+import {UserInputError} from "apollo-server";
+import {defaultProfile} from "@/graphql/resolvers/user_profile";
+import {PubSub} from "graphql-subscriptions";
 
-const relationshipResolvers: IResolvers = {
+const pubsub = new PubSub();
+
+const relationshipResolverAPI: IResolvers = {
     Query: {
         getRelationshipType: async (_, { user_first_id, user_second_id }) => {
             const relationship = await RelationshipModel.findOne({
@@ -22,13 +27,22 @@ const relationshipResolvers: IResolvers = {
             });
 
             // Use Promise.all to fetch all friends in parallel
-            const friends = await Promise.all(relationships.map(async ({ _id }) => {
-                const friendId = _id.user_first_id === user_id ? _id.user_second_id : _id.user_first_id;
-                const friend = await UserModel.findById(friendId); // Fetch the friend from the UserModel
-                return { id: friendId, username: friend.username }; // Return the id and username
-            }));
+            return await Promise.all(relationships.map(async ({_id}) => {
+                const friend_id = _id.user_first_id.toString() === user_id ? _id.user_second_id : _id.user_first_id;
+                const friend = await UserProfileModel.findOne({
+                    user_id: friend_id,
+                    server_id: null,
+                });
 
-            return friends;
+                return {
+                    id: friend_id,
+                    username: friend.username,
+                    display_name: friend.display_name,
+                    avatar_url: friend.avatar_url,
+                    banner_url: friend.banner_url,
+                    about_me: friend.about_me,
+                };
+            }));
         },
 
         getReceivedFriendRequests: async (_, { user_id }) => {
@@ -40,13 +54,22 @@ const relationshipResolvers: IResolvers = {
             });
 
             // Use Promise.all to fetch all friends in parallel
-            const friends = await Promise.all(relationships.map(async ({ _id }) => {
-                const friendId = _id.user_first_id === user_id ? _id.user_second_id : _id.user_first_id;
-                const friend = await UserModel.findById(friendId); // Fetch the friend from the UserModel
-                return { id: friendId, username: friend.username }; // Return the id and username
-            }));
+            return await Promise.all(relationships.map(async ({_id}) => {
+                const friend_id = _id.user_first_id.toString() === user_id ? _id.user_second_id : _id.user_first_id;
+                const friend = await UserProfileModel.findOne({
+                    user_id: friend_id,
+                    server_id: null,
+                });
 
-            return friends;
+                return {
+                    id: friend_id,
+                    username: friend.username,
+                    display_name: friend.display_name,
+                    avatar_url: friend.avatar_url,
+                    banner_url: friend.banner_url,
+                    about_me: friend.about_me,
+                };
+            }));
         },
 
         getSentFriendRequests: async (_, { user_id }) => {
@@ -57,16 +80,23 @@ const relationshipResolvers: IResolvers = {
                 ],
             });
 
-            console.log(relationships);
-
             // Use Promise.all to fetch all friends in parallel
-            const friends = await Promise.all(relationships.map(async ({ _id }) => {
-                const friendId = _id.user_first_id === user_id ? _id.user_second_id : _id.user_first_id;
-                const friend = await UserModel.findById(friendId); // Fetch the friend from the UserModel
-                return { id: friendId, username: friend.username }; // Return the id and username
-            }));
+            return await Promise.all(relationships.map(async ({_id}) => {
+                const friend_id = _id.user_first_id.toString() === user_id ? _id.user_second_id : _id.user_first_id;
+                const friend = await UserProfileModel.findOne({
+                    user_id: friend_id,
+                    server_id: null,
+                });
 
-            return friends;
+                return {
+                    id: friend_id,
+                    username: friend.username,
+                    display_name: friend.display_name,
+                    avatar_url: friend.avatar_url,
+                    banner_url: friend.banner_url,
+                    about_me: friend.about_me,
+                };
+            }));
         },
 
         getBlockedUsers: async (_, { user_id }) => {
@@ -78,13 +108,22 @@ const relationshipResolvers: IResolvers = {
             });
 
             // Use Promise.all to fetch all friends in parallel
-            const friends = await Promise.all(relationships.map(async ({ _id }) => {
-                const friendId = _id.user_first_id === user_id ? _id.user_second_id : _id.user_first_id;
-                const friend = await UserModel.findById(friendId); // Fetch the friend from the UserModel
-                return { id: friendId, username: friend.username }; // Return the id and username
-            }));
+            return await Promise.all(relationships.map(async ({_id}) => {
+                const friend_id = _id.user_first_id.toString() === user_id ? _id.user_second_id : _id.user_first_id;
+                const friend = await UserProfileModel.findOne({
+                    user_id: friend_id,
+                    server_id: null,
+                });
 
-            return friends;
+                return {
+                    id: friend_id,
+                    username: friend.username,
+                    display_name: friend.display_name,
+                    avatar_url: friend.avatar_url,
+                    banner_url: friend.banner_url,
+                    about_me: friend.about_me,
+                };
+            }));
         },
     },
     Mutation: {
@@ -119,14 +158,33 @@ const relationshipResolvers: IResolvers = {
         },
 
         deleteRelationship: async (_, { user_first_id, user_second_id }) => {
-            const relationship = await RelationshipModel.findOneAndDelete({
+            return RelationshipModel.findOneAndDelete({
                 '_id.user_first_id': user_first_id,
                 '_id.user_second_id': user_second_id,
             });
-
-            return relationship;
         },
     },
 };
 
-export default relationshipResolvers;
+const relationshipResolverWs: IResolvers = {
+    // ObjectId,
+    Subscription: {
+        friendListChanged: {
+            subscribe: async (_, { user_id }) => {
+                try {
+                    // to be updated
+                    return pubsub.asyncIterator(
+                      `FRIEND_LIST_CHANGED // TO BE UPDATED`
+                    );
+                } catch (err) {
+                    throw new Error(
+                      "Error subscribing to friend list updates. Maybe check the user ID or the result of the query."
+                    );
+                }
+            },
+        },
+    },
+};
+
+
+export default { API: relationshipResolverAPI, WS: relationshipResolverWs };

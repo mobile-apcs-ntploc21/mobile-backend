@@ -557,6 +557,8 @@ export const getSentFriendRequests = async (
   try {
     const user_id = res.locals.uid;
 
+    console.log(user_id);
+
     const { getSentFriendRequests: response } = await graphQLClient().request(
       GET_SENT_FRIEND_REQUESTS,
       {

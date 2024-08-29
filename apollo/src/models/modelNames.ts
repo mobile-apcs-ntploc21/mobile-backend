@@ -10,10 +10,10 @@ enum ModelNames {
   Category = 'categories',
   ServerRole = 'server_roles',
   AssignedUserRole = 'assigned_user_roles',
-  CategoryRolePermissions = 'category_role_permissions',
-  CategoryUserPermissions = 'category_user_permissions',
-  ChannelRolePermissions = 'channel_role_permissions',
-  ChannelUserPermissions = 'channel_user_permissions',
+  CategoryRolePermission = 'category_role_permissions',
+  CategoryUserPermission = 'category_user_permissions',
+  ChannelRolePermission = 'channel_role_permissions',
+  ChannelUserPermission = 'channel_user_permissions',
   Server_Emoji = "server_emojis",
 }
 

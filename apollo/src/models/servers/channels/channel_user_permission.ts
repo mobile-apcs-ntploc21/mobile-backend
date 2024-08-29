@@ -1,13 +1,13 @@
 import { model, Schema } from 'mongoose';
 import ModelNames from './../../modelNames';
 
-interface IChannelUserPermissions {
+interface IChannelUserPermission {
   _id: { user_id: Schema.Types.ObjectId; channel_id: Schema.Types.ObjectId };
   permissions: string;
   last_modified: Date;
 }
 
-const schema = new Schema<IChannelUserPermissions>(
+const schema = new Schema<IChannelUserPermission>(
   {
     _id: {
       user_id: {
@@ -33,8 +33,8 @@ const schema = new Schema<IChannelUserPermissions>(
   { timestamps: true }
 );
 
-const ChannelUserPermissions = model<IChannelUserPermissions>(
-  ModelNames.ChannelUserPermissions,
+const ChannelUserPermission = model<IChannelUserPermission>(
+  ModelNames.ChannelUserPermission,
   schema
 );
-export default ChannelUserPermissions;
+export default ChannelUserPermission;
