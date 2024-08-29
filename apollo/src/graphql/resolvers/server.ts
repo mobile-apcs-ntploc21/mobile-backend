@@ -70,7 +70,10 @@ const deleteServerTransaction = async (server_id) => {
     // Delete server
     await ServerModel.findByIdAndDelete(server_id, { session });
     // Delete server memebers
-    await ServerMemberModel.deleteMany({ server_id }, { session });
+    await ServerMemberModel.deleteMany(
+      { "_id.server_id": server_id },
+      { session }
+    );
 
     // TODO: Remove all emojis from the server
     await ServerEmoji.deleteMany({ server_id }, { session });

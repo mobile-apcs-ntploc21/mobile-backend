@@ -175,7 +175,7 @@ export const deleteServer = async (
     return res.status(404).json({ message: "Server not found." });
   }
 
-  if (server.owner.id !== res.locals.uid) {
+  if (server.owner !== res.locals.uid) {
     return res
       .status(403)
       .json({ message: "You don't have permission to delete this server." });
@@ -379,7 +379,6 @@ export const setFavoriteServer = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  console.log("setFavoriteServer");
   const is_favorite = req.body?.is_favorite ?? undefined;
   const server_id = req.params?.serverId;
   const user_id = res.locals.uid;
