@@ -3,11 +3,11 @@ import { IResolvers } from "@graphql-tools/utils";
 import { PubSub, withFilter } from "graphql-subscriptions";
 import { AuthenticationError, UserInputError } from "apollo-server";
 
-import ServerModel from "../../../models/server";
-import ChannelModel from "../../../models/Channel/channel";
-import ChannelPermissionModel from "../../../models/Channel/channel_permission";
-import CategoryModel from "../../../models/Channel/category";
-import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
+import ServerModel from "../../../../models/servers/server";
+import ChannelModel from "../../../../models/servers/channels/channel";
+import ChannelPermissionModel from "../../../../models/servers/channels/channel_permission";
+import CategoryModel from "../../../../models/servers/channels/category";
+import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels

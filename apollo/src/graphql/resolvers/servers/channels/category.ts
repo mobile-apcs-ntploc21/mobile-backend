@@ -2,10 +2,10 @@ import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
 import { AuthenticationError, UserInputError } from "apollo-server";
 
-import ChannelModel from "../../../models/Channel/channel";
-import CategoryModel from "../../../models/Channel/category";
-import CategoryPermissionModel from "../../../models/Channel/category_permission";
-import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
+import ChannelModel from "../../../../models/servers/channels/channel";
+import CategoryModel from "../../../../models/servers/channels/category";
+import CategoryPermissionModel from "../../../../models/servers/channels/category_permission";
+import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the category
 const POSITION_GAP = 10; // This is the minimum gap between the position of the categories

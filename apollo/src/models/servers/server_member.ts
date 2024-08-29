@@ -1,5 +1,5 @@
-import { model, Schema } from "mongoose";
-import ModelNames from "./modelNames";
+import { model, Schema } from 'mongoose';
+import ModelNames from './../modelNames';
 
 interface IServerMember {
   _id: { server_id: Schema.Types.ObjectId; user_id: Schema.Types.ObjectId };

@@ -8,14 +8,14 @@ import { userStatusResolvers_API, userStatusResolvers_Ws } from "./user_status";
 import userSettingsResolvers from "./userSettings";
 import { userProfileApollo, userProfileWs } from "./user_profile";
 /// Server
-import serverResolver from "./server";
-import serverEmoji from "./serverEmoji";
-import serverMemberResolver from "./server_member";
+import serverResolver from "./servers/server";
+import serverEmoji from "./servers/serverEmoji";
+import serverMemberResolver from "./servers/server_member";
 /// Channel
-import channelResolver from "./Channel/channel";
-import categoryResolver from "./Channel/category";
-import channelPermissionResolver from "./Channel/channel_permission";
-import categoryPermissionResolver from "./Channel/category_permission";
+import channelResolver from "./servers/channels/channel";
+import categoryResolver from "./servers/channels/category";
+import channelPermissionResolver from "./servers/channels/channel_permission";
+import categoryPermissionResolver from "./servers/channels/category_permission";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]

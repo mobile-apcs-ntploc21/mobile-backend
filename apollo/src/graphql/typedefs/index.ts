@@ -11,14 +11,14 @@ import {
   wsTypedefs as userProfileWs,
 } from "./user_profile";
 /// Server
-import serverSchema from "./server";
-import serverMemberSchema from "./server_member";
-import serverEmoji from "./serverEmoji";
+import serverSchema from "./servers/server";
+import serverMemberSchema from "./servers/server_member";
+import serverEmoji from "./servers/serverEmoji";
 /// Channel
-import channel from "./Channel/channel";
-import channel_permission from "./Channel/channel_permission";
-import category from "./Channel/category";
-import category_permission from "./Channel/category_permission";
+import channel from "./servers/channels/channel";
+import channel_permission from "./servers/channels/channel_permission";
+import category from "./servers/channels/category";
+import category_permission from "./servers/channels/category_permission";
 
 const linkedSchema = gql`
   type Query {
