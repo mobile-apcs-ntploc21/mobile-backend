@@ -148,10 +148,22 @@ export const processImage = async (
 export const compressImage = async (image: any) => {
   const { createReadStream, filename, mimetype } = await image;
 
-  if (mimetype !== "image/jpeg" && mimetype !== "image/png") {
+  const supportedImageTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/tiff",
+    "image/svg+xml"
+  ];
+  
+  // Check if the provided mimetype is in the list of supported types
+  if (!supportedImageTypes.includes(mimetype)) {
     throw new Error("Invalid file type.");
   }
-
+	
   const stream = createReadStream();
   const buffer = await streamToBuffer(stream);
 
