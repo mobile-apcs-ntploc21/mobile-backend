@@ -159,19 +159,36 @@ export const updateServerRole = async (
   const { roleId } = req.params;
   const { name, color, allow_anyone_mention, is_admin } = req.body;
 
-  let input: {name?: string, color?: string, allow_anyone_mention?: boolean, is_admin?: boolean} = {
-    ... (name && { name }),
-    ... (color && { color }),
-    ... (allow_anyone_mention && { allow_anyone_mention }),
-    ... (is_admin && { is_admin }),
-  };
-
   try {
+    // Fetch the current role data
+    const { getServerRole: currentRole } = await graphQLClient().request(
+      serverRoleQueries.GET_SERVER_ROLE,
+      {
+        role_id: roleId,
+      }
+    );
+    // Check if the role exists
+    if (!currentRole) {
+      return res.status(404).json({ message: "Server role not found" });
+    }
+
+    // filter currentRole and keeps only these fields: name, color, allow_anyone_mention, permissions, is_admin
+    const { name: currentName, color: currentColor, allow_anyone_mention: currentAllowAnyoneMention, is_admin: currentIsAdmin } = currentRole;
+
+    // Create an updated role object
+    const updatedRole = {
+      name: name !== undefined ? name : currentName,
+      color: color !== undefined ? color : currentColor,
+      allow_anyone_mention: allow_anyone_mention !== undefined ? allow_anyone_mention : currentAllowAnyoneMention,
+      is_admin: is_admin !== undefined ? is_admin : currentIsAdmin,
+    };
+
+    // Send the updated data to the server
     const response = await graphQLClient().request(
       serverRoleMutations.UPDATE_SERVER_ROLE,
       {
         role_id: roleId,
-        input: input,
+        input: updatedRole,
       }
     );
 
@@ -184,12 +201,12 @@ export const updateServerRole = async (
       is_admin: response.updateServerRole.is_admin,
       allow_anyone_mention: response.updateServerRole.allow_anyone_mention,
       last_modified: response.updateServerRole.last_modified,
-      number_of_users: response.updateServerRole.number_of_users
+      number_of_users: response.updateServerRole.number_of_users,
     });
   } catch (error) {
     return next(error);
   }
-}
+};
 
 export const getServerRolePermissions = async (
   req: Request,
@@ -588,6 +605,62 @@ export const getRolesAssignedWithMyself = async (
       server_id: serverId,
       user_id: userId,
       roles: filteredRoles ? filteredRoles : []
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export const getCurrentUserPermissions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = res.locals.uid;
+  const serverId = res.locals.server_id;
+
+  try {
+    const { getRolesAssignedWithUser: roles } = await graphQLClient().request(
+      serverRoleQueries.GET_ROLES_ASSIGNED_WITH_USER,
+      {
+        user_id: userId,
+        server_id: serverId,
+      }
+    );
+
+    const isAdmin = roles.some((role: any) => role.is_admin);
+
+    // the finalPermissions should still have all permissions that is being denied along with permissions with allowed values
+    const finalPermissions = roles.reduce((acc: any, role: any) => {
+      let role_permissions;
+      try {
+        role_permissions = JSON.parse(role.permissions);
+      } catch (error) {
+        console.error('Invalid JSON in role.permissions:', role.permissions);
+        return acc;
+      }
+
+      if (typeof role_permissions !== 'object' || role_permissions === null) {
+        console.error('role.permissions is not an object:', role_permissions);
+        return acc;
+      }
+
+      for (const permission in role_permissions) {
+        if (role_permissions[permission] === 'ALLOWED') {
+          acc[permission] = 'ALLOWED';
+        } else if (acc[permission] !== 'ALLOWED') {
+          acc[permission] = 'DENIED';
+        }
+      }
+
+      return acc;
+    }, {});
+
+    return res.status(201).json({
+      server_id: serverId,
+      user_id: userId,
+      is_admin: isAdmin,
+      permissions: finalPermissions
     });
   } catch (error) {
     return next(error);

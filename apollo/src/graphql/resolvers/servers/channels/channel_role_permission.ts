@@ -18,11 +18,6 @@ export const defaultChannelRole = JSON.stringify({
   [GeneralChannelPermissions.VIEW_CHANNEL]: PermissionStates.DEFAULT,
   [GeneralChannelPermissions.MANAGE_CHANNEL]: PermissionStates.DEFAULT,
 
-  // Membership Permissions
-  [MembershipPermissions.MANAGE_INVITE]: PermissionStates.DEFAULT,
-  [MembershipPermissions.KICK_MEMBER]: PermissionStates.DEFAULT,
-  [MembershipPermissions.BAN_MEMBER]: PermissionStates.DEFAULT,
-
   // Text Channel Permissions
   [TextChannelPermissions.SEND_MESSAGE]: PermissionStates.DEFAULT,
   [TextChannelPermissions.ATTACH_FILE]: PermissionStates.DEFAULT,

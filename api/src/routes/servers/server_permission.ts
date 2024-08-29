@@ -1,9 +1,9 @@
 import {Router} from "express";
 
 import * as serverRoles from "../../controllers/servers/server_permission"
-
-import { checkMembershipMiddleware } from '../../utils/checkMembershipMiddleware';
-import { authMiddleware } from '../../utils/authMiddleware';
+import {checkServerAdminMiddleware} from '../../utils/checkServerAdminMiddleware';
+import {checkServerPermissionMiddleware} from "../../utils/checkServerPermissionMiddleware";
+import {ServerPermissions} from "../../constants/permissions";
 
 const serverRoleRouter = Router();
 
@@ -15,6 +15,7 @@ serverRoleRouter.get(
 
 serverRoleRouter.post(
   '/',
+  checkServerAdminMiddleware,
   serverRoles.createServerRole
 );
 
@@ -23,29 +24,34 @@ serverRoleRouter.get(
   serverRoles.getServerRole
 );
 
-serverRoleRouter.get(
-  '/:roleId/permissions',
-  serverRoles.getServerRolePermissions
-);
-
-serverRoleRouter.put(
-  '/:roleId/permissions',
-  serverRoles.updateServerRolePermissions
-);
-
-serverRoleRouter.patch(
-  '/:roleId/permissions',
-  serverRoles.updatePartialServerRolePermissions
-);
-
 serverRoleRouter.delete(
   '/:roleId',
+  checkServerAdminMiddleware,
   serverRoles.deleteServerRole
 );
 
 serverRoleRouter.patch(
   '/:roleId',
+  checkServerAdminMiddleware,
   serverRoles.updateServerRole
+);
+
+serverRoleRouter.get(
+  '/:roleId/permissions',
+  checkServerAdminMiddleware,
+  serverRoles.getServerRolePermissions
+);
+
+serverRoleRouter.put(
+  '/:roleId/permissions',
+  checkServerAdminMiddleware,
+  serverRoles.updateServerRolePermissions
+);
+
+serverRoleRouter.patch(
+  '/:roleId/permissions',
+  checkServerAdminMiddleware,
+  serverRoles.updatePartialServerRolePermissions
 );
 
 serverRoleRouter.get(
@@ -55,6 +61,7 @@ serverRoleRouter.get(
 
 serverRoleRouter.post(
   '/:roleId/members/self',
+  checkServerAdminMiddleware,
   serverRoles.addMyselfToRole
 );
 
@@ -65,11 +72,13 @@ serverRoleRouter.delete(
 
 serverRoleRouter.post(
   '/:roleId/members/:userId',
+  checkServerAdminMiddleware,
   serverRoles.addMemberToRole
 );
 
 serverRoleRouter.delete(
   '/:roleId/members/:userId',
+  checkServerAdminMiddleware,
   serverRoles.removeMemberFromRole
 );
 
