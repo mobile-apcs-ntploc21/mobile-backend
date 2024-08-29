@@ -2,7 +2,6 @@ import { model, Schema } from 'mongoose';
 import ModelNames from './../modelNames';
 
 interface IServerRole {
-  _id: Schema.Types.ObjectId;
   server_id: Schema.Types.ObjectId;
   name: string;
   color: string;
@@ -15,9 +14,6 @@ interface IServerRole {
 
 const schema = new Schema<IServerRole>(
   {
-    _id: {
-      type: Schema.Types.ObjectId,
-    },
     server_id: {
       type: Schema.Types.ObjectId,
       ref: ModelNames.Server,

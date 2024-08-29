@@ -1,6 +1,6 @@
 import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
-import ModelNames from "./modelNames";
+import ModelNames from "../modelNames";
 
 interface IServerEmoji {
   server_id: Schema.Types.ObjectId;

@@ -1,13 +1,13 @@
 import { model, Schema } from 'mongoose';
 import ModelNames from './../../modelNames';
 
-interface ICategoryRolePermissions {
-  _id: { server_role_id: Schema.Types.ObjectId; category_id: Schema.Types.ObjectId };
+interface IChannelRolePermission {
+  _id: { server_role_id: Schema.Types.ObjectId; channel_id: Schema.Types.ObjectId };
   permissions: string;
   last_modified: Date;
 }
 
-const schema = new Schema<ICategoryRolePermissions>(
+const schema = new Schema<IChannelRolePermission>(
   {
     _id: {
       server_role_id: {
@@ -15,10 +15,10 @@ const schema = new Schema<ICategoryRolePermissions>(
         ref: ModelNames.ServerRole,
         required: [true, 'Server Role ID is required!'],
       },
-      category_id: {
+      channel_id: {
         type: Schema.Types.ObjectId,
-        ref: ModelNames.Category,
-        required: [true, 'Category ID is required!'],
+        ref: ModelNames.Channel,
+        required: [true, 'Channel ID is required!'],
       },
     },
     permissions: {
@@ -33,8 +33,8 @@ const schema = new Schema<ICategoryRolePermissions>(
   { timestamps: true }
 );
 
-const CategoryRolePermissions = model<ICategoryRolePermissions>(
-  ModelNames.CategoryRolePermissions,
+const ChannelRolePermission = model<IChannelRolePermission>(
+  ModelNames.ChannelRolePermission,
   schema
 );
-export default CategoryRolePermissions;
+export default ChannelRolePermission;
