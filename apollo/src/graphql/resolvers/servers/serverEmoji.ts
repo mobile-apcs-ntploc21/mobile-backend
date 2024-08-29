@@ -2,9 +2,9 @@ import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
 import { ApolloError, UserInputError, ValidationError } from "apollo-server";
 
-import ServerEmojiModel from "../../models/serverEmoji";
-import ServerModel from "../../models/server";
-import { publishEvent, ServerEvents } from "../pubsub/pubsub";
+import ServerEmojiModel from "../../../models/servers/serverEmoji";
+import ServerModel from "../../../models/servers/server";
+import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
 
 const SERVER_MAX_EMOJI = 20;
 

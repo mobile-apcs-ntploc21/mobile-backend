@@ -3,11 +3,11 @@ import { PubSub, withFilter } from "graphql-subscriptions";
 import { AuthenticationError, UserInputError } from "apollo-server";
 import { GraphQLJSON } from "graphql-scalars";
 
-import ServerModel from "../../models/server";
-import ServerEmoji from "../../models/serverEmoji";
-import UserModel from "../../models/user";
-import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
-import ServerMemberModel from "../../models/server_member";
+import ServerModel from '../../../models/servers/server'
+import ServerEmoji from '../../../models/servers/serverEmoji';
+import UserModel from '../../../models/user';
+import { getAsyncIterator, publishEvent, ServerEvents } from '../../pubsub/pubsub';
+import ServerMemberModel from '../../../models/servers/server_member';
 import mongoose from "mongoose";
 
 const createServerTransaction = async (input) => {

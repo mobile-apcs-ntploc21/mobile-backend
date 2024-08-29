@@ -2,9 +2,9 @@ import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
 import { AuthenticationError, UserInputError } from "apollo-server";
 
-import ServerModel from "../../../models/server";
-import CategoryModel from "../../../models/Channel/category";
-import CategoryPermissionModel from "../../../models/Channel/category_permission";
+import ServerModel from "../../../../models/servers/server";
+import CategoryModel from "../../../../models/servers/channels/category";
+import CategoryPermissionModel from "../../../../models/servers/channels/category_permission";
 
 const resolvers: IResolvers = {
   Query: {

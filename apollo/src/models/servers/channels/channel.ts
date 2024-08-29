@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
+import ModelNames from './../../modelNames';
 import validator from "validator";
 
 interface IChannel {
@@ -92,6 +93,6 @@ const channelSchema = new Schema<IChannel>(
   { timestamps: true }
 );
 
-const Channel = mongoose.model<IChannel>("Channel", channelSchema);
+const Channel = mongoose.model<IChannel>(ModelNames.Channel, channelSchema);
 
 export default Channel;

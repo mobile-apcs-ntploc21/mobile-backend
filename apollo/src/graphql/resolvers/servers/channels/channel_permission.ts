@@ -1,10 +1,10 @@
 import mongoose, { Error, MongooseError } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
 
-import ServerModel from "../../../models/server";
-import ChannelModel from "../../../models/Channel/channel";
-import ChannelPermissionModel from "../../../models/Channel/channel_permission";
-import { ServerEvents, publishEvent } from "../../../graphql/pubsub/pubsub";
+import ServerModel from "../../../../models/servers/server";
+import ChannelModel from "../../../../models/servers/channels/channel";
+import ChannelPermissionModel from "../../../../models/servers/channels/channel_permission";
+import { ServerEvents, publishEvent } from "../../../pubsub/pubsub";
 
 const resolvers: IResolvers = {
   Query: {

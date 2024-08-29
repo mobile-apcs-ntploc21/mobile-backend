@@ -1,4 +1,3 @@
-import server from "@/graphql/typedefs/server";
 import mongoose, { model, Schema } from "mongoose";
 import validator from "validator";
 import ModelNames from "./modelNames";

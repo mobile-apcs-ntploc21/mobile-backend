@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
+import ModelNames from './../../modelNames';
 import validator from "validator";
 
 interface ICategory {
@@ -54,6 +55,6 @@ const categorySchema = new Schema<ICategory>(
   { timestamps: true }
 );
 
-const Category = model<ICategory>("Category", categorySchema);
+const Category = model<ICategory>(ModelNames.Category, categorySchema);
 
 export default Category;
