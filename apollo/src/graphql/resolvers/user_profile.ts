@@ -1,25 +1,26 @@
-import { IResolvers } from "@graphql-tools/utils";
-import { UserInputError } from "apollo-server";
-import { PubSub } from "graphql-subscriptions";
-import { GraphQLScalarType, Kind } from "graphql";
-import mongoose from "mongoose";
+import { IResolvers } from '@graphql-tools/utils';
+import { UserInputError } from 'apollo-server';
+import { PubSub } from 'graphql-subscriptions';
+import { GraphQLScalarType, Kind } from 'graphql';
+import mongoose from 'mongoose';
 
-import UserModel from "../../models/user";
-import UserProfileModel from "../../models/user_profile";
+import UserModel from '../../models/user';
+import UserProfileModel from '../../models/user_profile';
+import { publishEvent, ServerEvents } from '../pubsub/pubsub';
 
 const pubsub = new PubSub();
 
 export const defaultProfile = {
   server_id: null,
-  display_name: "",
-  about_me: "",
-  avatar_url: "",
-  banner_url: "",
+  display_name: '',
+  about_me: '',
+  avatar_url: '',
+  banner_url: '',
 };
 
 const ObjectId = new GraphQLScalarType({
-  name: "ObjectId",
-  description: "Mongo object id scalar type",
+  name: 'ObjectId',
+  description: 'Mongo object id scalar type',
   parseValue(value: string) {
     return new mongoose.Types.ObjectId(value);
   },
@@ -52,9 +53,9 @@ const userProfileApollo: IResolvers = {
               server_id: null,
               display_name: user.username,
               username: user.username,
-              about_me: "",
-              avatar_url: "",
-              banner_url: "",
+              about_me: '',
+              avatar_url: '',
+              banner_url: '',
             };
 
             return await UserProfileModel.create(defaultProfile);
@@ -65,7 +66,7 @@ const userProfileApollo: IResolvers = {
 
         return userProfiles;
       } catch (error) {
-        throw new Error("Error syncing user profiles.");
+        throw new Error('Error syncing user profiles.');
       }
     },
 
@@ -82,7 +83,7 @@ const userProfileApollo: IResolvers = {
     getUserProfileByUsername: async (_, { username }) => {
       const user = await UserModel.findOne({ username });
       if (!user) {
-        throw new UserInputError("User with that username not found.");
+        throw new UserInputError('User with that username not found.');
       }
 
       const userProfile = await UserProfileModel.findOne({ user_id: user._id });
@@ -104,7 +105,7 @@ const userProfileApollo: IResolvers = {
       try {
         const user = await UserModel.findOne({ _id: user_id });
         if (!user) {
-          throw new UserInputError("User with that user_id not found.");
+          throw new UserInputError('User with that user_id not found.');
         }
 
         const username = user.username;
@@ -122,7 +123,7 @@ const userProfileApollo: IResolvers = {
         return userProfile;
       } catch (error) {
         throw new UserInputError(
-          "Error creating user profile. Please check any duplicated field."
+          'Error creating user profile. Please check any duplicated field.'
         );
       }
     },
@@ -144,16 +145,22 @@ const userProfileApollo: IResolvers = {
 
       if (!userProfile) {
         throw new UserInputError(
-          "User profile with that userId and server_id not found."
+          'User profile with that userId and server_id not found.'
         );
       }
 
       pubsub.publish(
-        `USER_PROFILE_UPDATED ${userProfile._id} ${server_id || "null"}`,
+        `USER_PROFILE_UPDATED ${userProfile._id} ${server_id || 'null'}`,
         {
           userProfileUpdated: userProfile,
         }
       );
+
+      // Publish event in servers
+      publishEvent(ServerEvents.userProfileChanged, {
+        type: ServerEvents.userProfileChanged,
+        data: userProfile,
+      });
 
       return userProfile;
     },
@@ -165,7 +172,7 @@ const userProfileApollo: IResolvers = {
       });
 
       if (!userProfile) {
-        throw new UserInputError("User profile with that userId not found.");
+        throw new UserInputError('User profile with that userId not found.');
       }
 
       return userProfile;
@@ -185,15 +192,15 @@ const userProfileWs: IResolvers = {
           });
           if (!userProfile) {
             throw new UserInputError(
-              "User profile with that userId not found."
+              'User profile with that userId not found.'
             );
           }
           return pubsub.asyncIterator(
-            `USER_PROFILE_UPDATED ${userProfile._id} ${server_id || "null"}`
+            `USER_PROFILE_UPDATED ${userProfile._id} ${server_id || 'null'}`
           );
         } catch (err) {
           throw new Error(
-            "Error subscribing to user profile updates. Maybe check the user ID or the result of the query."
+            'Error subscribing to user profile updates. Maybe check the user ID or the result of the query.'
           );
         }
       },
