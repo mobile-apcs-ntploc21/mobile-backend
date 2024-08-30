@@ -5,6 +5,7 @@ import { UserInputError } from "apollo-server-core";
 import { ObjectId, Schema } from "mongoose";
 import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
 import user from "../../typedefs/user";
+import ServerBan from "@/models/servers/server_bans";
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -64,8 +65,19 @@ const addServerMemberTransaction = async ({
     if (!validateUsers(user_ids))
       throw new UserInputError("Invalid server member input!");
 
+    // Filter out banned users
+    const bannedUsers = await ServerBan.find({
+      "_id.server_id": server_id,
+      "_id.user_id": { $in: user_ids },
+    });
+    const filteredUsers = user_ids.filter(
+      (user_id) =>
+        !bannedUsers.some((ban) => String(ban._id.user_id) === String(user_id))
+    );
+
+    // Add members to the server and update totalMembers count
     const res = await ServerMemberModel.insertMany(
-      user_ids.map((user_id) => ({
+      filteredUsers.map((user_id) => ({
         _id: { server_id, user_id },
       })),
       {
@@ -74,7 +86,7 @@ const addServerMemberTransaction = async ({
     );
     await serverModel.updateOne(
       { _id: server_id },
-      { $inc: { totalMembers: user_ids.length } },
+      { $inc: { totalMembers: filteredUsers.length } },
       { session }
     );
 
@@ -151,11 +163,19 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
   try {
     const { server, inviteIndex } = await validateInviteCode(url);
 
+    // Check user has been banned
+    const bannedUser = await ServerBan.findOne({
+      "_id.server_id": server._id,
+      "_id.user_id": user_id,
+    });
+    if (bannedUser) {
+      throw new Error("You are banned from this server!");
+    }
+
     const newdoc = {
       server_id: server._id,
       user_id,
     };
-
     await ServerMemberModel.create(
       [
         {

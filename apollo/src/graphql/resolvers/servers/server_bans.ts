@@ -31,8 +31,6 @@ const checkPrequisites = async (server_id, user_id) => {
     "_id.user_id": user_id,
   });
 
-  console.log(user, serverMember);
-
   if (!serverMember) {
     return "User is not a member of the server!";
   }
@@ -53,7 +51,7 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
     }
 
     const [createdBan] = await ServerBansModel.create(
-      [{ _id: { server: server_id, user: user_id } }],
+      [{ _id: { server_id: server_id, user_id: user_id } }],
       opts
     );
 
@@ -124,8 +122,8 @@ const resolvers: IResolvers = {
         const serverBan = await CreateBanTransaction({ server_id, user_id });
 
         return {
-          server: serverBan._id.server_id,
-          user: serverBan._id.user_id,
+          server_id: serverBan._id.server_id,
+          user_id: serverBan._id.user_id,
         };
       } catch (error) {
         throw error;
@@ -143,8 +141,8 @@ const resolvers: IResolvers = {
               user_id,
             });
             success.push({
-              server: serverBan._id.server_id,
-              user: serverBan._id.user_id,
+              server_id: serverBan._id.server_id,
+              user_id: serverBan._id.user_id,
             });
           } catch (error) {
             failed.push({ user_id: user_id, error: error.message });
