@@ -151,6 +151,24 @@ const removeServerMemberTransaction = async ({
       { session }
     );
 
+    // Remove assigned roles
+    // Get all roles in the server
+    const roles = await ServerRoleModel.find({
+      server_id,
+    });
+
+    // Get all assigned roles
+    const assignedRoles = await AssignedUserRoleModel.find({
+      '_id.server_role_id': { $in: roles.map(role => role._id) },
+      '_id.user_id': { $in: user_ids },
+    });
+
+    // Delete assigned roles
+    await AssignedUserRoleModel.deleteMany({
+      '_id.server_role_id': { $in: roles.map(role => role._id) },
+      '_id.user_id': { $in: user_ids },
+    });
+
     await session.commitTransaction();
     return res;
   } catch (error) {
