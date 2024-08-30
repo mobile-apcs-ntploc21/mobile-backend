@@ -10,6 +10,7 @@ const gqlTypes = gql`
     position: Int
     permissions: String
     is_admin: Boolean
+    default: Boolean
     last_modified: String
     number_of_users: Int
   }
@@ -36,11 +37,13 @@ const gqlAPI = gql`
     syncServerRole: [ServerRole]
     getServerRole(role_id: ID!): ServerRole
     getServerRoles(server_id: ID!): [ServerRole]
+    getDefaultServerRole(server_id: ID!): ServerRole
   }
 
   type Mutation {
     createServerRole(server_id: ID!, input: CreateServerRoleInput!): ServerRole
     updateServerRole(role_id: ID!, input: UpdateServerRoleInput!): ServerRole
+    updateDefaultServerRole(server_id: ID!, input: UpdateServerRoleInput!): ServerRole
     deleteServerRole(role_id: ID!): ServerRole
   }
 `;

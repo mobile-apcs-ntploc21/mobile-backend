@@ -22,7 +22,11 @@ export const getServerRoles = async (
       return res.status(404).json({message: "Server not found"});
     }
 
-    if (roles.length === 0) return res.json([]);
+    if (roles.length === 0)
+      return res.json({
+        server_id: serverId,
+        roles: []
+      });
 
     return res.json({
       server_id: serverId,
@@ -33,6 +37,7 @@ export const getServerRoles = async (
           color: role.color,
           position: role.position,
           is_admin: role.is_admin,
+          default: role.default,
           allow_anyone_mention: role.allow_anyone_mention,
           last_modified: role.last_modified,
           number_of_users: role.number_of_users,
@@ -67,6 +72,7 @@ export const getServerRole = async (
       color: role.color,
       position: role.position,
       is_admin: role.is_admin,
+      default: role.default,
       allow_anyone_mention: role.allow_anyone_mention,
       last_modified: role.last_modified,
       number_of_users: role.number_of_users,
@@ -111,6 +117,7 @@ export const createServerRole = async (
       color: response.createServerRole.color,
       position: response.createServerRole.position,
       is_admin: response.createServerRole.is_admin,
+      default: response.createServerRole.default,
       allow_anyone_mention: response.createServerRole.allow_anyone_mention,
       last_modified: response.createServerRole.last_modified,
       number_of_users: response.createServerRole.number_of_users,
@@ -142,6 +149,7 @@ export const deleteServerRole = async (
       color: response.deleteServerRole.color,
       position: response.deleteServerRole.position,
       is_admin: response.deleteServerRole.is_admin,
+      default: response.deleteServerRole.default,
       allow_anyone_mention: response.deleteServerRole.allow_anyone_mention,
       last_modified: response.deleteServerRole.last_modified,
       number_of_users: response.deleteServerRole.number_of_users,
@@ -199,6 +207,7 @@ export const updateServerRole = async (
       color: response.updateServerRole.color,
       position: response.updateServerRole.position,
       is_admin: response.updateServerRole.is_admin,
+      default: response.updateServerRole.default,
       allow_anyone_mention: response.updateServerRole.allow_anyone_mention,
       last_modified: response.updateServerRole.last_modified,
       number_of_users: response.updateServerRole.number_of_users,
@@ -241,6 +250,38 @@ export const getServerRolePermissions = async (
     return next(error);
   }
 };
+
+export const getDefaultServerRolePermissions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const serverId = res.locals.server_id;
+
+  try {
+    const { getDefaultServerRole: defaultRole } = await graphQLClient().request(
+      serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+      {
+        server_id: serverId,
+      }
+    );
+
+    let parsedRolePermissions = null;
+    try {
+      parsedRolePermissions = JSON.parse(defaultRole.permissions);
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ message: "Server role permissions is not in JSON format !" });
+    }
+
+    return res.status(200).json({
+      ...parsedRolePermissions
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
 
 export const updateServerRolePermissions = async (
   req: Request,
@@ -385,6 +426,151 @@ export const updatePartialServerRolePermissions = async (
     let parsedRolePermissions = null;
     try {
       parsedRolePermissions = JSON.parse(response.updateServerRole.permissions);
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ message: "Server role permissions is not in JSON format !" });
+    }
+
+    return res.status(201).json({ ...parsedRolePermissions });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export const updateDefaultServerRolePermissions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const serverId = res.locals.server_id;
+  const updatedFields = req.body;
+
+  const { getDefaultServerRole: defaultRole } = await graphQLClient().request(
+    serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+    {
+      server_id: serverId,
+    }
+  );
+
+  let current_role_permissions = null;
+  try {
+    current_role_permissions = JSON.parse(defaultRole.permissions);
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: "Current server role permissions is not in JSON format !" });
+  }
+
+  // Validate updatedFields keys and values
+  for (const key in updatedFields) {
+    if (updatedFields.hasOwnProperty(key)) {
+      const value = updatedFields[key];
+      if (!current_role_permissions.hasOwnProperty(key)) {
+        return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+      }
+      if (value !== "ALLOWED" && value !== "DENIED") {
+        return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".` });
+      }
+    }
+  }
+
+  // Ensure all keys in req.body are equal to permissions
+  for (const key in current_role_permissions) {
+    if (!updatedFields.hasOwnProperty(key)) {
+      return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+    }
+  }
+
+  for (const key in updatedFields) {
+    if (updatedFields.hasOwnProperty(key)) {
+      current_role_permissions[key] = updatedFields[key];
+    }
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      serverRoleMutations.UPDATE_DEFAULT_SERVER_ROLE,
+      {
+        server_id: serverId,
+        input: {
+          permissions: JSON.stringify(current_role_permissions),
+        },
+      }
+    );
+
+    let parsedRolePermissions = null;
+    try {
+      parsedRolePermissions = JSON.parse(response.updateDefaultServerRole.permissions);
+    } catch (error) {
+      return res
+        .status(400)
+        .json({ message: "Server role permissions is not in JSON format !" });
+    }
+
+    return res.status(201).json({ ...parsedRolePermissions });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export const updatePartialDefaultServerRolePermissions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const serverId = res.locals.server_id;
+  const updatedFields = req.body;
+
+  const { getDefaultServerRole: defaultRole } = await graphQLClient().request(
+    serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+    {
+      server_id: serverId,
+    }
+  );
+
+  let current_role_permissions = null;
+  try {
+    current_role_permissions = JSON.parse(defaultRole.permissions);
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ message: "Current server role permissions is not in JSON format !" });
+  }
+
+  // Validate updatedFields keys and values
+  for (const key in updatedFields) {
+    if (updatedFields.hasOwnProperty(key)) {
+      const value = updatedFields[key];
+      if (!current_role_permissions.hasOwnProperty(key)) {
+        return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+      }
+      if (value !== "ALLOWED" && value !== "DENIED") {
+        return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".` });
+      }
+    }
+  }
+
+  for (const key in updatedFields) {
+    if (updatedFields.hasOwnProperty(key)) {
+      current_role_permissions[key] = updatedFields[key];
+    }
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      serverRoleMutations.UPDATE_DEFAULT_SERVER_ROLE,
+      {
+        server_id: serverId,
+        input: {
+          permissions: JSON.stringify(current_role_permissions),
+        },
+      }
+    );
+
+    let parsedRolePermissions = null;
+    try {
+      parsedRolePermissions = JSON.parse(response.updateDefaultServerRole.permissions);
     } catch (error) {
       return res
         .status(400)
@@ -558,6 +744,7 @@ export const getRolesAssignedWithUser = async (
       color: role.color,
       position: role.position,
       is_admin: role.is_admin,
+      default: role.default,
       allow_anyone_mention: role.allow_anyone_mention,
       last_modified: role.last_modified,
       number_of_users: role.number_of_users,
@@ -596,6 +783,7 @@ export const getRolesAssignedWithMyself = async (
       color: role.color,
       position: role.position,
       is_admin: role.is_admin,
+      default: role.default,
       allow_anyone_mention: role.allow_anyone_mention,
       last_modified: role.last_modified,
       number_of_users: role.number_of_users,

@@ -126,6 +126,12 @@ const removeUserFromRoleTransaction = async ({
       throw new UserInputError("Server role not found");
     }
 
+    // if the role is the default role, do not allow the user to be removed
+    const serverRole = await ServerRoleModel.findById(role_id);
+    if (serverRole.default) {
+      throw new UserInputError("Cannot remove user from default role");
+    }
+
     const assignedUserRole = await AssignedUserRoleModel.findOneAndDelete(
       { role_id, user_id },
       { session }
@@ -172,6 +178,7 @@ const assignedUserRoleAPI: IResolvers = {
             position: serverRole.position,
             permissions: serverRole.permissions,
             is_admin: serverRole.is_admin,
+            default: serverRole.default,
             last_modified: serverRole.last_modified,
             number_of_users: roles.length,
           };

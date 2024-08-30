@@ -275,6 +275,7 @@ export const serverRoleQueries = {
         position
         permissions
         is_admin
+        default
         last_modified
         number_of_users
       }
@@ -292,6 +293,25 @@ export const serverRoleQueries = {
         position
         permissions
         is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+
+  GET_DEFAULT_SERVER_ROLE: gql`
+    query getDefaultServerRole($server_id: ID!) {
+      getDefaultServerRole(server_id: $server_id) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
         last_modified
         number_of_users
       }
@@ -322,6 +342,7 @@ export const serverRoleQueries = {
         position
         permissions
         is_admin
+        default
         last_modified
         number_of_users
       }

@@ -312,6 +312,7 @@ export const serverRoleMutations = {
         position
         permissions
         is_admin
+        default
         last_modified
         number_of_users
       }
@@ -328,6 +329,27 @@ export const serverRoleMutations = {
         position
         permissions
         is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  UPDATE_DEFAULT_SERVER_ROLE: gql`
+    mutation updateDefaultServerRole(
+      $server_id: ID!
+      $input: UpdateServerRoleInput!
+    ) {
+      updateDefaultServerRole(server_id: $server_id, input: $input) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
         last_modified
         number_of_users
       }
@@ -344,6 +366,7 @@ export const serverRoleMutations = {
         position
         permissions
         is_admin
+        default
         last_modified
         number_of_users
       }
