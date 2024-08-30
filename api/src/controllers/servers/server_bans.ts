@@ -1,7 +1,11 @@
 import express from "express";
 import graphQLClient from "../../utils/graphql";
 
-import { serverBansQueries } from "../../graphql/queries";
+import {
+  serverBansQueries,
+  serverRoleQueries,
+  serverQueries,
+} from "../../graphql/queries";
 import { serverBansMutations } from "../../graphql/mutations";
 
 const _getServerBan = async (serverId: string, userId: string) => {
@@ -26,6 +30,68 @@ const _getServerBans = async (serverId: string, limit: number) => {
   );
 
   return response.getServerBans;
+};
+
+const getUserRoles = async (serverId: string, userId: string) => {
+  const response = await graphQLClient().request(
+    serverRoleQueries.GET_ROLES_ASSIGNED_WITH_USER,
+    {
+      user_id: userId,
+      server_id: serverId,
+    }
+  );
+
+  return response.getRolesAssignedWithUser;
+};
+
+const isUserOwner = async (serverId: string, userId: string) => {
+  const response = await graphQLClient().request(
+    serverQueries.GET_SERVER_BY_ID,
+    {
+      server_id: serverId,
+    }
+  );
+
+  return String(response.server.owner) === String(userId);
+};
+
+// ==================
+
+/**
+ * Check if the user has the permission to ban or kick a user from the server
+ * It will check these condition:
+ * - If the userId is the owner of the server = return false
+ * - If the userId has Administration role and currentUserId is not owner = return false
+ *
+ * @async
+ * @param {string} serverId
+ * @param {string} userId
+ * @param {string} currentUserId
+ * @returns {*}
+ */
+const checkPrequisites = async (
+  serverId: string,
+  userId: string,
+  currentUserId: string
+) => {
+  if (userId === currentUserId) {
+    return "Cannot ban or kick yourself";
+  }
+
+  const isOwner = await isUserOwner(serverId, userId);
+  if (isOwner) {
+    return "Cannot ban the server owner";
+  }
+
+  const currentUserOwner = await isUserOwner(serverId, currentUserId);
+  const userRoles = await getUserRoles(serverId, currentUserId);
+  const isAdmin = userRoles.find((role) => role.is_admin);
+
+  if (isAdmin && !currentUserOwner) {
+    return "You don't have permission to ban or kick user";
+  }
+
+  return null;
 };
 
 // ==================
@@ -90,10 +156,18 @@ export const createServerBan = async (
   next: express.NextFunction
 ) => {
   const { serverId, userId } = req.params;
+  const currentUser = res.locals.uid;
 
   if (!serverId || !userId) {
     return res.status(400).json({
       message: "Missing serverId or userId in the params",
+    });
+  }
+
+  const check = await checkPrequisites(serverId, userId, currentUser);
+  if (check) {
+    return res.status(403).json({
+      message: check,
     });
   }
 
@@ -123,11 +197,10 @@ export const createServerBulkBan = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  // TODO: Check user has permission to ban
-
   // We assume that userIds is an array of user IDs
   const { serverId } = req.params;
   const { userIds } = req.body;
+  const currentUser = res.locals.uid;
 
   if (!serverId || !userIds) {
     return res.status(400).json({
@@ -140,6 +213,16 @@ export const createServerBulkBan = async (
     return res.status(400).json({
       message: "User IDs must be an array. I.e. userIds: ['id1', 'id2'].",
     });
+  }
+
+  for (let i = 0; i < userIds.length; i++) {
+    const check = await checkPrequisites(serverId, userIds[i], currentUser);
+    if (check) {
+      return res.status(403).json({
+        failed: userIds[i],
+        message: check,
+      });
+    }
   }
 
   try {
@@ -204,22 +287,28 @@ export const createServerKick = async (
     });
   }
 
+  const check = await checkPrequisites(serverId, userId, res.locals.uid);
+  if (check) {
+    return res.status(403).json({
+      message: check,
+    });
+  }
+
   try {
-    const response = await graphQLClient().request(
-      serverBansMutations.CREATE_SERVER_KICK,
-      {
+    const response = (
+      await graphQLClient().request(serverBansMutations.CREATE_SERVER_KICK, {
         server_id: serverId,
         user_id: userId,
-      }
-    );
+      })
+    )?.createServerKick;
 
-    if (!response.createServerKick) {
+    if (!response) {
       return res.status(404).json({
-        message: "User not found",
+        message: "User not found or cannot be kick.",
       });
     }
 
-    return res.status(204);
+    return res.status(204).send();
   } catch (error) {
     return next(error);
   }
