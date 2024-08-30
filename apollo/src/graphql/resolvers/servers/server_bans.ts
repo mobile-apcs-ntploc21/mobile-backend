@@ -78,6 +78,38 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
   }
 };
 
+const serverKickUser = async ({ server_id, user_id }) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Remove user from server members
+    const opts = { session, new: true };
+    const check = await checkPrequisites(server_id, user_id);
+    if (check) {
+      throw new UserInputError(String(check));
+    }
+
+    const _ = await ServerMemberModel.findOneAndDelete(
+      { "_id.server_id": server_id, "_id.user_id": user_id },
+      opts
+    );
+
+    // Decrease server total members (if exists in server members)
+    if (_) {
+      const server = await ServerModel.findById(server_id).session(session);
+      server.totalMembers--;
+      await server.save();
+    }
+
+    await session.commitTransaction();
+    return true;
+  } catch (error) {
+    await session.abortTransaction();
+    throw new UserInputError(`Failed to kick user: ${error.message}`);
+  }
+};
+
 const resolvers: IResolvers = {
   Query: {
     getServerBan: async (_, { server_id, user_id }) => {
@@ -108,8 +140,8 @@ const resolvers: IResolvers = {
           .sort({ createdAt: -1 });
 
         return serverBans.map((ban) => ({
-          server: ban._id.server_id,
-          user: ban._id.user_id,
+          server_id: ban._id.server_id,
+          user_id: ban._id.user_id,
         }));
       } catch (error) {
         throw error;
@@ -177,37 +209,9 @@ const resolvers: IResolvers = {
 
     createServerKick: async (_, { server_id, user_id }) => {
       try {
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        const success = await serverKickUser({ server_id, user_id });
 
-        try {
-          // Remove user from server members
-          const opts = { session, new: true };
-          const check = await checkPrequisites(server_id, user_id);
-          if (check) {
-            throw new UserInputError(String(check));
-          }
-
-          const _ = await ServerMemberModel.findOneAndDelete(
-            { "_id.server_id": server_id, "_id.user_id": user_id },
-            opts
-          );
-
-          // Decrease server total members (if exists in server members)
-          if (_) {
-            const server = await ServerModel.findById(server_id).session(
-              session
-            );
-            server.totalMembers--;
-            await server.save();
-          }
-
-          await session.commitTransaction();
-          return true;
-        } catch (error) {
-          await session.abortTransaction();
-          throw new UserInputError(`Failed to kick user: ${error.message}`);
-        }
+        return success;
       } catch (error) {
         throw error;
       }
