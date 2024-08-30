@@ -5,6 +5,11 @@ const gqlTypes = gql`
     server_id: ID!
     user_id: ID!
   }
+
+  type ProfileStatus {
+    user_profile: UserProfile!
+    user_status: UserStatus!
+  }
 `;
 
 const gqlAPI = gql`
@@ -14,7 +19,7 @@ const gqlAPI = gql`
   }
 
   extend type Query {
-    getServerMembers(server_id: ID!): [UserProfile]
+    getServerMembers(server_id: ID!): [ProfileStatus]
     checkServerMember(server_id: ID!, user_id: ID!): Boolean
   }
 

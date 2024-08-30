@@ -195,9 +195,23 @@ const API: IResolvers = {
           {
             $unwind: '$user_profile',
           },
+          {
+            $lookup: {
+              from: ModelNames.UserStatus, // Ensure this matches the actual collection name
+              localField: '_id.user_id', // Field from ServerMemberModel
+              foreignField: 'user_id', // Field from UserStatusModel
+              as: 'user_status',
+            },
+          },
+          {
+            $unwind: '$user_status',
+          },
         ]);
 
-        return res.map((member) => member.user_profile);
+        return res.map(({ user_profile, user_status }) => ({
+          user_profile,
+          user_status,
+        }));
       } catch (error) {
         throw new UserInputError(error.message);
       }

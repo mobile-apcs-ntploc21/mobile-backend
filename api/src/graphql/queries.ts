@@ -205,11 +205,20 @@ export const serverMemberQueries = {
   GET_SERVER_MEMBERS: gql`
     query GetServerMembers($server_id: ID!) {
       getServerMembers(server_id: $server_id) {
-        user_id
-        username
-        display_name
-        avatar_url
-        banner_url
+        user_profile {
+          user_id
+          username
+          display_name
+          avatar_url
+          banner_url
+        }
+        user_status {
+          user_id
+          type
+          last_seen
+          status_text
+          is_online
+        }
       }
     }
   `,
