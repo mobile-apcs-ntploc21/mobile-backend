@@ -5,6 +5,8 @@ import { UserInputError } from 'apollo-server-core';
 import { ObjectId, Schema } from 'mongoose';
 import { publishEvent, ServerEvents } from '../../pubsub/pubsub';
 import user from '../../typedefs/user';
+import ServerRoleModel from "../../../models/servers/server_role";
+import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -75,6 +77,18 @@ const addServerMemberTransaction = async ({
     await serverModel.updateOne(
       { _id: server_id },
       { $inc: { totalMembers: user_ids.length } },
+      { session }
+    );
+
+    // assign default role to new members
+    const defaultRole = await ServerRoleModel.findOne({ server_id, default: true });
+    await AssignedUserRoleModel.create(
+      user_ids.map((user_id) => ({
+        _id: {
+          server_role_id: defaultRole._id,
+          user_id,
+        },
+      })),
       { session }
     );
 

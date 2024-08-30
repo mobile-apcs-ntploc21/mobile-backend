@@ -9,6 +9,9 @@ import UserModel from '../../../models/user';
 import { getAsyncIterator, publishEvent, ServerEvents } from '../../pubsub/pubsub';
 import ServerMemberModel from '../../../models/servers/server_member';
 import mongoose from "mongoose";
+import ServerRoleModel from "../../../models/servers/server_role";
+import {defaultServerRole} from "./server_role";
+import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -49,6 +52,33 @@ const createServerTransaction = async (input) => {
       { session }
     );
 
+    await ServerRoleModel.create(
+      [
+        {
+          server_id: server.id,
+          name: "@everyone",
+          color: "#CDCDCD",
+          allow_anyone_mention: true,
+          // the position needs to be set as large as possible, because it needs to be always at the bottom
+          position: -1,
+          permissions: defaultServerRole,
+          is_admin: false,
+          default: true,
+        },
+      ],
+      { session }
+    );
+
+    await AssignedUserRoleModel.create(
+      [
+        {
+          user_id: input.owner_id,
+          server_role_id: server.id,
+        },
+      ],
+      { session }
+    );
+
     // Commit transaction
     await session.commitTransaction();
     return server;
@@ -79,6 +109,16 @@ const deleteServerTransaction = async (server_id) => {
 
     // TODO: Remove all emojis from the server
     await ServerEmoji.deleteMany({ server_id }, { session });
+
+    // Delete server roles and assigned user roles
+    const serverRoles = await ServerRoleModel.find({ server_id });
+    const serverRoleIds = serverRoles.map((role) => role._id);
+
+    await AssignedUserRoleModel.deleteMany({
+      server_role_id: { $in: serverRoleIds },
+    }, { session });
+
+    await ServerRoleModel.deleteMany({ server_id }, { session });
 
     // Commit transaction
     await session.commitTransaction();

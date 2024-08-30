@@ -9,6 +9,7 @@ interface IServerRole {
   position: number;
   permissions: string;
   is_admin: boolean;
+  default: boolean;
   last_modified: Date;
 }
 
@@ -44,6 +45,11 @@ const schema = new Schema<IServerRole>(
     is_admin: {
       type: Boolean,
       default: false,
+    },
+    default: {
+      type: Boolean,
+      default: false,
+      required: [true, 'Default attribute is required!'],
     },
     last_modified: {
       type: Date,
