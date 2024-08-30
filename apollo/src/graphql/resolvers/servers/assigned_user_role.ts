@@ -172,6 +172,8 @@ const assignedUserRoleAPI: IResolvers = {
         return await Promise.all(roles.map(async (role) => {
           const role_id = role._id.server_role_id;
           const serverRole = await ServerRoleModel.findById(role_id);
+          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+
           return {
             id: serverRole._id,
             server_id: serverRole.server_id,
@@ -183,7 +185,7 @@ const assignedUserRoleAPI: IResolvers = {
             is_admin: serverRole.is_admin,
             default: serverRole.default,
             last_modified: serverRole.last_modified,
-            number_of_users: roles.length,
+            number_of_users: users.length,
           };
         }));
       } catch (error) {
