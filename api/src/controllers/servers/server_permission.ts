@@ -620,6 +620,12 @@ export const getCurrentUserPermissions = async (
   const serverId = res.locals.server_id;
 
   try {
+    const {
+      server: { owner },
+    } = await graphQLClient().request(serverQueries.GET_SERVER_BY_ID, {
+      server_id: serverId,
+    });
+
     const { getRolesAssignedWithUser: roles } = await graphQLClient().request(
       serverRoleQueries.GET_ROLES_ASSIGNED_WITH_USER,
       {
@@ -628,9 +634,8 @@ export const getCurrentUserPermissions = async (
       }
     );
 
-    const isAdmin = roles.some((role: any) => role.is_admin);
+    const isAdmin = (owner === userId) || (roles.some((role: any) => role.is_admin));
 
-    // the finalPermissions should still have all permissions that is being denied along with permissions with allowed values
     const finalPermissions = roles.reduce((acc: any, role: any) => {
       let role_permissions;
       try {
