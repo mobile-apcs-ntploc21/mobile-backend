@@ -7,6 +7,7 @@ import UserModel from "@/models/user";
 import ServerModel from "@/models/servers/server";
 import ServerBansModel from "@/models/servers/server_bans";
 import ServerMemberModel from "@/models/servers/server_member";
+import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 
 // This will check these conditions:
 // - Is a user_id exists?
@@ -61,6 +62,9 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
       opts
     );
 
+    // Remove all roles assigned to the user
+    await AssignedUserRoleModel.deleteMany({ "_id.user_id": user_id }, opts);
+
     // Decrease server total members (if exists in server members)
     if (_) {
       const server = await ServerModel.findById(server_id).session(session);
@@ -94,6 +98,9 @@ const serverKickUser = async ({ server_id, user_id }) => {
       { "_id.server_id": server_id, "_id.user_id": user_id },
       opts
     );
+
+    // Remove all roles assigned to the user
+    await AssignedUserRoleModel.deleteMany({ "_id.user_id": user_id }, opts);
 
     // Decrease server total members (if exists in server members)
     if (_) {
