@@ -1,14 +1,14 @@
-import { IResolvers } from "@graphql-tools/utils";
-import { PubSub, withFilter } from "graphql-subscriptions";
-import { AuthenticationError, UserInputError } from "apollo-server";
-import { GraphQLJSON } from "graphql-scalars";
+import { IResolvers } from '@graphql-tools/utils';
+import { PubSub, withFilter } from 'graphql-subscriptions';
+import { AuthenticationError, UserInputError } from 'apollo-server';
+import { GraphQLJSON } from 'graphql-scalars';
 
-import ServerModel from "../../models/server";
-import ServerEmoji from "../../models/serverEmoji";
-import UserModel from "../../models/user";
-import { getAsyncIterator, publishEvent, ServerEvents } from "../pubsub/pubsub";
-import ServerMemberModel from "../../models/server_member";
-import mongoose from "mongoose";
+import ServerModel from '../../models/server';
+import ServerEmoji from '../../models/serverEmoji';
+import UserModel from '../../models/user';
+import { getAsyncIterator, publishEvent, ServerEvents } from '../pubsub/pubsub';
+import ServerMemberModel from '../../models/server_member';
+import mongoose from 'mongoose';
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -32,7 +32,7 @@ const createServerTransaction = async (input) => {
 
     // Get the number of servers the user is a member of
     const servers = await ServerMemberModel.find({
-      "_id.user_id": input.owner_id,
+      '_id.user_id': input.owner_id,
     });
 
     await ServerMemberModel.create(
@@ -93,7 +93,7 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       return server;
@@ -101,7 +101,7 @@ const serverAPI: IResolvers = {
     servers: async (_, { user_id }) => {
       // Find the server ids that the user is a member of
       const serverMembers = await ServerMemberModel.find({
-        "_id.user_id": user_id,
+        '_id.user_id': user_id,
       });
 
       // Get the server ids
@@ -146,7 +146,7 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       return server.invite_code;
@@ -158,7 +158,7 @@ const serverAPI: IResolvers = {
       try {
         const user = await UserModel.findById(input.owner_id);
         if (!user) {
-          throw new UserInputError("User not found !");
+          throw new UserInputError('User not found !');
         }
 
         const server = await createServerTransaction(input);
@@ -171,7 +171,7 @@ const serverAPI: IResolvers = {
     updateServer: async (_, { server_id, input }, context) => {
       const __ = await ServerModel.findById(server_id);
       if (!__) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       const server = await ServerModel.findByIdAndUpdate(server_id, input, {
@@ -201,13 +201,13 @@ const serverAPI: IResolvers = {
     transferOwnership: async (_, { server_id, user_id }, context) => {
       const user = await UserModel.findById(user_id);
       if (!user) {
-        throw new UserInputError("User not found !");
+        throw new UserInputError('User not found !');
       }
 
       const server = await ServerModel.findById(server_id);
       const owner = String(server?.owner) || null;
       if (!server) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       if (user_id === owner) {
@@ -222,7 +222,7 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       const inviteCode = {
@@ -239,7 +239,7 @@ const serverAPI: IResolvers = {
         }
       ).catch((error) => {
         throw new UserInputError(
-          "Cannot add this invite code this time. The invite code may already exist or invalid."
+          'Cannot add this invite code this time. The invite code may already exist or invalid.'
         );
       });
 
@@ -249,7 +249,7 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findById(server_id);
 
       if (!server) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       await ServerModel.updateOne(
@@ -266,12 +266,12 @@ const serverAPI: IResolvers = {
       if (is_favorite === undefined) {
         // Toggle favorite
         const serverMember = await ServerMemberModel.findOne({
-          "_id.server_id": server_id,
-          "_id.user_id": user_id,
+          '_id.server_id': server_id,
+          '_id.user_id': user_id,
         });
 
         if (!serverMember) {
-          throw new UserInputError("Server not found !");
+          throw new UserInputError('Server not found !');
         }
 
         is_favorite = !serverMember.is_favorite;
@@ -279,14 +279,14 @@ const serverAPI: IResolvers = {
 
       const server = await ServerMemberModel.updateOne(
         {
-          "_id.server_id": server_id,
-          "_id.user_id": user_id,
+          '_id.server_id': server_id,
+          '_id.user_id': user_id,
         },
         { is_favorite: is_favorite }
       );
 
       if (!server) {
-        throw new UserInputError("Server not found !");
+        throw new UserInputError('Server not found !');
       }
 
       return true;
@@ -303,8 +303,8 @@ const serverAPI: IResolvers = {
 
           await ServerMemberModel.updateOne(
             {
-              "_id.server_id": server_id,
-              "_id.user_id": user_id,
+              '_id.server_id': server_id,
+              '_id.user_id': user_id,
             },
             { position },
             { session }
@@ -329,20 +329,33 @@ const serverWs: IResolvers = {
   JSON: GraphQLJSON,
   Subscription: {
     serverUpdated: {
-      resolve: (payload) => {
-        return payload;
-      },
-      subscribe: withFilter(
-        () => {
-          return getAsyncIterator([ServerEvents.serverUpdated]);
-        },
-        (payload, variables, context) => {
-          const server_id = String(payload.server_id) || null;
-          const variables_id = variables.server_id || null;
+      resolve: (payload, args, context) => ({
+        ...payload,
+        server_id: args.server_id,
+      }),
+      async subscribe(rootValue, args, context) {
+        const members = await ServerMemberModel.find({
+          '_id.server_id': args.server_id,
+        });
 
-          return server_id === variables_id;
-        }
-      ),
+        return withFilter(
+          () => {
+            return getAsyncIterator(Object.values(ServerEvents));
+          },
+          (payload, variables, context) => {
+            const server_id = String(payload.server_id) || null;
+            const variables_id = variables.server_id || null;
+
+            const isSameServer = payload?.data?.user_id
+              ? members.some((member) =>
+                  payload.data.user_id.equals(member._id.user_id)
+                )
+              : false;
+
+            return server_id === variables_id || isSameServer;
+          }
+        )(rootValue, args, context);
+      },
     },
   },
 };
