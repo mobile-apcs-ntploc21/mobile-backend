@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import { serverMemberQueries, serverQueries } from '../graphql/queries';
-import { serverMemberMutations } from '../graphql/mutations';
+import { Request, Response, NextFunction } from "express";
+import graphQLClient from "../../utils/graphql";
+import { serverMemberQueries, serverQueries } from "../../graphql/queries";
+import { serverMemberMutations } from "../../graphql/mutations";
 
 export const getServerMembers = async (
   req: Request,

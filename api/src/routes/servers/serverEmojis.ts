@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, Router } from "express";
-import { authMiddleware } from "../utils/authMiddleware";
+import { authMiddleware } from "../../utils/authMiddleware";
 
-import * as serverEmojiCtrl from "../controllers/serverEmojis";
+import * as serverEmojiCtrl from "../../controllers/servers/serverEmojis";
 
 const serverRouter = Router();
 

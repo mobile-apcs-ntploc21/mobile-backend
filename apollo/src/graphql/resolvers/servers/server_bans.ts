@@ -20,6 +20,15 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
       throw new UserInputError("Cannot ban server owner!");
     }
 
+    const serverBan = await ServerBansModel.findOne({
+      "_id.server": server_id,
+      "_id.user": user_id,
+    });
+
+    if (serverBan) {
+      throw new UserInputError("User is already banned!");
+    }
+
     const [createdBan] = await ServerBansModel.create(
       [{ _id: { server: server_id, user: user_id } }],
       opts
@@ -127,9 +136,19 @@ const resolvers: IResolvers = {
     },
     deleteServerBan: async (_, { server_id, user_id }) => {
       try {
-        const serverBan = await ServerBansModel.findOneAndDelete({
+        const serverBan = await ServerBansModel.findOne({
+          "_id.server": server_id,
+          "_id.user": user_id,
+        });
+
+        if (!serverBan) {
+          return false;
+        }
+
+        await ServerBansModel.findOneAndDelete({
           _id: { server: server_id, user: user_id },
         });
+
         return true;
       } catch (error) {
         throw error;

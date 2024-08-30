@@ -1,5 +1,5 @@
 import express from "express";
-import * as serverBansController from "../controllers/server_bans";
+import * as serverBansController from "../../controllers/servers/server_bans";
 
 const serverBansRouter = express.Router();
 

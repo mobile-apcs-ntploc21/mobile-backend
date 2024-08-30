@@ -1,20 +1,24 @@
 import { Request, Response, NextFunction, Router } from "express";
-import { authMiddleware } from "../utils/authMiddleware";
+import { authMiddleware } from "../../utils/authMiddleware";
 
-import * as serverCtrl from "../controllers/server";
+import * as serverCtrl from "../../controllers/servers/server";
 import {
   getServerMembers,
   joinServer,
   removeSelf,
-} from "../controllers/server_member";
-import { checkMembershipMiddleware } from "../utils/checkMembershipMiddleware";
-import { checkOwnerMiddleware } from "../utils/checkOwnerMiddleware";
+} from "../../controllers/servers/server_member";
+import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
+import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
 import serverOwnerRouter from "./server_owner";
 
 const serverRouter = Router();
 
-import serverRoleRouter from './servers/server_permission';
-import {getRolesAssignedWithMyself, getRolesAssignedWithUser, getCurrentUserPermissions} from "../controllers/servers/server_permission";
+import serverRoleRouter from "./server_permission";
+import {
+  getRolesAssignedWithMyself,
+  getRolesAssignedWithUser,
+  getCurrentUserPermissions,
+} from "../../controllers/servers/server_permission";
 
 // Members
 serverRouter.use("/:serverId/owner", checkOwnerMiddleware, serverOwnerRouter);
@@ -70,26 +74,32 @@ serverRouter.post(
   serverCtrl.transferOwnership
 );
 
-serverRouter.use('/:serverId/roles',
+serverRouter.use(
+  "/:serverId/roles",
   authMiddleware,
   checkMembershipMiddleware,
-  serverRoleRouter);
-
-serverRouter.get('/:serverId/members/self/roles',
-  authMiddleware,
-  checkMembershipMiddleware,
-  getRolesAssignedWithMyself);
-
-serverRouter.get('/:serverId/members/:userId/roles',
-  authMiddleware,
-  checkMembershipMiddleware,
-  getRolesAssignedWithUser);
+  serverRoleRouter
+);
 
 serverRouter.get(
-  '/:serverId/members/self/permissions',
+  "/:serverId/members/self/roles",
+  authMiddleware,
+  checkMembershipMiddleware,
+  getRolesAssignedWithMyself
+);
+
+serverRouter.get(
+  "/:serverId/members/:userId/roles",
+  authMiddleware,
+  checkMembershipMiddleware,
+  getRolesAssignedWithUser
+);
+
+serverRouter.get(
+  "/:serverId/members/self/permissions",
   authMiddleware,
   checkMembershipMiddleware,
   getCurrentUserPermissions
-)
+);
 
 export default serverRouter;

@@ -15,9 +15,9 @@ import friendRouter from "./routes/friend";
 import settingsRouter from "./routes/settings";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
-import serverRouter from "./routes/server";
-import serverEmojiRouter from "./routes/serverEmojis";
-import serverBansRouter from "./routes/server_bans";
+import serverRouter from "./routes/servers/server";
+import serverEmojiRouter from "./routes/servers/serverEmojis";
+import serverBansRouter from "./routes/servers/server_bans";
 
 dotenv.config({ path: "./config.env" });
 
