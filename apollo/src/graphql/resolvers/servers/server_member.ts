@@ -1,11 +1,13 @@
-import serverModel from "../../../models/servers/server";
-import ServerMemberModel from "../../../models/servers/server_member";
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server-core";
 import { ObjectId, Schema } from "mongoose";
 import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
 import user from "../../typedefs/user";
+import serverModel from "../../../models/servers/server";
+import ServerMemberModel from "../../../models/servers/server_member";
 import ServerBan from "@/models/servers/server_bans";
+import ServerRoleModel from "../../../models/servers/server_role";
+import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -91,7 +93,10 @@ const addServerMemberTransaction = async ({
     );
 
     // assign default role to new members
-    const defaultRole = await ServerRoleModel.findOne({ server_id, default: true });
+    const defaultRole = await ServerRoleModel.findOne({
+      server_id,
+      default: true,
+    });
     await AssignedUserRoleModel.create(
       user_ids.map((user_id) => ({
         _id: {
