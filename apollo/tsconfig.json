@@ -18,7 +18,13 @@
     "paths": {
       "@/*": [
         "*"
-      ]
+      ],
+      "@models/*": [
+        "models/*"
+      ],
+      "@resolvers/*": [
+        "graphql/resolvers/*"
+      ],
     }
   }
 }
