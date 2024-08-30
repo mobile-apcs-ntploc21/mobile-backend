@@ -182,6 +182,7 @@ export const serverQueries = {
     query server($server_id: ID!) {
       server(server_id: $server_id) {
         id
+        owner
         name
         owner
         avatar_url
@@ -195,6 +196,7 @@ export const serverQueries = {
     query servers($user_id: ID!) {
       servers(user_id: $user_id) {
         id
+        owner
         name
         avatar_url
         banner_url
