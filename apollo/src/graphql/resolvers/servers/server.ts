@@ -15,7 +15,7 @@ import ServerMemberModel from "../../../models/servers/server_member";
 import ServerBansModel from "../../../models/servers/server_bans";
 import mongoose from "mongoose";
 import ServerRoleModel from "../../../models/servers/server_role";
-import {defaultServerRole} from "./server_role";
+import { defaultServerRole } from "./server_role";
 import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
 
 const createServerTransaction = async (input) => {
@@ -123,11 +123,14 @@ const deleteServerTransaction = async (server_id) => {
     const serverRoles = await ServerRoleModel.find({ server_id });
     const serverRoleIds = serverRoles.map((role) => role._id);
 
-    await AssignedUserRoleModel.deleteMany({
-      server_role_id: { $in: serverRoleIds },
-    }, { session });
+    await AssignedUserRoleModel.deleteMany(
+      {
+        server_role_id: { $in: serverRoleIds },
+      },
+      { session }
+    );
 
-    await ServerRoleModel.deleteMany({ server_id }, { session });
+    await ServerRoleModel.deleteMany({ server_id: server_id }, { session });
 
     // Commit transaction
     await session.commitTransaction();
