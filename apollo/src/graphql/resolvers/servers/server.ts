@@ -3,11 +3,16 @@ import { PubSub, withFilter } from "graphql-subscriptions";
 import { AuthenticationError, UserInputError } from "apollo-server";
 import { GraphQLJSON } from "graphql-scalars";
 
-import ServerModel from '../../../models/servers/server'
-import ServerEmoji from '../../../models/servers/serverEmoji';
-import UserModel from '../../../models/user';
-import { getAsyncIterator, publishEvent, ServerEvents } from '../../pubsub/pubsub';
-import ServerMemberModel from '../../../models/servers/server_member';
+import {
+  getAsyncIterator,
+  publishEvent,
+  ServerEvents,
+} from "../../pubsub/pubsub";
+import UserModel from "../../../models/user";
+import ServerModel from "../../../models/servers/server";
+import ServerEmoji from "../../../models/servers/serverEmoji";
+import ServerMemberModel from "../../../models/servers/server_member";
+import ServerBansModel from "../../../models/servers/server_bans";
 import mongoose from "mongoose";
 import ServerRoleModel from "../../../models/servers/server_role";
 import {defaultServerRole} from "./server_role";
@@ -106,9 +111,13 @@ const deleteServerTransaction = async (server_id) => {
       },
       { session }
     );
-
-    // TODO: Remove all emojis from the server
+    // Delete server emojis
     await ServerEmoji.deleteMany({ server_id }, { session });
+    // Delete server bans
+    await ServerBansModel.deleteMany(
+      { "_id.server_id": server_id },
+      { session }
+    );
 
     // Delete server roles and assigned user roles
     const serverRoles = await ServerRoleModel.find({ server_id });
