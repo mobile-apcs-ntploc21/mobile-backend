@@ -2,8 +2,8 @@ import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
   type ServerBan {
-    server: ID
-    user: ID
+    server_id: ID
+    user_id: ID
   }
 `;
 

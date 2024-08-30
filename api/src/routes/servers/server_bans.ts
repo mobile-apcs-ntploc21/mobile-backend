@@ -24,4 +24,9 @@ serverBansRouter.delete(
   serverBansController.deleteServerBan
 );
 
+serverBansRouter.put(
+  "/:serverId/kick/:userId",
+  serverBansController.createServerKick
+);
+
 export default serverBansRouter;
