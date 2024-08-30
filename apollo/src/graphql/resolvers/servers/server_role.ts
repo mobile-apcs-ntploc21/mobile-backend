@@ -11,7 +11,8 @@ import {
 import ServerModel from "../../../models/servers/server";
 import mongoose, {ObjectId} from "mongoose";
 import {publishEvent, ServerEvents} from "./../../pubsub/pubsub";
-import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
+import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
+import ServerMemberModel from "@/models/servers/server_member";
 
 export const defaultServerRole = JSON.stringify({
   // General Server Permissions
@@ -97,7 +98,50 @@ const serverRoleAPI: IResolvers = {
   Query: {
     syncServerRole: async (_, __, { user }) => {
       try {
-        // empty
+        // iterate through all members of a server, and assign them with default server role if they are not assigned yet
+        // first, find all servers and their default server roles
+        const servers = await ServerModel.find();
+        for (const server of servers) {
+          let defaultServerRole = await ServerRoleModel.findOne({ server_id: server._id, default: true });
+          if (!defaultServerRole) {
+            // create default server role if not found
+            await ServerRoleModel.create({
+              server_id: server._id,
+              name: '@everyone',
+              color: '#000000',
+              allow_anyone_mention: true,
+              position: 0,
+              permissions: defaultServerRole,
+              is_admin: false,
+              default: true
+            });
+            defaultServerRole = await ServerRoleModel.findOne({ server_id: server._id, default: true });
+          }
+
+          // find all members of the server
+          const members = await ServerMemberModel.find({
+            '_id.server_id': server._id
+          });
+          for (const member of members) {
+            // check if the member is assigned with the default server role
+            const assignedRole = await AssignedUserRoleModel.findOne({
+              '_id.user_id': member._id.user_id,
+              '_id.server_role_id': defaultServerRole._id
+            });
+            if (!assignedRole) {
+              // assign the member with the default server role
+              await AssignedUserRoleModel.create([
+                {
+                  _id: {
+                    user_id: member._id.user_id,
+                    server_role_id: defaultServerRole._id
+                  }
+                }
+              ]);
+            }
+          }
+        }
+
         return await ServerRoleModel.find();
       } catch (err) {
         throw new UserInputError("Cannot sync server roles!");

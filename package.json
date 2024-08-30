@@ -15,5 +15,8 @@
   "dependencies": {
     "concurrently": "^7.6.0",
     "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "tsconfig-paths": "^4.2.0"
   }
 }
