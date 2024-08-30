@@ -1,8 +1,8 @@
 import express from "express";
-import graphQLClient from "../utils/graphql";
+import graphQLClient from "../../utils/graphql";
 
-import { serverBansQueries } from "../graphql/queries";
-import { serverBansMutations } from "../graphql/mutations";
+import { serverBansQueries } from "../../graphql/queries";
+import { serverBansMutations } from "../../graphql/mutations";
 
 const _getServerBan = async (serverId: string, userId: string) => {
   const response = await graphQLClient().request(
@@ -35,8 +35,6 @@ export const getServerBan = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  // TODO: Check user has permission to view ban
-
   const { serverId, userId } = req.params;
 
   if (!serverId || !userId) {
@@ -67,8 +65,6 @@ export const getServerBans = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  // TODO: Check user has permission to view bans
-
   const { serverId } = req.params;
   const { limit } = req.query;
 
@@ -93,8 +89,6 @@ export const createServerBan = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  // TODO: Check user has permission to ban
-
   const { serverId, userId } = req.params;
 
   if (!serverId || !userId) {
@@ -114,8 +108,12 @@ export const createServerBan = async (
 
     return res.status(200).json(response.createServerBan);
   } catch (error) {
-    return res.status(500).json({
-      message: "Internal Server Error",
+    const errorMessage = String(error.response.errors[0].message) ?? null;
+    if (!errorMessage) {
+      return next(error);
+    }
+    return res.status(400).json({
+      message: errorMessage,
     });
   }
 };
@@ -155,9 +153,7 @@ export const createServerBulkBan = async (
 
     return res.status(200).json(response.createServerBulkBan);
   } catch (error) {
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
+    return next(error);
   }
 };
 
@@ -183,11 +179,15 @@ export const deleteServerBan = async (
       }
     );
 
+    if (!response.deleteServerBan) {
+      return res.status(404).json({
+        message: "Ban not found",
+      });
+    }
+
     return res.status(204);
   } catch (error) {
-    return res.status(500).json({
-      message: "Internal Server Error",
-    });
+    return next(error);
   }
 };
 

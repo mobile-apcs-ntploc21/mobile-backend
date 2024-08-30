@@ -1,9 +1,9 @@
 import express from "express";
 
-import { processImage } from "../utils/storage";
-import graphQLClient from "../utils/graphql";
-import { serverEmojiQueries } from "../graphql/queries";
-import { serverEmojiMutations } from "../graphql/mutations";
+import { processImage } from "../../utils/storage";
+import graphQLClient from "../../utils/graphql";
+import { serverEmojiQueries } from "../../graphql/queries";
+import { serverEmojiMutations } from "../../graphql/mutations";
 
 const _getServerEmojis = async (server_id: string) => {
   const response = await graphQLClient().request(

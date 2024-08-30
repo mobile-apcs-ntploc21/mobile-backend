@@ -1,10 +1,10 @@
 import express from "express";
 import streamifier from "streamifier";
 
-import { processImage } from "../utils/storage";
-import graphQLClient from "../utils/graphql";
-import { serverQueries } from "../graphql/queries";
-import { serverMutations } from "../graphql/mutations";
+import { processImage } from "../../utils/storage";
+import graphQLClient from "../../utils/graphql";
+import { serverQueries } from "../../graphql/queries";
+import { serverMutations } from "../../graphql/mutations";
 
 const getServerOverview = async (server_id: string) => {
   const response = await graphQLClient().request(
