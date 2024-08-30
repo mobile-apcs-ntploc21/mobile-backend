@@ -14,7 +14,7 @@ import {
   wsTypedefs as userProfileWs,
 } from "./user_profile";
 /// Server
-import serverBans from "./server_bans";
+import serverBans from "./servers/server_bans";
 import serverSchema from "./servers/server";
 import serverMemberSchema from "./servers/server_member";
 import serverEmoji from "./servers/serverEmoji";

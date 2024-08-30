@@ -19,6 +19,8 @@ const gqlMutations = gql`
     createServerBan(server_id: ID!, user_id: ID!): ServerBan
     createServerBulkBan(server_id: ID!, user_ids: [ID]!): [ServerBan]
     deleteServerBan(server_id: ID!, user_id: ID!): Boolean
+
+    createServerKick(server_id: ID!, user_id: ID!): Boolean
   }
 `;
 

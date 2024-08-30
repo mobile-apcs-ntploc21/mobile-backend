@@ -11,7 +11,7 @@ import { userProfileApollo, userProfileWs } from "./user_profile";
 import serverResolver from "./servers/server";
 import serverEmoji from "./servers/serverEmoji";
 import serverMemberResolver from "./servers/server_member";
-import serverBansResolver from "./server_bans";
+import serverBansResolver from "./servers/server_bans";
 /// Channel
 import channelResolver from "./servers/channels/channel";
 import categoryResolver from "./servers/channels/category";

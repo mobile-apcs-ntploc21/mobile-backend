@@ -1,4 +1,5 @@
-import mongoose, { model, Schema } from "mongoose";
+import mongoose, { Model, model, Schema } from "mongoose";
+import ModelNames from "../modelNames";
 
 interface IServerBan {
   _id: {
@@ -12,12 +13,12 @@ const serverBanSchema = new Schema<IServerBan>(
     _id: {
       server: {
         type: Schema.Types.ObjectId,
-        ref: "Server",
+        ref: ModelNames.Server,
         required: [true, "Server ID is required!"],
       },
       user: {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: ModelNames.User,
         required: [true, "User ID is required!"],
       },
     },
@@ -25,6 +26,6 @@ const serverBanSchema = new Schema<IServerBan>(
   { timestamps: true }
 );
 
-const ServerBan = mongoose.model("ServerBan", serverBanSchema);
+const ServerBan = mongoose.model(ModelNames.Server_Ban, serverBanSchema);
 
 export default ServerBan;
