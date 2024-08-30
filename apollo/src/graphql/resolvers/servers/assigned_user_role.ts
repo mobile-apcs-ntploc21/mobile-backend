@@ -133,7 +133,10 @@ const removeUserFromRoleTransaction = async ({
     }
 
     const assignedUserRole = await AssignedUserRoleModel.findOneAndDelete(
-      { role_id, user_id },
+      {
+        '_id.server_role_id': role_id,
+        '_id.user_id': user_id,
+      },
       { session }
     );
 
