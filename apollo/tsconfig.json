@@ -14,10 +14,10 @@
     "types": [
       "node"
     ],
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
       "@/*": [
-        "src/*"
+        "*"
       ]
     }
   }

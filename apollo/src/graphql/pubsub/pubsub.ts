@@ -1,35 +1,62 @@
 // pubsub.ts
-import { PubSub } from 'graphql-subscriptions';
+import { PubSub } from "graphql-subscriptions";
 
 const pubsub = new PubSub();
 
 export enum ServerEvents {
-  userProfileChanged = 'USER_PROFILE_CHANGED',
-  userStatusChanged = 'USER_STATUS_CHANGED',
+  userProfileChanged = "USER_PROFILE_CHANGED",
+  userStatusChanged = "USER_STATUS_CHANGED",
 
-  memberJoined = 'MEMBER_JOINED',
-  memberLeft = 'MEMBER_LEFT',
-  memberUpdated = 'MEMBER_UPDATED',
+  memberJoined = "MEMBER_JOINED",
+  memberLeft = "MEMBER_LEFT",
+  memberUpdated = "MEMBER_UPDATED",
 
-  emojiAdded = 'EMOJI_ADDED',
-  emojiUpdated = 'EMOJI_UPDATED',
-  emojiDeleted = 'EMOJI_DELETED',
+  emojiAdded = "EMOJI_ADDED",
+  emojiUpdated = "EMOJI_UPDATED",
+  emojiDeleted = "EMOJI_DELETED",
 
-  serverUpdated = 'SERVER_UPDATED',
-  serverDeleted = 'SERVER_DELETED',
+  serverUpdated = "SERVER_UPDATED",
+  serverDeleted = "SERVER_DELETED",
 
-  memberAdded = 'MEMBER_ADDED',
-  memberRemoved = 'MEMBER_REMOVED',
+  memberAdded = "MEMBER_ADDED",
+  memberRemoved = "MEMBER_REMOVED",
+
+  channelAdded = "CHANNEL_ADDED",
+  channelDeleted = "CHANNEL_DELETED",
+  channelUpdated = "CHANNEL_UPDATED",
+
+  categoryAdded = "CATEGORY_ADDED",
+  categoryDeleted = "CATEGORY_DELETED",
+  categoryUpdated = "CATEGORY_UPDATED",
+
+  roleAdded = "ROLE_ADDED",
+  roleDeleted = "ROLE_DELETED",
+  roleUpdated = "ROLE_UPDATED",
+
+  userRoleAdded = "ADD_USER_TO_ROLE",
+  userRoleDeleted = "REMOVE_USER_FROM_ROLE",
+
+  channelRoleAdded = "ADD_CHANNEL_PERMISSIONS_TO_ROLE",
+  channelRoleDeleted = "REMOVE_CHANNEL_PERMISSIONS_FROM_ROLE",
+  channelRoleUpdated = "UPDATE_CHANNEL_PERMISSIONS_FOR_ROLE",
+
+  categoryRoleAdded = "ADD_CATEGORY_PERMISSIONS_TO_ROLE",
+  categoryRoleDeleted = "REMOVE_CATEGORY_PERMISSIONS_FROM_ROLE",
+  categoryRoleUpdated = "UPDATE_CATEGORY_PERMISSIONS_FOR_ROLE",
+
+  channelUserAdded = "ADD_CHANNEL_PERMISSIONS_TO_USER",
+  channelUserDeleted = "REMOVE_CHANNEL_PERMISSIONS_FROM_USER",
+  channelUserUpdated = "UPDATE_CHANNEL_PERMISSIONS_FOR_USER",
+
+  categoryUserAdded = "ADD_CATEGORY_PERMISSIONS_TO_USER",
+  categoryUserDeleted = "REMOVE_CATEGORY_PERMISSIONS_FROM_USER",
+  categoryUserUpdated = "UPDATE_CATEGORY_PERMISSIONS_FOR_USER",
 }
 
 export enum ChannelEvents {
-  messageAdded = 'MESSAGE_ADDED',
-  messageDeleted = 'MESSAGE_DELETED',
-  messageEdited = 'MESSAGE_EDITED',
-
-  channelAdded = 'CHANNEL_ADDED',
-  channelDeleted = 'CHANNEL_DELETED',
-  channelUpdated = 'CHANNEL_UPDATED',
+  messageAdded = "MESSAGE_ADDED",
+  messageDeleted = "MESSAGE_DELETED",
+  messageEdited = "MESSAGE_EDITED",
 }
 
 /**

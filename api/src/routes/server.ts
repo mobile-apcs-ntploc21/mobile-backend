@@ -13,6 +13,9 @@ import serverOwnerRouter from "./server_owner";
 
 const serverRouter = Router();
 
+import serverRoleRouter from './servers/server_permission';
+import {getRolesAssignedWithMyself, getRolesAssignedWithUser, getCurrentUserPermissions} from "../controllers/servers/server_permission";
+
 // Members
 serverRouter.use("/:serverId/owner", checkOwnerMiddleware, serverOwnerRouter);
 
@@ -66,5 +69,27 @@ serverRouter.post(
   authMiddleware,
   serverCtrl.transferOwnership
 );
+
+serverRouter.use('/:serverId/roles',
+  authMiddleware,
+  checkMembershipMiddleware,
+  serverRoleRouter);
+
+serverRouter.get('/:serverId/members/self/roles',
+  authMiddleware,
+  checkMembershipMiddleware,
+  getRolesAssignedWithMyself);
+
+serverRouter.get('/:serverId/members/:userId/roles',
+  authMiddleware,
+  checkMembershipMiddleware,
+  getRolesAssignedWithUser);
+
+serverRouter.get(
+  '/:serverId/members/self/permissions',
+  authMiddleware,
+  checkMembershipMiddleware,
+  getCurrentUserPermissions
+)
 
 export default serverRouter;

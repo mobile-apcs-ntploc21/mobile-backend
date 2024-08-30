@@ -1,10 +1,10 @@
-import serverModel from '../../models/server';
-import ServerMemberModel from '../../models/server_member';
+import serverModel from '../../../models/servers/server';
+import ServerMemberModel from '../../../models/servers/server_member';
 import { IResolvers } from '@graphql-tools/utils';
 import { UserInputError } from 'apollo-server-core';
 import { ObjectId, Schema } from 'mongoose';
-import { publishEvent, ServerEvents } from '../pubsub/pubsub';
-import user from '../typedefs/user';
+import { publishEvent, ServerEvents } from '../../pubsub/pubsub';
+import user from '../../typedefs/user';
 
 type ServerMembers = {
   server_id: ObjectId;
