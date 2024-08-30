@@ -9,6 +9,7 @@ import {
   UserStatusEvents,
 } from '../pubsub/user_status';
 import { wsLogger } from '../../utils';
+import { publishEvent, ServerEvents } from '../pubsub/pubsub';
 
 export const userStatusResolvers_API: IResolvers = {
   DateTime,
@@ -81,6 +82,10 @@ export const userStatusResolvers_API: IResolvers = {
         res.type = type;
         await res.save();
 
+        publishEvent(ServerEvents.userStatusChanged, {
+          type: ServerEvents.userStatusChanged,
+          data: res,
+        });
         publishStatusChanged(res);
         return res;
       } catch (error) {
@@ -95,6 +100,10 @@ export const userStatusResolvers_API: IResolvers = {
           { new: true }
         );
 
+        publishEvent(ServerEvents.userStatusChanged, {
+          type: ServerEvents.userStatusChanged,
+          data: res,
+        });
         publishStatusChanged(res);
         return res;
       } catch (error) {
