@@ -93,7 +93,7 @@ export const createServerBan = async (
 
   if (!serverId || !userId) {
     return res.status(400).json({
-      message: "Missing serverId or userId",
+      message: "Missing serverId or userId in the params",
     });
   }
 
@@ -166,7 +166,7 @@ export const deleteServerBan = async (
 
   if (!serverId || !userId) {
     return res.status(400).json({
-      message: "Missing serverId or userId",
+      message: "Missing serverId or userId in the params",
     });
   }
 
@@ -181,7 +181,7 @@ export const deleteServerBan = async (
 
     if (!response.deleteServerBan) {
       return res.status(404).json({
-        message: "Ban not found",
+        message: "Banned user information not found",
       });
     }
 
@@ -200,7 +200,7 @@ export const createServerKick = async (
 
   if (!serverId || !userId) {
     return res.status(400).json({
-      message: "Missing serverId or userId",
+      message: "Missing serverId or userId in the params",
     });
   }
 
