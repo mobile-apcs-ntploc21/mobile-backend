@@ -14,7 +14,7 @@ const gqlAPI = gql`
   }
 
   extend type Query {
-    getServerMembers(server_id: ID!): [ServerMember]
+    getServerMembers(server_id: ID!): [UserProfile]
     checkServerMember(server_id: ID!, user_id: ID!): Boolean
   }
 

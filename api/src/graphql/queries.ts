@@ -1,4 +1,4 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
 export const GET_USER_BY_ID = gql`
   query getUserById($id: ID!) {
@@ -205,8 +205,11 @@ export const serverMemberQueries = {
   GET_SERVER_MEMBERS: gql`
     query GetServerMembers($server_id: ID!) {
       getServerMembers(server_id: $server_id) {
-        server_id
         user_id
+        username
+        display_name
+        avatar_url
+        banner_url
       }
     }
   `,

@@ -19,10 +19,7 @@ export const getServerMembers = async (
 
     if (members.length === 0) return res.json([]);
 
-    return res.json({
-      server_id: serverId,
-      members: members.map((member: any) => member.user_id),
-    });
+    return res.json(members);
   } catch (error) {
     return next(error);
   }

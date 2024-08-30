@@ -5,6 +5,8 @@ import { UserInputError } from 'apollo-server-core';
 import { ObjectId, Schema } from 'mongoose';
 import { publishEvent, ServerEvents } from '../pubsub/pubsub';
 import user from '../typedefs/user';
+import ModelNames from '../../models/modelNames';
+import mongoose from 'mongoose';
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -174,11 +176,28 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
 const API: IResolvers = {
   Query: {
     getServerMembers: async (_, { server_id }) => {
+      server_id = new mongoose.Types.ObjectId(server_id);
       try {
-        const res = await ServerMemberModel.find({
-          '_id.server_id': server_id,
-        });
-        return res.map((member) => member._id);
+        const res = await ServerMemberModel.aggregate([
+          {
+            $match: {
+              '_id.server_id': server_id,
+            },
+          },
+          {
+            $lookup: {
+              from: ModelNames.UserProfile, // Ensure this matches the actual collection name
+              localField: '_id.user_id', // Field from ServerMemberModel
+              foreignField: 'user_id', // Field from UserProfileModel
+              as: 'user_profile',
+            },
+          },
+          {
+            $unwind: '$user_profile',
+          },
+        ]);
+
+        return res.map((member) => member.user_profile);
       } catch (error) {
         throw new UserInputError(error.message);
       }
