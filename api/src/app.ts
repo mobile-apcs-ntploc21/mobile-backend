@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 
 import globalErrorHandler from "./controllers/error";
 import { authMiddleware } from "./utils/authMiddleware";
+import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
 import userRouter from "./routes/user";
 import friendRouter from "./routes/friend";
 import settingsRouter from "./routes/settings";
@@ -57,7 +58,12 @@ app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 
 /// Server
 app.use("/api/v1/servers", serverRouter);
-app.use("/api/v1/servers", serverEmojiRouter);
+app.use(
+  "/api/v1/servers",
+  authMiddleware,
+  checkMembershipMiddleware,
+  serverEmojiRouter
+);
 app.use("/api/v1/servers", authMiddleware, serverBansRouter);
 
 // Handle when go to undefined route
