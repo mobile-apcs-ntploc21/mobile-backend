@@ -59,7 +59,7 @@ app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 /// Server
 app.use("/api/v1/servers", serverRouter);
 app.use(
-  "/api/v1/servers",
+  "/api/v1/servers/:serverId/emojis",
   authMiddleware,
   checkMembershipMiddleware,
   serverEmojiRouter

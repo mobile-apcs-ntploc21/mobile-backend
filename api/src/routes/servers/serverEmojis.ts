@@ -4,25 +4,25 @@ import { BaseRolePermissions as BRP } from "../../constants/permissions";
 
 import * as serverEmojiCtrl from "../../controllers/servers/serverEmojis";
 
-const serverRouter = Router();
+const serverRouter = Router({ mergeParams: true });
 
 // ServerEmoji CRUD operations routes
-serverRouter.get("/:serverId/emojis/:emojiId", serverEmojiCtrl.getServerEmoji);
-serverRouter.get("/:serverId/emojis/", serverEmojiCtrl.getServerEmojis);
+serverRouter.get("/:emojiId", serverEmojiCtrl.getServerEmoji);
+serverRouter.get("/", serverEmojiCtrl.getServerEmojis);
 
 serverRouter.post(
-  "/:serverId/emojis/",
+  "/",
   checkServerPermissionMiddleware([BRP.CREATE_EXPRESSION]),
   serverEmojiCtrl.createServerEmoji
 );
 serverRouter.patch(
-  "/:serverId/emojis/:emojiId",
+  "/:emojiId",
   checkServerPermissionMiddleware([BRP.MANAGE_EXPRESSION]),
   serverEmojiCtrl.updateServerEmoji
 );
 
 serverRouter.delete(
-  "/:serverId/emojis/:emojiId",
+  "/:emojiId",
   checkServerPermissionMiddleware([BRP.MANAGE_EXPRESSION]),
   serverEmojiCtrl.deleteServerEmoji
 );
