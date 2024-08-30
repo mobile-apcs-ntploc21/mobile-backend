@@ -323,3 +323,80 @@ export const serverBansMutations = {
     }
   `,
 };
+
+export const serverRoleMutations = {
+  CREATE_SERVER_ROLE: gql`
+    mutation createServerRole($server_id: ID!, $input: CreateServerRoleInput!) {
+      createServerRole(server_id: $server_id, input: $input) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  UPDATE_SERVER_ROLE: gql`
+    mutation updateServerRole($role_id: ID!, $input: UpdateServerRoleInput!) {
+      updateServerRole(role_id: $role_id, input: $input) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  DELETE_SERVER_ROLE: gql`
+    mutation deleteServerRole($role_id: ID!) {
+      deleteServerRole(role_id: $role_id) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+
+  ADD_USER_TO_ROLE: gql`
+    mutation addUserToRole($role_id: ID!, $user_id: ID!) {
+      addUserToRole(role_id: $role_id, user_id: $user_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+      }
+    }
+  `,
+
+  REMOVE_USER_FROM_ROLE: gql`
+    mutation removeUserFromRole($role_id: ID!, $user_id: ID!) {
+      removeUserFromRole(role_id: $role_id, user_id: $user_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+      }
+    }
+  `,
+};
