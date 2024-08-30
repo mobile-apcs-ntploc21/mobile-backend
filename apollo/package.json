@@ -3,6 +3,25 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/server.ts",
+  "nodemonConfig": {
+    "ignore": [
+      "src/**/*.test.ts",
+      "src/**/*.spec.ts",
+      "src/**/*.test.tsx",
+      "src/**/*.spec.tsx",
+      "src/**/*.test.js",
+      "src/**/*.spec.js",
+      "src/**/*.test.jsx",
+      "src/**/*.spec.jsx",
+      ".git",
+      "node_modules"
+    ],
+    "watch": [
+      "src"
+    ],
+    "exec": "node -r tsconfig-paths/register -r ts-node/register ./src/server.ts",
+    "ext": "ts, js"
+  },
   "scripts": {
     "compile": "tsc",
     "build": "tsc",
@@ -40,6 +59,8 @@
     "mongoose": "^8.4.3",
     "morgan": "^1.10.0",
     "short-unique-id": "^5.2.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "validator": "^13.12.0",
     "ws": "^8.18.0",
     "xss-clean": "^0.1.4"
