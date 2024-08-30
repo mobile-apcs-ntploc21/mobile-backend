@@ -1,12 +1,10 @@
-import serverModel from "../../models/server";
-import ServerMemberModel from "../../models/server_member";
-import ServerBansModel from "../../models/server_bans";
+import serverModel from "../../../models/servers/server";
+import ServerMemberModel from "../../../models/servers/server_member";
 import { IResolvers } from "@graphql-tools/utils";
-import { UserInputError, ForbiddenError } from "apollo-server-core";
+import { UserInputError } from "apollo-server-core";
 import { ObjectId, Schema } from "mongoose";
-import { publishEvent, ServerEvents } from "../pubsub/pubsub";
-
-import user from "../typedefs/user";
+import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
+import user from "../../typedefs/user";
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -65,16 +63,6 @@ const addServerMemberTransaction = async ({
   try {
     if (!validateUsers(user_ids))
       throw new UserInputError("Invalid server member input!");
-
-    // Check if user has been banned in the server.
-    if (
-      !(await ServerBansModel.find({
-        server: server_id,
-        user: { $in: user_ids },
-      }))
-    ) {
-      throw new ForbiddenError("One of the user member in the list is banned!");
-    }
 
     const res = await ServerMemberModel.insertMany(
       user_ids.map((user_id) => ({
@@ -162,10 +150,6 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
 
   try {
     const { server, inviteIndex } = await validateInviteCode(url);
-
-    // Check if user has been banned in the server.
-    if (!(await ServerBansModel.exists({ server: server._id, user: user_id })))
-      throw new ForbiddenError("User is banned!");
 
     const newdoc = {
       server_id: server._id,
