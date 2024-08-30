@@ -304,22 +304,27 @@ export const serverBansMutations = {
   CREATE_SERVER_BAN: gql`
     mutation createServerBan($server_id: ID!, $user_id: ID!) {
       createServerBan(server_id: $server_id, user_id: $user_id) {
-        server
-        user
+        server_id
+        user_id
       }
     }
   `,
   CREATE_SERVER_BULK_BAN: gql`
     mutation createServerBulkBan($server_id: ID!, $user_ids: [ID]!) {
       createServerBulkBan(server_id: $server_id, user_ids: $user_ids) {
-        server
-        user
+        server_id
+        user_id
       }
     }
   `,
   DELETE_SERVER_BAN: gql`
     mutation deleteServerBan($server_id: ID!, $user_id: ID!) {
       deleteServerBan(server_id: $server_id, user_id: $user_id)
+    }
+  `,
+  CREATE_SERVER_KICK: gql`
+    mutation createServerKick($server_id: ID!, $user_id: ID!) {
+      createServerKick(server_id: $server_id, user_id: $user_id)
     }
   `,
 };

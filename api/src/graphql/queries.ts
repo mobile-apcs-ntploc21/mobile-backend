@@ -267,16 +267,16 @@ export const serverBansQueries = {
   GET_SERVER_BAN: gql`
     query getServerBan($server_id: ID!, $user_id: ID!) {
       getServerBan(server_id: $server_id, user_id: $user_id) {
-        server
-        user
+        server_id
+        user_id
       }
     }
   `,
   GET_SERVER_BANS: gql`
     query getServerBans($server_id: ID!, $limit: Int) {
       getServerBans(server_id: $server_id, limit: $limit) {
-        server
-        user
+        server_id
+        user_id
       }
     }
   `,

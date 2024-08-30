@@ -191,4 +191,38 @@ export const deleteServerBan = async (
   }
 };
 
+export const createServerKick = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { serverId, userId } = req.params;
+
+  if (!serverId || !userId) {
+    return res.status(400).json({
+      message: "Missing serverId or userId",
+    });
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      serverBansMutations.CREATE_SERVER_KICK,
+      {
+        server_id: serverId,
+        user_id: userId,
+      }
+    );
+
+    if (!response.createServerKick) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    return res.status(204);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 // ==================

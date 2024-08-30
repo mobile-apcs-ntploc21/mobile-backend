@@ -3,20 +3,20 @@ import ModelNames from "../modelNames";
 
 interface IServerBan {
   _id: {
-    server: Schema.Types.ObjectId;
-    user: Schema.Types.ObjectId;
+    server_id: Schema.Types.ObjectId;
+    user_id: Schema.Types.ObjectId;
   };
 }
 
 const serverBanSchema = new Schema<IServerBan>(
   {
     _id: {
-      server: {
+      server_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.Server,
         required: [true, "Server ID is required!"],
       },
-      user: {
+      user_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.User,
         required: [true, "User ID is required!"],
