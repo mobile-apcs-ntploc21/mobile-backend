@@ -224,6 +224,7 @@ export const serverMemberQueries = {
     query GetServerMembers($server_id: ID!, $limit: Int) {
       getServerMembers(server_id: $server_id, limit: $limit) {
         id
+        user_id
         username
         display_name
         avatar_url
@@ -288,6 +289,7 @@ export const serverBansQueries = {
     query getServerBans($server_id: ID!, $limit: Int) {
       getServerBans(server_id: $server_id, limit: $limit) {
         id
+        user_id
         username
         display_name
         avatar_url
@@ -461,8 +463,9 @@ export const serverCategoryQueries = {
         name
         position
       }
-    }`,
-}
+    }
+  `,
+};
 
 export const serverCategoryPermissionQueries = {
   GET_CATEGORY_ROLES_PERMISSION: gql`
@@ -479,7 +482,8 @@ export const serverCategoryPermissionQueries = {
         number_of_users
         permissions
       }
-    }`,
+    }
+  `,
   GET_CATEGORY_USERS_PERMISSION: gql`
     query getCategoryUsersPermissions($category_id: ID!) {
       getCategoryUsersPermissions(category_id: $category_id) {
@@ -491,7 +495,8 @@ export const serverCategoryPermissionQueries = {
         about_me
         permissions
       }
-    }`,
+    }
+  `,
   GET_CATEGORY_ROLE_PERMISSION: gql`
     query getCategoryRolePermission($role_id: ID!, $category_id: ID!) {
       getCategoryRolePermission(role_id: $role_id, category_id: $category_id) {
@@ -505,7 +510,8 @@ export const serverCategoryPermissionQueries = {
         is_admin
         last_modified
       }
-    }`,
+    }
+  `,
   GET_CATEGORY_USER_PERMISSION: gql`
     query getCategoryUserPermission($user_id: ID!, $category_id: ID!) {
       getCategoryUserPermission(user_id: $user_id, category_id: $category_id) {
@@ -517,5 +523,6 @@ export const serverCategoryPermissionQueries = {
         about_me
         permissions
       }
-    }`,
-}
+    }
+  `,
+};
