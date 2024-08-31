@@ -18,6 +18,8 @@ import {
   getRolesAssignedWithUser,
   getCurrentUserPermissions,
 } from "../../controllers/servers/server_permission";
+import {checkCategoryExistenceMiddleware} from "../../utils/checkCategoryExistenceMiddleware";
+import categoryRouter from "./channels/category";
 
 const serverRouter = Router();
 
@@ -118,6 +120,14 @@ serverRouter.get(
   authMiddleware,
   checkMembershipMiddleware,
   getCurrentUserPermissions
+);
+
+serverRouter.use(
+  "/:serverId/categories/:categoryId",
+  authMiddleware,
+  checkMembershipMiddleware,
+  checkCategoryExistenceMiddleware,
+  categoryRouter
 );
 
 export default serverRouter;

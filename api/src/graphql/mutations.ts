@@ -428,3 +428,134 @@ export const serverRoleMutations = {
     }
   `,
 };
+
+export const serverCategoryPermissionMutations = {
+  CREATE_CATEGORY_ROLE_PERMISSION: gql`
+    mutation createCategoryRolePermission(
+      $role_id: ID!
+      $category_id: ID!
+      $permissions: String!
+    ) {
+      createCategoryRolePermission(
+        role_id: $role_id
+        category_id: $category_id
+        permissions: $permissions
+      ) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  CREATE_CATEGORY_USER_PERMISSION: gql`
+    mutation createCategoryUserPermission(
+      $user_id: ID!
+      $category_id: ID!
+      $permissions: String!
+    ) {
+      createCategoryUserPermission(
+        user_id: $user_id
+        category_id: $category_id
+        permissions: $permissions
+      ) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }
+  `,
+  UPDATE_CATEGORY_ROLE_PERMISSION: gql`
+    mutation updateCategoryRolePermission(
+      $role_id: ID!
+      $category_id: ID!
+      $permissions: String!
+    ) {
+      updateCategoryRolePermission(
+        role_id: $role_id
+        category_id: $category_id
+        permissions: $permissions
+      ) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  UPDATE_CATEGORY_USER_PERMISSION: gql`
+    mutation updateCategoryUserPermission(
+      $user_id: ID!
+      $category_id: ID!
+      $permissions: String!
+    ) {
+      updateCategoryUserPermission(
+        user_id: $user_id
+        category_id: $category_id
+        permissions: $permissions
+      ) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }
+  `,
+  DELETE_CATEGORY_ROLE_PERMISSION: gql`
+    mutation deleteCategoryRolePermission(
+      $role_id: ID!
+      $category_id: ID!
+    ) {
+      deleteCategoryRolePermission(role_id: $role_id, category_id: $category_id) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  DELETE_CATEGORY_USER_PERMISSION: gql`
+    mutation deleteCategoryUserPermission(
+      $user_id: ID!
+      $category_id: ID!
+    ) {
+      deleteCategoryUserPermission(user_id: $user_id, category_id: $category_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }
+  `,
+}
