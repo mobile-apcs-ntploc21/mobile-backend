@@ -4,6 +4,7 @@ import { GraphQLJSON } from "graphql-scalars";
 import mongoose from "mongoose";
 
 import UserModel from "@/models/user";
+import UserProfileModel from "@/models/user_profile";
 import ServerModel from "@/models/servers/server";
 import ServerBansModel from "@/models/servers/server_bans";
 import ServerMemberModel from "@/models/servers/server_member";
@@ -139,6 +140,10 @@ const resolvers: IResolvers = {
       }
     },
     getServerBans: async (_, { server_id, limit }) => {
+      if (!limit) {
+        limit = 1000;
+      }
+
       try {
         const serverBans = await ServerBansModel.find({
           "_id.server": server_id,
@@ -146,10 +151,11 @@ const resolvers: IResolvers = {
           .limit(limit)
           .sort({ createdAt: -1 });
 
-        return serverBans.map((ban) => ({
-          server_id: ban._id.server_id,
-          user_id: ban._id.user_id,
-        }));
+        // Get user profiles of the banned users
+        const user_ids = serverBans.map((ban) => ban._id.user_id);
+        const profiles = UserProfileModel.find({ user_id: { $in: user_ids } });
+
+        return profiles;
       } catch (error) {
         throw error;
       }

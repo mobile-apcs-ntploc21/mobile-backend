@@ -10,7 +10,7 @@ const gqlTypes = gql`
 const gqlQueries = gql`
   extend type Query {
     getServerBan(server_id: ID!, user_id: ID!): ServerBan
-    getServerBans(server_id: ID!, limit: Int): [ServerBan]
+    getServerBans(server_id: ID!, limit: Int): [UserProfile]
   }
 `;
 
