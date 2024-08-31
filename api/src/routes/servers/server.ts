@@ -1,12 +1,20 @@
-import {Router} from "express";
-import {authMiddleware} from "../../utils/authMiddleware";
-import {checkServerPermissionMiddleware} from "../../utils/checkServerPermissionMiddleware";
-import {BaseRolePermissions as BRP, CategoryPermissions, ChannelPermissions} from "../../constants/permissions";
+import { Router } from "express";
+import { authMiddleware } from "../../utils/authMiddleware";
+import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
+import {
+  BaseRolePermissions as BRP,
+  CategoryPermissions,
+  ChannelPermissions,
+} from "../../constants/permissions";
 
 import * as serverCtrl from "../../controllers/servers/server";
-import {getServerMembers, joinServer, removeSelf,} from "../../controllers/servers/server_member";
-import {checkMembershipMiddleware} from "../../utils/checkMembershipMiddleware";
-import {checkOwnerMiddleware} from "../../utils/checkOwnerMiddleware";
+import {
+  getServerMembers,
+  joinServer,
+  removeSelf,
+} from "../../controllers/servers/server_member";
+import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
+import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
 import serverOwnerRouter from "./server_owner";
 import serverRoleRouter from "./server_permission";
 import {
@@ -14,10 +22,10 @@ import {
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
 } from "../../controllers/servers/server_permission";
-import {checkCategoryExistenceMiddleware} from "../../utils/checkCategoryExistenceMiddleware";
+import { checkCategoryExistenceMiddleware } from "../../utils/checkCategoryExistenceMiddleware";
 import categoryRouter from "./channels/category";
 import channelRouter from "./channels/channel";
-import {checkChannelExistenceMiddleware} from "../../utils/checkChannelExistenceMiddleware";
+import { checkChannelExistenceMiddleware } from "../../utils/checkChannelExistenceMiddleware";
 
 const serverRouter = Router();
 
@@ -53,34 +61,44 @@ serverRouter.post("/", authMiddleware, serverCtrl.createServer);
 serverRouter.put(
   "/:serverId",
   authMiddleware,
+  checkMembershipMiddleware,
   checkServerPermissionMiddleware([BRP.MANAGE_SERVER]),
   serverCtrl.updateServer
 );
 serverRouter.patch(
   "/:serverId",
   authMiddleware,
+  checkMembershipMiddleware,
   checkServerPermissionMiddleware([BRP.MANAGE_SERVER]),
   serverCtrl.updateServer
 );
 
-serverRouter.delete("/:serverId", authMiddleware, serverCtrl.deleteServer);
+serverRouter.delete(
+  "/:serverId",
+  authMiddleware,
+  checkMembershipMiddleware,
+  serverCtrl.deleteServer
+);
 
 // Invite Link CRUD operations routes
 serverRouter.get(
   "/:serverId/invite",
   authMiddleware,
+  checkMembershipMiddleware,
   checkServerPermissionMiddleware([BRP.MANAGE_INVITE]),
   serverCtrl.getInviteCode
 );
 serverRouter.post(
   "/:serverId/invite",
   authMiddleware,
+  checkMembershipMiddleware,
   checkServerPermissionMiddleware([BRP.MANAGE_INVITE]),
   serverCtrl.createInviteCode
 );
 serverRouter.delete(
   "/:serverId/invite/",
   authMiddleware,
+  checkMembershipMiddleware,
   checkServerPermissionMiddleware([BRP.MANAGE_INVITE]),
   serverCtrl.deleteInviteCode
 );
