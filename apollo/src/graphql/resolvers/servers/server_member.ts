@@ -2,7 +2,8 @@ import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server-core";
 import { ObjectId, Schema } from "mongoose";
 import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
-import user from "../../typedefs/user";
+
+import UserProfileModel from "@/models/user_profile";
 import serverModel from "../../../models/servers/server";
 import ServerMemberModel from "../../../models/servers/server_member";
 import ServerBan from "@/models/servers/server_bans";
@@ -228,12 +229,43 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
 
 const API: IResolvers = {
   Query: {
-    getServerMembers: async (_, { server_id }) => {
+    getServerMembers: async (_, { server_id, limit }) => {
+      // Set default limit to 1000
+      if (!limit) {
+        limit = 1000;
+      }
+
       try {
-        const res = await ServerMemberModel.find({
+        // Get all members of the server
+        const members = await ServerMemberModel.find({
           "_id.server_id": server_id,
+        }).limit(limit);
+
+        // Get the user profile of each member (contains default and server profile)
+        const user_ids = members.map((member) => member._id.user_id);
+        const allProfiles = await UserProfileModel.find({
+          user_id: { $in: user_ids },
+          server_id: { $in: [null, server_id] },
         });
-        return res.map((member) => member._id);
+
+        let profiles = [];
+        for (let i = 0; i < user_ids.length; i++) {
+          let profile = allProfiles.find(
+            (profile) =>
+              String(profile.user_id) === String(user_ids[i]) &&
+              String(profile.server_id) === server_id
+          );
+
+          if (!profile) {
+            profile = allProfiles.find(
+              (profile) => String(profile.user_id) === String(user_ids[i])
+            );
+          }
+
+          profiles.push(profile);
+        }
+
+        return profiles;
       } catch (error) {
         throw new UserInputError(error.message);
       }

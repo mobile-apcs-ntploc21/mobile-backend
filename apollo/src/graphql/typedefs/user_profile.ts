@@ -5,14 +5,14 @@ const gqlType = gql`
 
   type UserProfile {
     id: ID!
-    user_id: ObjectId!
-    server_id: ObjectId
+    user_id: ID!
+    server_id: ID
     display_name: String
     username: String!
     about_me: String!
     avatar_url: String
     banner_url: String
-    status: ObjectId
+    status: ID
   }
 
   input UserProfileInput {

@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-express';
+import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
   type ServerMember {
@@ -14,7 +14,7 @@ const gqlAPI = gql`
   }
 
   extend type Query {
-    getServerMembers(server_id: ID!): [ServerMember]
+    getServerMembers(server_id: ID!, limit: Int): [UserProfile]
     checkServerMember(server_id: ID!, user_id: ID!): Boolean
   }
 
