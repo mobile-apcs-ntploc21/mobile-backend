@@ -15,8 +15,6 @@ import serverBansResolver from "./servers/server_bans";
 /// Channel
 import channelResolver from "./servers/channels/channel";
 import categoryResolver from "./servers/channels/category";
-import channelPermissionResolver from "./servers/channels/channel_permission";
-import categoryPermissionResolver from "./servers/channels/category_permission";
 import server_role from "./servers/server_role";
 import assigned_user_role from "./servers/assigned_user_role";
 import channel_role_permission from "./servers/channels/channel_role_permission";
@@ -46,8 +44,6 @@ export const apiResolvers = mergeResolvers([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
-  channelPermissionResolver,
-  categoryPermissionResolver,
 ]);
 
 export const wsResolvers = mergeResolvers([
