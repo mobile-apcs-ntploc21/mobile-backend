@@ -15,13 +15,14 @@ const gqlTypes = gql`
 const gqlAPI = gql`
   type Query {
     syncChannelUserPermission: [ChannelUserPermission]
-    getChannelUserPermission(user_id: ID!, channel_id: ID!): ChannelUserPermission
+    getChannelUsersPermissions(channel_id: ID!): [UserProfileWithPermissions]
+    getChannelUserPermission(user_id: ID!, channel_id: ID!): UserProfileWithPermissions
   }
 
   type Mutation {
-    createChannelUserPermission(user_id: ID!, channel_id: ID!, permissions: String): ChannelUserPermission
-    updateChannelUserPermission(user_id: ID!, channel_id: ID!, permissions: String): ChannelUserPermission
-    deleteChannelUserPermission(user_id: ID!, channel_id: ID!): ChannelUserPermission
+    createChannelUserPermission(user_id: ID!, channel_id: ID!, permissions: String): [UserProfileWithPermissions]
+    updateChannelUserPermission(user_id: ID!, channel_id: ID!, permissions: String): UserProfileWithPermissions
+    deleteChannelUserPermission(user_id: ID!, channel_id: ID!): [UserProfileWithPermissions]
   }
 `;
 

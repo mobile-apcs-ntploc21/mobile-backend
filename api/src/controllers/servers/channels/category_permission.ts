@@ -1,12 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import graphQLClient from '../../../utils/graphql';
-import {serverRoleQueries, serverQueries, serverCategoryPermissionQueries} from '../../../graphql/queries';
+import {serverRoleQueries, serverCategoryPermissionQueries} from '../../../graphql/queries';
 import {
   serverCategoryPermissionMutations,
-  serverMemberMutations,
-  serverRoleMutations
 } from '../../../graphql/mutations';
-import {CategoryPermissions} from "../../../constants/permissions";
 
 import { getUserCategoryPermissionsFunc } from '../../../utils/getUserCategoryPermissions';
 
