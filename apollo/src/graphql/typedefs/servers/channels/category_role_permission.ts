@@ -15,13 +15,14 @@ const gqlTypes = gql`
 const gqlAPI = gql`
   type Query {
     syncCategoryRolePermission: [CategoryRolePermission]
-    getCategoryRolePermission(role_id: ID!, category_id: ID!): CategoryRolePermission
+    getCategoryRolesPermissions(category_id: ID!): [ServerRole]
+    getCategoryRolePermission(role_id: ID!, category_id: ID!): ServerRole
   }
 
   type Mutation {
-    createCategoryRolePermission(role_id: ID!, category_id: ID!, permissions: String): CategoryRolePermission
-    updateCategoryRolePermission(role_id: ID!, category_id: ID!, permissions: String): CategoryRolePermission
-    deleteCategoryRolePermission(role_id: ID!, category_id: ID!): CategoryRolePermission
+    createCategoryRolePermission(role_id: ID!, category_id: ID!, permissions: String): [ServerRole]
+    updateCategoryRolePermission(role_id: ID!, category_id: ID!, permissions: String): ServerRole
+    deleteCategoryRolePermission(role_id: ID!, category_id: ID!): [ServerRole]
   }
 `;
 

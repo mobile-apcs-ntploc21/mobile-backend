@@ -20,6 +20,18 @@ serverRoleRouter.post(
 );
 
 serverRoleRouter.get(
+  '/default',
+  checkServerAdminMiddleware,
+  serverRoles.getDefaultServerRole
+);
+
+serverRoleRouter.patch(
+  '/default',
+  checkServerAdminMiddleware,
+  serverRoles.updateDefaultServerRole
+);
+
+serverRoleRouter.get(
   '/default/permissions',
   checkServerAdminMiddleware,
   serverRoles.getDefaultServerRolePermissions

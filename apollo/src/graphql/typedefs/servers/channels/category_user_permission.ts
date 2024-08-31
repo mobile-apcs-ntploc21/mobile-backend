@@ -6,6 +6,16 @@ const gqlTypes = gql`
     permissions: String
   }
   
+  type UserProfileWithPermissions {
+    id: ID!
+    display_name: String
+    username: String!
+    about_me: String!
+    avatar_url: String
+    banner_url: String
+    permissions: String
+  }
+  
   type IDPair {
     user_id: ID
     category_id: ID
@@ -15,13 +25,14 @@ const gqlTypes = gql`
 const gqlAPI = gql`
   type Query {
     syncCategoryUserPermission: [CategoryUserPermission]
-    getCategoryUserPermission(user_id: ID!, category_id: ID!): CategoryUserPermission
+    getCategoryUsersPermissions(category_id: ID!): [UserProfileWithPermissions]
+    getCategoryUserPermission(user_id: ID!, category_id: ID!): UserProfileWithPermissions
   }
 
   type Mutation {
-    createCategoryUserPermission(user_id: ID!, category_id: ID!, permissions: String): CategoryUserPermission
-    updateCategoryUserPermission(user_id: ID!, category_id: ID!, permissions: String): CategoryUserPermission
-    deleteCategoryUserPermission(user_id: ID!, category_id: ID!): CategoryUserPermission
+    createCategoryUserPermission(user_id: ID!, category_id: ID!, permissions: String): [UserProfileWithPermissions]
+    updateCategoryUserPermission(user_id: ID!, category_id: ID!, permissions: String): UserProfileWithPermissions
+    deleteCategoryUserPermission(user_id: ID!, category_id: ID!): [UserProfileWithPermissions]
   }
 `;
 

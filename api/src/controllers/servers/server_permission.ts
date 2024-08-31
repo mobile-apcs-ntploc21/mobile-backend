@@ -82,6 +82,38 @@ export const getServerRole = async (
   }
 };
 
+export const getDefaultServerRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const serverId = res.locals.server_id;
+
+  try {
+    const { getDefaultServerRole: defaultRole } = await graphQLClient().request(
+      serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+      {
+        server_id: serverId,
+      }
+    );
+
+    return res.json({
+      id: defaultRole.id,
+      server_id: defaultRole.server_id,
+      name: defaultRole.name,
+      color: defaultRole.color,
+      position: defaultRole.position,
+      is_admin: defaultRole.is_admin,
+      default: defaultRole.default,
+      allow_anyone_mention: defaultRole.allow_anyone_mention,
+      last_modified: defaultRole.last_modified,
+      number_of_users: defaultRole.number_of_users,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export const createServerRole = async (
   req: Request,
   res: Response,
@@ -216,6 +248,63 @@ export const updateServerRole = async (
     return next(error);
   }
 };
+
+export const updateDefaultServerRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const serverId = res.locals.server_id;
+  const { color, allow_anyone_mention, is_admin } = req.body;
+
+  try {
+    // Fetch the current role data
+    const { getDefaultServerRole: currentRole } = await graphQLClient().request(
+      serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+      {
+        server_id: serverId,
+      }
+    );
+    // Check if the role exists
+    if (!currentRole) {
+      return res.status(404).json({ message: "Default server role not found" });
+    }
+
+    // filter currentRole and keeps only these fields: name, color, allow_anyone_mention, permissions, is_admin
+    const { color: currentColor, allow_anyone_mention: currentAllowAnyoneMention, is_admin: currentIsAdmin } = currentRole;
+
+    // Create an updated role object
+    const updatedRole = {
+      color: color !== undefined ? color : currentColor,
+      allow_anyone_mention: allow_anyone_mention !== undefined ? allow_anyone_mention : currentAllowAnyoneMention,
+      is_admin: is_admin !== undefined ? is_admin : currentIsAdmin,
+    };
+
+    // Send the updated data to the server
+    const response = await graphQLClient().request(
+      serverRoleMutations.UPDATE_DEFAULT_SERVER_ROLE,
+      {
+        server_id: serverId,
+        input: updatedRole,
+      }
+    );
+
+    return res.status(201).json({
+      id: response.updateDefaultServerRole.id,
+      server_id: response.updateDefaultServerRole.server_id,
+      name: response.updateDefaultServerRole.name,
+      color: response.updateDefaultServerRole.color,
+      position: response.updateDefaultServerRole.position,
+      is_admin: response.updateDefaultServerRole.is_admin,
+      default: response.updateDefaultServerRole.default,
+      allow_anyone_mention: response.updateDefaultServerRole.allow_anyone_mention,
+      last_modified: response.updateDefaultServerRole.last_modified,
+      number_of_users: response.updateDefaultServerRole.number_of_users,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
 
 export const getServerRolePermissions = async (
   req: Request,

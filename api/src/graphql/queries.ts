@@ -369,3 +369,71 @@ export const serverRoleQueries = {
     }
   `,
 };
+
+export const serverCatgoryQueries = {
+  GET_CATEGORY: gql`
+    query getCategory($category_id: ID!) {
+      getCategory(category_id: $category_id) {
+        id
+        server_id
+        name
+        position
+      }
+    }`,
+}
+
+export const serverCategoryPermissionQueries = {
+  GET_CATEGORY_ROLES_PERMISSION: gql`
+    query getCategoryRolesPermissions($category_id: ID!) {
+      getCategoryRolesPermissions(category_id: $category_id) {
+        id
+        server_id
+        name
+        color
+        position
+        is_admin
+        allow_anyone_mention
+        last_modified
+        number_of_users
+        permissions
+      }
+    }`,
+  GET_CATEGORY_USERS_PERMISSION: gql`
+    query getCategoryUsersPermissions($category_id: ID!) {
+      getCategoryUsersPermissions(category_id: $category_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }`,
+  GET_CATEGORY_ROLE_PERMISSION: gql`
+    query getCategoryRolePermission($role_id: ID!, $category_id: ID!) {
+      getCategoryRolePermission(role_id: $role_id, category_id: $category_id) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        last_modified
+      }
+    }`,
+  GET_CATEGORY_USER_PERMISSION: gql`
+    query getCategoryUserPermission($user_id: ID!, $category_id: ID!) {
+      getCategoryUserPermission(user_id: $user_id, category_id: $category_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }`,
+}
