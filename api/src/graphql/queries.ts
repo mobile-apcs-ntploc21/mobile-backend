@@ -229,6 +229,12 @@ export const serverMemberQueries = {
         avatar_url
         banner_url
         about_me
+        status {
+          type
+          last_seen
+          status_text
+          is_online
+        }
       }
     }
   `,

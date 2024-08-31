@@ -5,6 +5,17 @@ const gqlTypes = gql`
     server_id: ID!
     user_id: ID!
   }
+
+  type ServerProfile {
+    id: ID!
+    user_id: ID!
+    display_name: String
+    username: String
+    about_me: String
+    avatar_url: String
+    banner_url: String
+    status: UserStatus
+  }
 `;
 
 const gqlAPI = gql`
@@ -14,7 +25,7 @@ const gqlAPI = gql`
   }
 
   extend type Query {
-    getServerMembers(server_id: ID!, limit: Int): [UserProfile]
+    getServerMembers(server_id: ID!, limit: Int): [ServerProfile]
     checkServerMember(server_id: ID!, user_id: ID!): Boolean
   }
 
