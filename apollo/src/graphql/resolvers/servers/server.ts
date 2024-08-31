@@ -77,8 +77,10 @@ const createServerTransaction = async (input) => {
     await AssignedUserRoleModel.create(
       [
         {
-          user_id: input.owner_id,
-          server_role_id: server.id,
+          _id: {
+            user_id: input.owner_id,
+            server_role_id: server.id,
+          },
         },
       ],
       { session }
