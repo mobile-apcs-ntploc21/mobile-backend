@@ -3,6 +3,7 @@ import { UserInputError } from "apollo-server-core";
 import { ObjectId, Schema } from "mongoose";
 import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
 
+import UserStatusModel from "@/models/user_status";
 import UserProfileModel from "@/models/user_profile";
 import serverModel from "../../../models/servers/server";
 import ServerMemberModel from "../../../models/servers/server_member";
@@ -229,6 +230,9 @@ const API: IResolvers = {
           user_id: { $in: user_ids },
           server_id: { $in: [null, server_id] },
         });
+        const allStatuses = await UserStatusModel.find({
+          user_id: { $in: user_ids },
+        });
 
         let profiles = [];
         for (let i = 0; i < user_ids.length; i++) {
@@ -238,13 +242,26 @@ const API: IResolvers = {
               String(profile.server_id) === server_id
           );
 
+          let status = allStatuses.find(
+            (status) => String(status.user_id) === String(user_ids[i])
+          );
+
           if (!profile) {
             profile = allProfiles.find(
               (profile) => String(profile.user_id) === String(user_ids[i])
             );
           }
 
-          profiles.push(profile);
+          profiles.push({
+            id: profile._id,
+            user_id: profile.user_id,
+            display_name: profile.display_name,
+            username: profile.username,
+            about_me: profile.about_me,
+            avatar_url: profile.avatar_url,
+            banner_url: profile.banner_url,
+            status: status,
+          });
         }
 
         return profiles;
