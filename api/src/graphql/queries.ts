@@ -221,10 +221,14 @@ export const serverQueries = {
 
 export const serverMemberQueries = {
   GET_SERVER_MEMBERS: gql`
-    query GetServerMembers($server_id: ID!) {
-      getServerMembers(server_id: $server_id) {
-        server_id
-        user_id
+    query GetServerMembers($server_id: ID!, $limit: Int) {
+      getServerMembers(server_id: $server_id, limit: $limit) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
       }
     }
   `,
@@ -277,8 +281,12 @@ export const serverBansQueries = {
   GET_SERVER_BANS: gql`
     query getServerBans($server_id: ID!, $limit: Int) {
       getServerBans(server_id: $server_id, limit: $limit) {
-        server_id
-        user_id
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
       }
     }
   `,
