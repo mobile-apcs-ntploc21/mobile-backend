@@ -235,7 +235,15 @@ const API: IResolvers = {
         if (!url) throw new UserInputError('Invite url is required!');
         if (!user_id) throw new UserInputError('User ID is required!');
 
-        return await joinServerTransaction(url, user_id);
+        const res = await joinServerTransaction(url, user_id);
+
+        await publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.memberJoined,
+          server_id: res.server_id,
+          data: res.user_id,
+        });
+
+        return res;
       } catch (error) {
         throw new UserInputError(error.message);
       }
