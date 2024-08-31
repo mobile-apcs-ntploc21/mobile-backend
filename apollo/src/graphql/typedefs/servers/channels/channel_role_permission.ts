@@ -15,13 +15,14 @@ const gqlTypes = gql`
 const gqlAPI = gql`
   type Query {
     syncChannelRolePermission: [ChannelRolePermission]
-    getChannelRolePermission(role_id: ID!, channel_id: ID!): ChannelRolePermission
+    getChannelRolesPermissions(channel_id: ID!): [ServerRole]
+    getChannelRolePermission(role_id: ID!, channel_id: ID!): ServerRole
   }
 
   type Mutation {
-    createChannelRolePermission(role_id: ID!, channel_id: ID!, permissions: String): ChannelRolePermission
-    updateChannelRolePermission(role_id: ID!, channel_id: ID!, permissions: String): ChannelRolePermission
-    deleteChannelRolePermission(role_id: ID!, channel_id: ID!): ChannelRolePermission
+    createChannelRolePermission(role_id: ID!, channel_id: ID!, permissions: String): [ServerRole]
+    updateChannelRolePermission(role_id: ID!, channel_id: ID!, permissions: String): ServerRole
+    deleteChannelRolePermission(role_id: ID!, channel_id: ID!): [ServerRole]
   }
 `;
 

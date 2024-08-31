@@ -559,3 +559,135 @@ export const serverCategoryPermissionMutations = {
     }
   `,
 }
+
+export const serverChannelPermissionMutations = {
+  CREATE_CHANNEL_ROLE_PERMISSION: gql`
+    mutation createChannelRolePermission(
+      $role_id: ID!
+      $channel_id: ID!
+      $permissions: String!
+    ) {
+      createChannelRolePermission(
+        role_id: $role_id
+        channel_id: $channel_id
+        permissions: $permissions
+      ) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  CREATE_CHANNEL_USER_PERMISSION: gql`
+    mutation createChannelUserPermission(
+      $user_id: ID!
+      $channel_id: ID!
+      $permissions: String!
+    ) {
+      createChannelUserPermission(
+        user_id: $user_id
+        channel_id: $channel_id
+        permissions: $permissions
+      ) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }
+  `,
+  UPDATE_CHANNEL_ROLE_PERMISSION: gql`
+    mutation updateChannelRolePermission(
+      $role_id: ID!
+      $channel_id: ID!
+      $permissions: String!
+    ) {
+      updateChannelRolePermission(
+        role_id: $role_id
+        channel_id: $channel_id
+        permissions: $permissions
+      ) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  UPDATE_CHANNEL_USER_PERMISSION: gql`
+    mutation updateChannelUserPermission(
+      $user_id: ID!
+      $channel_id: ID!
+      $permissions: String!
+    ) {
+      updateChannelUserPermission(
+        user_id: $user_id
+        channel_id: $channel_id
+        permissions: $permissions
+      ) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }
+  `,
+  DELETE_CHANNEL_ROLE_PERMISSION: gql`
+    mutation deleteChannelRolePermission(
+      $role_id: ID!
+      $channel_id: ID!
+    ) {
+      deleteChannelRolePermission(role_id: $role_id, channel_id: $channel_id) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        default
+        last_modified
+        number_of_users
+      }
+    }
+  `,
+  DELETE_CHANNEL_USER_PERMISSION: gql`
+    mutation deleteChannelUserPermission(
+      $user_id: ID!
+      $channel_id: ID!
+    ) {
+      deleteChannelUserPermission(user_id: $user_id, channel_id: $channel_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }
+  `,
+}
+

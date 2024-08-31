@@ -1,25 +1,23 @@
-import { Request, Response, NextFunction, Router } from "express";
-import { authMiddleware } from "../../utils/authMiddleware";
-import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
-import { BaseRolePermissions as BRP } from "../../constants/permissions";
+import {Router} from "express";
+import {authMiddleware} from "../../utils/authMiddleware";
+import {checkServerPermissionMiddleware} from "../../utils/checkServerPermissionMiddleware";
+import {BaseRolePermissions as BRP, CategoryPermissions, ChannelPermissions} from "../../constants/permissions";
 
 import * as serverCtrl from "../../controllers/servers/server";
-import {
-  getServerMembers,
-  joinServer,
-  removeSelf,
-} from "../../controllers/servers/server_member";
-import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
-import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
+import {getServerMembers, joinServer, removeSelf,} from "../../controllers/servers/server_member";
+import {checkMembershipMiddleware} from "../../utils/checkMembershipMiddleware";
+import {checkOwnerMiddleware} from "../../utils/checkOwnerMiddleware";
 import serverOwnerRouter from "./server_owner";
 import serverRoleRouter from "./server_permission";
 import {
+  getCurrentUserPermissions,
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
-  getCurrentUserPermissions,
 } from "../../controllers/servers/server_permission";
 import {checkCategoryExistenceMiddleware} from "../../utils/checkCategoryExistenceMiddleware";
 import categoryRouter from "./channels/category";
+import channelRouter from "./channels/channel";
+import {checkChannelExistenceMiddleware} from "../../utils/checkChannelExistenceMiddleware";
 
 const serverRouter = Router();
 
@@ -128,6 +126,14 @@ serverRouter.use(
   checkMembershipMiddleware,
   checkCategoryExistenceMiddleware,
   categoryRouter
+);
+
+serverRouter.use(
+  "/:serverId/channels/:channelId",
+  authMiddleware,
+  checkMembershipMiddleware,
+  checkChannelExistenceMiddleware,
+  channelRouter
 );
 
 export default serverRouter;

@@ -384,7 +384,75 @@ export const serverRoleQueries = {
   `,
 };
 
-export const serverCatgoryQueries = {
+export const serverChannelQueries = {
+  GET_CHANNEL: gql`
+    query getChannel($channel_id: ID!) {
+      getChannel(channel_id: $channel_id) {
+        id
+        server_id
+        name
+        position
+      }
+    }`,
+}
+
+export const serverChannelPermissionQueries = {
+  GET_CHANNEL_ROLES_PERMISSION: gql`
+    query getChannelRolesPermissions($channel_id: ID!) {
+      getChannelRolesPermissions(channel_id: $channel_id) {
+        id
+        server_id
+        name
+        color
+        position
+        is_admin
+        allow_anyone_mention
+        last_modified
+        number_of_users
+        permissions
+      }
+    }`,
+  GET_CHANNEL_USERS_PERMISSION: gql`
+    query getChannelUsersPermissions($channel_id: ID!) {
+      getChannelUsersPermissions(channel_id: $channel_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }`,
+  GET_CHANNEL_ROLE_PERMISSION: gql`
+    query getChannelRolePermission($role_id: ID!, $channel_id: ID!) {
+      getChannelRolePermission(role_id: $role_id, channel_id: $channel_id) {
+        id
+        server_id
+        name
+        color
+        allow_anyone_mention
+        position
+        permissions
+        is_admin
+        last_modified
+      }
+    }`,
+  GET_CHANNEL_USER_PERMISSION: gql`
+    query getChannelUserPermission($user_id: ID!, $channel_id: ID!) {
+      getChannelUserPermission(user_id: $user_id, channel_id: $channel_id) {
+        id
+        username
+        display_name
+        avatar_url
+        banner_url
+        about_me
+        permissions
+      }
+    }`,
+}
+
+export const serverCategoryQueries = {
   GET_CATEGORY: gql`
     query getCategory($category_id: ID!) {
       getCategory(category_id: $category_id) {

@@ -3,7 +3,7 @@ import {serverCategoryPermissionQueries, serverQueries, serverRoleQueries} from 
 import {CategoryPermissions} from "../constants/permissions";
 
 /*
-* - get all server roles assigned with the current user
+- get all server roles assigned with the current user
 - for each server role, get the category permissions associated with that role (if exists)
     + If exists, then calculate the final category permissions associated with that role
         * The way we combine is, if the category permission is "DEFAULT", then it will inherit the permission value from server role permissions

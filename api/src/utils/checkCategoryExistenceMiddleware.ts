@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import graphQLClient from '../utils/graphql';
-import {serverCatgoryQueries} from '../graphql/queries';
+import {serverCategoryQueries} from '../graphql/queries';
 
 export const checkCategoryExistenceMiddleware = async (
   req: Request,
@@ -13,7 +13,7 @@ export const checkCategoryExistenceMiddleware = async (
 
   try {
     const { getCategory: category } = await graphQLClient().request(
-      serverCatgoryQueries.GET_CATEGORY,
+      serverCategoryQueries.GET_CATEGORY,
       {
         category_id: categoryId,
       }
