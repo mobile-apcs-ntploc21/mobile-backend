@@ -5,9 +5,12 @@ import { AuthenticationError, UserInputError } from "apollo-server";
 
 import ServerModel from "../../../../models/servers/server";
 import ChannelModel from "../../../../models/servers/channels/channel";
-import ChannelPermissionModel from "../../../../models/servers/channels/channel_permission";
 import CategoryModel from "../../../../models/servers/channels/category";
 import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
+import ServerRoleModel from "@models/servers/server_role";
+import {defaultChannelRole} from "@resolvers/servers/channels/channel_role_permission";
+import ChannelRolePermission from "@models/servers/channels/channel_role_permission";
+import ChannelUserPermission from "@models/servers/channels/channel_user_permission";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
@@ -46,13 +49,20 @@ const createChannelTransaction = async (server_id, input) => {
       opts
     );
 
-    // TODO: Add channel permissions as @everyone role
-    await ChannelPermissionModel.create(
+    // find the default server role and create a channel permission for it
+    const default_server_role = await ServerRoleModel.findOne({
+      server_id,
+      default: true,
+    });
+
+    await ChannelRolePermission.create(
       [
         {
-          channel_id: channel[0]._id,
-          server_role_id: null,
-          is_user: false,
+          _id: {
+            server_role_id: default_server_role._id,
+            channel_id: channel[0]._id,
+          },
+          permissions: defaultChannelRole,
         },
       ],
       opts
@@ -137,9 +147,8 @@ const channelAPI: IResolvers = {
       // This is a hard delete
       try {
         const channel = await ChannelModel.findByIdAndDelete(channel_id);
-        const channel_permissions = await ChannelPermissionModel.deleteMany({
-          channel_id,
-        });
+        await ChannelRolePermission.deleteMany({ "_id.channel_id": channel_id });
+        await ChannelUserPermission.deleteMany({ "_id.channel_id": channel_id });
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelDeleted,

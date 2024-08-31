@@ -4,8 +4,11 @@ import { AuthenticationError, UserInputError } from "apollo-server";
 
 import ChannelModel from "../../../../models/servers/channels/channel";
 import CategoryModel from "../../../../models/servers/channels/category";
-import CategoryPermissionModel from "../../../../models/servers/channels/category_permission";
 import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
+import ServerRoleModel from "../../../../models/servers/server_role";
+import CategoryRolePermission from "@models/servers/channels/category_role_permission";
+import {defaultCategoryRole} from "@resolvers/servers/channels/category_role_permission";
+import CategoryUserPermission from "@models/servers/channels/category_user_permission";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the category
 const POSITION_GAP = 10; // This is the minimum gap between the position of the categories
@@ -36,17 +39,19 @@ const createCategoryTransaction = async (server_id, input) => {
       opts
     );
 
-    // Create the category permissions for @everyone
-    const category_permission = await CategoryPermissionModel.create(
+    // find the default server role and create a category permission for it
+    const default_server_role = await ServerRoleModel.findOne({ server_id, default: true });
+
+    await CategoryRolePermission.create(
       [
         {
-          category_id: category[0]._id,
-          server_role_id: null,
-          is_user: false,
-        },
-      ],
-      opts
-    );
+          _id: {
+            server_role_id: default_server_role._id,
+            category_id: category[0]._id,
+          },
+          permissions: defaultCategoryRole,
+        }
+    ], opts);
 
     await session.commitTransaction();
     session.endSession();
@@ -75,7 +80,8 @@ const deleteCategoryTransaction = async (category_id) => {
     await CategoryModel.findByIdAndDelete(category_id).session(session);
 
     // Delete the category permissions
-    await CategoryPermissionModel.deleteMany({ category_id }).session(session);
+    await CategoryRolePermission.deleteMany({ "_id.category_id": category_id }).session(session);
+    await CategoryUserPermission.deleteMany({ "_id.category_id": category_id }).session(session);
 
     // Set all the channels of the category to null
     await ChannelModel.updateMany({ category_id }, { category_id: null }, opts);

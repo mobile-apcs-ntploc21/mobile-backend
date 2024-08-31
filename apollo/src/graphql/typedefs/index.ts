@@ -22,9 +22,7 @@ import server_role from "./servers/server_role";
 import assigned_user_role from "./servers/assigned_user_role";
 /// Channel
 import channel from "./servers/channels/channel";
-import channel_permission from "./servers/channels/channel_permission";
 import category from "./servers/channels/category";
-import category_permission from "./servers/channels/category_permission";
 import channel_role_permission from "./servers/channels/channel_role_permission";
 import channel_user_permission from "./servers/channels/channel_user_permission";
 import category_role_permission from "./servers/channels/category_role_permission";
@@ -65,8 +63,6 @@ export const apiTypeDefs = mergeTypeDefs([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
-  channel_permission,
-  category_permission,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
