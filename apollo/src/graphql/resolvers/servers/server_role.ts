@@ -178,7 +178,7 @@ const serverRoleAPI: IResolvers = {
 
       const serverRoles = await ServerRoleModel.find({ server_id });
 
-      return serverRoles.map(async (serverRole) => {
+      return await Promise.all(serverRoles.map(async (serverRole) => {
         const users = await AssignedUserRoleModel.find({'_id.server_role_id': serverRole._id});
 
         return {
@@ -194,7 +194,7 @@ const serverRoleAPI: IResolvers = {
           last_modified: serverRole.last_modified,
           number_of_users: users.length,
         };
-      });
+      }));
     },
     getDefaultServerRole: async (_, { server_id }) => {
       // check if server_id is valid

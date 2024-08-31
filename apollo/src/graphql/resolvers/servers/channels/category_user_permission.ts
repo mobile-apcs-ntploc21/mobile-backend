@@ -1,47 +1,19 @@
 import {IResolvers} from "@graphql-tools/utils";
 import {UserInputError} from "apollo-server";
-import {
-  GeneralCategoryPermissions,
-  MembershipPermissions,
-  PermissionStates,
-  TextChannelPermissions,
-  VoiceChannelPermissions
-} from "../../../../constants/permissions";
 import mongoose, {ObjectId} from "mongoose";
 import {publishEvent, ServerEvents} from "../../../pubsub/pubsub";
 import UserModel from "../../../../models/user";
 import Category from "../../../../models/servers/channels/category";
 import CategoryUserPermission from "../../../../models/servers/channels/category_user_permission";
 import UserProfileModel from "@models/user_profile";
-import CategoryRolePermission from "@models/servers/channels/category_role_permission";
-
-export const defaultCategoryUserPermission = JSON.stringify({
-  // General Category Permissions
-  [GeneralCategoryPermissions.VIEW_CHANNEL]: PermissionStates.DEFAULT,
-  [GeneralCategoryPermissions.MANAGE_CHANNEL]: PermissionStates.DEFAULT,
-
-  // Text Channel Permissions
-  [TextChannelPermissions.SEND_MESSAGE]: PermissionStates.DEFAULT,
-  [TextChannelPermissions.ATTACH_FILE]: PermissionStates.DEFAULT,
-  [TextChannelPermissions.ADD_REACTION]: PermissionStates.DEFAULT,
-  [TextChannelPermissions.USE_EXTERNAL_EMOJI]: PermissionStates.DEFAULT,
-  [TextChannelPermissions.MENTION_ALL]: PermissionStates.DEFAULT,
-  [TextChannelPermissions.MANAGE_MESSAGE]: PermissionStates.DEFAULT,
-
-  // Voice Channel Permissions
-  [VoiceChannelPermissions.VOICE_CONNECT]: PermissionStates.DEFAULT,
-  [VoiceChannelPermissions.VOICE_SPEAK]: PermissionStates.DEFAULT,
-  [VoiceChannelPermissions.VOICE_VIDEO]: PermissionStates.DEFAULT,
-  [VoiceChannelPermissions.VOICE_MUTE_MEMBER]: PermissionStates.DEFAULT,
-  [VoiceChannelPermissions.VOICE_DEAFEN_MEMBER]: PermissionStates.DEFAULT,
-});
+import {defaultCategoryRole} from "./category_role_permission";
 
 const createCategoryUserPermission = async (user_id: ObjectId, category_id: ObjectId,  permissions: String ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   if (!permissions) {
-    permissions = defaultCategoryUserPermission;
+    permissions = defaultCategoryRole;
   }
   try {
     if (!UserModel.findById(user_id).session(session)) {
@@ -50,6 +22,13 @@ const createCategoryUserPermission = async (user_id: ObjectId, category_id: Obje
 
     if (!Category.findById(category_id).session(session)) {
       throw new UserInputError("Category not found");
+    }
+    // check if user is already assigned with the category
+    if (await CategoryUserPermission.exists({
+      '_id.user_id': user_id,
+      '_id.category_id': category_id
+    })) {
+      throw new UserInputError("User is already assigned to category permissions!");
     }
 
     const category_user_permission = await CategoryUserPermission.create({
