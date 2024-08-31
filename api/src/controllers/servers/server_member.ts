@@ -9,20 +9,20 @@ export const getServerMembers = async (
   next: NextFunction
 ) => {
   const { serverId } = req.params;
+  const { limit } = req.query;
+
   try {
     const { getServerMembers: members } = await graphQLClient().request(
       serverMemberQueries.GET_SERVER_MEMBERS,
       {
         server_id: serverId,
+        limit: Number(limit) || 1000,
       }
     );
 
     if (members.length === 0) return res.json([]);
 
-    return res.json({
-      server_id: serverId,
-      members: members.map((member: any) => member.user_id),
-    });
+    return res.status(200).json(members);
   } catch (error) {
     return next(error);
   }
