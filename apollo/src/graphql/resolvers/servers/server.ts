@@ -1,22 +1,24 @@
 import { IResolvers } from "@graphql-tools/utils";
-import { PubSub, withFilter } from "graphql-subscriptions";
-import { AuthenticationError, UserInputError } from "apollo-server";
+import { UserInputError } from "apollo-server";
 import { GraphQLJSON } from "graphql-scalars";
+import { withFilter } from "graphql-subscriptions";
 
+import mongoose from "mongoose";
+import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
+import ServerModel from "../../../models/servers/server";
+import ServerBansModel from "../../../models/servers/server_bans";
+import ServerMemberModel from "../../../models/servers/server_member";
+import ServerRoleModel from "../../../models/servers/server_role";
+import ServerEmoji from "../../../models/servers/serverEmoji";
+import ServerChannelModel from "@/models/servers/channels/channel";
+import ServerCategoryModel from "@/models/servers/channels/category";
+import UserModel from "../../../models/user";
 import {
   getAsyncIterator,
   publishEvent,
   ServerEvents,
 } from "../../pubsub/pubsub";
-import UserModel from "../../../models/user";
-import ServerModel from "../../../models/servers/server";
-import ServerEmoji from "../../../models/servers/serverEmoji";
-import ServerMemberModel from "../../../models/servers/server_member";
-import ServerBansModel from "../../../models/servers/server_bans";
-import mongoose from "mongoose";
-import ServerRoleModel from "../../../models/servers/server_role";
 import { defaultServerRole } from "./server_role";
-import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
 
 const createServerTransaction = async (input) => {
   // Create session
@@ -124,7 +126,6 @@ const deleteServerTransaction = async (server_id) => {
     // Delete server roles and assigned user roles
     const serverRoles = await ServerRoleModel.find({ server_id });
     const serverRoleIds = serverRoles.map((role) => role._id);
-
     await AssignedUserRoleModel.deleteMany(
       {
         server_role_id: { $in: serverRoleIds },
@@ -133,6 +134,10 @@ const deleteServerTransaction = async (server_id) => {
     );
 
     await ServerRoleModel.deleteMany({ server_id: server_id }, { session });
+
+    // Delete all server's channels and categories
+    await ServerChannelModel.deleteMany({ server_id: server_id }, { session });
+    await ServerCategoryModel.deleteMany({ server_id: server_id }, { session });
 
     // Commit transaction
     await session.commitTransaction();
