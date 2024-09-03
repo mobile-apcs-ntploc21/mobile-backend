@@ -21,7 +21,6 @@ serverRoleRouter.post(
 
 serverRoleRouter.get(
   '/default',
-  checkServerAdminMiddleware,
   serverRoles.getDefaultServerRole
 );
 
