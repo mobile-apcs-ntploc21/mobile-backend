@@ -146,10 +146,8 @@ const resolvers: IResolvers = {
 
       try {
         const serverBans = await ServerBansModel.find({
-          "_id.server": server_id,
-        })
-          .limit(limit)
-          .sort({ createdAt: -1 });
+          "_id.server_id": server_id,
+        }).limit(limit);
 
         // Get user profiles of the banned users
         const user_ids = serverBans.map((ban) => ban._id.user_id);
@@ -211,7 +209,8 @@ const resolvers: IResolvers = {
         }
 
         await ServerBansModel.findOneAndDelete({
-          _id: { server_id: server_id, user_id: user_id },
+          "_id.server_id": server_id,
+          "_id.user_id": user_id,
         });
 
         return true;
