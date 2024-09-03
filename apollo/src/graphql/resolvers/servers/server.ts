@@ -411,8 +411,9 @@ const serverWs: IResolvers = {
             const variables_id = variables.server_id || null;
 
             const isSameServer = payload?.data?.user_id
-              ? members.some((member) =>
-                  payload.data.user_id.equals(member._id.user_id)
+              ? members.some(
+                  (member) =>
+                    String(payload.data.user_id) === String(member._id.user_id)
                 )
               : false;
 

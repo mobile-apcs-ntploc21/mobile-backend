@@ -235,6 +235,7 @@ export const serverMemberQueries = {
           status_text
           is_online
         }
+        roleIds
       }
     }
   `,

@@ -14,7 +14,8 @@ const gqlTypes = gql`
     about_me: String
     avatar_url: String
     banner_url: String
-    status: UserStatus
+    status: UserStatus!
+    roleIds: [ID!]!
   }
 `;
 
