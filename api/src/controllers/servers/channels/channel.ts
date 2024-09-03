@@ -1,14 +1,17 @@
 import express from "express";
 
-import graphQLClient from "../utils/graphql";
-import { channelQueries } from "../graphql/queries";
-import { channelMutations } from "../graphql/mutations";
+import graphQLClient from "../../../utils/graphql";
+import { serverChannelQueries } from "../../../graphql/queries";
+import { channelMutations } from "../../../graphql/mutations";
 
 const _getChannel = async (channel_id: string) => {
   try {
-    const response = await graphQLClient().request(channelQueries.GET_CHANNEL, {
-      channel_id,
-    });
+    const response = await graphQLClient().request(
+      serverChannelQueries.GET_CHANNEL,
+      {
+        channel_id,
+      }
+    );
 
     return response.getChannel;
   } catch (error) {
@@ -19,7 +22,7 @@ const _getChannel = async (channel_id: string) => {
 const _getChannels = async (server_id: string) => {
   try {
     const response = await graphQLClient().request(
-      channelQueries.GET_CHANNELS,
+      serverChannelQueries.GET_CHANNELS,
       {
         server_id,
       }
@@ -31,21 +34,6 @@ const _getChannels = async (server_id: string) => {
     });
 
     return channels.sort((a: any, b: any) => a.position - b.position);
-  } catch (error) {
-    return null;
-  }
-};
-
-const _getChannelPermissions = async (channel_id: string) => {
-  try {
-    const response = await graphQLClient().request(
-      channelQueries.GET_CHANNEL_PERMISSIONS,
-      {
-        channel_id,
-      }
-    );
-
-    return response.getChannelPermissions;
   } catch (error) {
     return null;
   }
@@ -97,34 +85,6 @@ export const getChannels = async (
     const channels = await _getChannels(server_id).catch(() => null);
 
     return res.status(200).json({ channels });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const getChannelPermissions = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const channel_id = req.params?.channelId;
-
-  if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
-  }
-
-  try {
-    const permissions = await _getChannelPermissions(channel_id).catch(
-      () => null
-    );
-
-    if (!permissions) {
-      return res
-        .status(404)
-        .json({ message: "Channel permissions not found." });
-    }
-
-    return res.status(200).json({ permissions });
   } catch (error) {
     return next(error);
   }
@@ -294,144 +254,6 @@ export const moveChannel = async (
     );
 
     return res.status(200).json({ ...channel.moveChannel });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-// ====== Channel Permissions ======
-
-export const createChannelPermission = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const server_id = req.params?.serverId;
-  const channel_id = req.params?.channelId;
-  const { role_id, user_id, allow, deny } = req.body;
-
-  if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
-  }
-
-  if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
-  }
-
-  try {
-    let permission = null;
-
-    if (role_id) {
-      permission = await graphQLClient().request(
-        channelMutations.CREATE_CHANNEL_PERMISSION,
-        {
-          channel_id,
-          input: {
-            server_role_id: role_id,
-            is_user: false,
-            allow,
-            deny,
-          },
-        }
-      );
-    } else if (user_id) {
-      permission = await graphQLClient().request(
-        channelMutations.CREATE_CHANNEL_PERMISSION,
-        {
-          channel_id,
-          input: {
-            user_id,
-            is_user: true,
-            allow,
-            deny,
-          },
-        }
-      );
-    }
-
-    if (!permission) {
-      return res
-        .status(400)
-        .json({ message: "Role ID or User ID is required." });
-    }
-
-    return res.status(200).json({ ...permission.createChannelPermission });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const updateChannelPermission = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const server_id = req.params?.serverId;
-  const channel_id = req.params?.channelId;
-  const permission_id = req.params?.permissionId;
-  const { allow, deny } = req.body;
-
-  if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
-  }
-
-  if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
-  }
-
-  if (!permission_id) {
-    return res.status(400).json({ message: "Permission ID is required." });
-  }
-
-  const permissions = await _getChannelPermissions(channel_id).catch(
-    () => null
-  );
-
-  if (!permissions) {
-    return res.status(404).json({ message: "Channel permissions not found." });
-  }
-
-  if (!permissions.find((p: any) => p.id === permission_id)) {
-    return res
-      .status(404)
-      .json({ message: "Permission not found in the channel." });
-  }
-
-  try {
-    const permission = await graphQLClient().request(
-      channelMutations.UPDATE_CHANNEL_PERMISSION,
-      {
-        permission_id,
-        input: {
-          allow,
-          deny,
-        },
-      }
-    );
-
-    return res.status(200).json({ ...permission.updateChannelPermission });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const deleteChannelPermission = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const permission_id = req.params?.permissionId;
-
-  if (!permission_id) {
-    return res.status(400).json({ message: "Permission ID is required." });
-  }
-
-  try {
-    await graphQLClient().request(channelMutations.DELETE_CHANNEL_PERMISSION, {
-      id: permission_id,
-    });
-
-    return res.status(200).json({ message: "Permission deleted." });
   } catch (error) {
     return next(error);
   }

@@ -1,94 +1,98 @@
 import {
   addRoleToCategoryPermission,
-  addUserToCategoryPermission, deleteRoleCategoryPermission, deleteUserCategoryPermission,
+  addUserToCategoryPermission,
+  deleteRoleCategoryPermission,
+  deleteUserCategoryPermission,
   getRoleAssignedWithCategory,
   getRolesAssignedWithCategory,
-  getUserAssignedWithCategoryPermission, getUserCategoryPermissions,
+  getUserAssignedWithCategoryPermission,
+  getUserCategoryPermissions,
   getUsersAssignedWithCategoryPermission,
-  updatePartialRoleCategoryPermission, updatePartialUserCategoryPermission,
+  updatePartialRoleCategoryPermission,
+  updatePartialUserCategoryPermission,
   updateRoleCategoryPermission,
-  updateUserCategoryPermission
+  updateUserCategoryPermission,
 } from "../../../controllers/servers/channels/category_permission";
-import {Router} from "express";
-import {checkServerAdminMiddleware} from "../../../utils/checkServerAdminMiddleware";
+import { Router } from "express";
+import { checkServerAdminMiddleware } from "../../../utils/checkServerAdminMiddleware";
 
-const categoryPermissionRouter = Router();
+const categoryPermissionRouter = Router({ mergeParams: true });
 
 categoryPermissionRouter.get(
-  '/roles/permissions',
+  "/roles/permissions",
   checkServerAdminMiddleware,
   getRolesAssignedWithCategory
 );
 
 categoryPermissionRouter.get(
-  '/users/self/permissions',
+  "/users/self/permissions",
   getUserCategoryPermissions
-)
+);
 
 categoryPermissionRouter.get(
-  '/users/permissions',
+  "/users/permissions",
   checkServerAdminMiddleware,
   getUsersAssignedWithCategoryPermission
 );
 
 categoryPermissionRouter.get(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   getRoleAssignedWithCategory
 );
 
 categoryPermissionRouter.get(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   getUserAssignedWithCategoryPermission
 );
 
 categoryPermissionRouter.post(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   addRoleToCategoryPermission
-)
+);
 
 categoryPermissionRouter.post(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   addUserToCategoryPermission
-)
+);
 
 categoryPermissionRouter.put(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   updateRoleCategoryPermission
-)
+);
 
 categoryPermissionRouter.put(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   updateUserCategoryPermission
-)
+);
 
 categoryPermissionRouter.patch(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   updatePartialRoleCategoryPermission
-)
+);
 
 categoryPermissionRouter.patch(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   updatePartialUserCategoryPermission
-)
+);
 
 categoryPermissionRouter.delete(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   deleteRoleCategoryPermission
-)
+);
 
 categoryPermissionRouter.delete(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   deleteUserCategoryPermission
-)
+);
 
 export default categoryPermissionRouter;

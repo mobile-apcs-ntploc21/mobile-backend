@@ -1,94 +1,98 @@
 import {
   addRoleToChannelPermission,
-  addUserToChannelPermission, deleteRoleChannelPermission, deleteUserChannelPermission,
+  addUserToChannelPermission,
+  deleteRoleChannelPermission,
+  deleteUserChannelPermission,
   getRoleAssignedWithChannel,
   getRolesAssignedWithChannel,
-  getUserAssignedWithChannelPermission, getUserChannelPermissions,
+  getUserAssignedWithChannelPermission,
+  getUserChannelPermissions,
   getUsersAssignedWithChannelPermission,
-  updatePartialRoleChannelPermission, updatePartialUserChannelPermission,
+  updatePartialRoleChannelPermission,
+  updatePartialUserChannelPermission,
   updateRoleChannelPermission,
-  updateUserChannelPermission
+  updateUserChannelPermission,
 } from "../../../controllers/servers/channels/channel_permission";
-import {Router} from "express";
-import {checkServerAdminMiddleware} from "../../../utils/checkServerAdminMiddleware";
+import { Router } from "express";
+import { checkServerAdminMiddleware } from "../../../utils/checkServerAdminMiddleware";
 
-const channelPermissionRouter = Router();
+const channelPermissionRouter = Router({ mergeParams: true });
 
 channelPermissionRouter.get(
-  '/roles/permissions',
+  "/roles/permissions",
   checkServerAdminMiddleware,
   getRolesAssignedWithChannel
 );
 
 channelPermissionRouter.get(
-  '/users/self/permissions',
+  "/users/self/permissions",
   getUserChannelPermissions
-)
+);
 
 channelPermissionRouter.get(
-  '/users/permissions',
+  "/users/permissions",
   checkServerAdminMiddleware,
   getUsersAssignedWithChannelPermission
 );
 
 channelPermissionRouter.get(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   getRoleAssignedWithChannel
 );
 
 channelPermissionRouter.get(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   getUserAssignedWithChannelPermission
 );
 
 channelPermissionRouter.post(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   addRoleToChannelPermission
-)
+);
 
 channelPermissionRouter.post(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   addUserToChannelPermission
-)
+);
 
 channelPermissionRouter.put(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   updateRoleChannelPermission
-)
+);
 
 channelPermissionRouter.put(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   updateUserChannelPermission
-)
+);
 
 channelPermissionRouter.patch(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   updatePartialRoleChannelPermission
-)
+);
 
 channelPermissionRouter.patch(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   updatePartialUserChannelPermission
-)
+);
 
 channelPermissionRouter.delete(
-  '/roles/:roleId/permissions',
+  "/roles/:roleId/permissions",
   checkServerAdminMiddleware,
   deleteRoleChannelPermission
-)
+);
 
 channelPermissionRouter.delete(
-  '/users/:userId/permissions',
+  "/users/:userId/permissions",
   checkServerAdminMiddleware,
   deleteUserChannelPermission
-)
+);
 
 export default channelPermissionRouter;

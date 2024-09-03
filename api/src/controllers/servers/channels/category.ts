@@ -1,20 +1,23 @@
 import express from "express";
 
-import graphQLClient from "../utils/graphql";
-import { categoryQueries } from "../graphql/queries";
-import { categoryMutations } from "../graphql/mutations";
+import graphQLClient from "../../../utils/graphql";
+import { serverCategoryQueries } from "../../../graphql/queries";
+import { categoryMutations } from "../../../graphql/mutations";
 
 const _getCategory = async (category_id: string) => {
-  const response = await graphQLClient().request(categoryQueries.GET_CATEGORY, {
-    category_id,
-  });
+  const response = await graphQLClient().request(
+    serverCategoryQueries.GET_CATEGORY,
+    {
+      category_id,
+    }
+  );
 
   return response.getCategory;
 };
 
 const _getCategories = async (server_id: string) => {
   const response = await graphQLClient().request(
-    categoryQueries.GET_CATEGORIES,
+    serverCategoryQueries.GET_CATEGORIES,
     {
       server_id,
     }
@@ -29,17 +32,6 @@ const _getCategories = async (server_id: string) => {
   categories.sort((a: any, b: any) => a.position - b.position);
 
   return categories;
-};
-
-const _getCategoryPermissions = async (category_id: string) => {
-  const response = await graphQLClient().request(
-    categoryQueries.GET_CATEGORY_PERMISSIONS,
-    {
-      category_id,
-    }
-  );
-
-  return response.getCategoryPermissions;
 };
 
 // =========================
@@ -169,120 +161,6 @@ export const moveCategory = async (
     );
 
     return res.status(200).json({ category: response.moveCategory });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-// ========== PERMISSIONS ==========
-
-export const getCategoryPermissions = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const { category_id } = req.params;
-
-  if (!category_id) {
-    return res.status(400).json({ message: "Category ID is required." });
-  }
-
-  try {
-    const permissions = await _getCategoryPermissions(category_id).catch(
-      () => null
-    );
-    return res.status(200).json({ permissions });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const createCategoryPermission = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const { category_id } = req.params;
-  const { server_role_id, user_id, is_user, allow, deny } = req.body;
-
-  if (!category_id) {
-    return res.status(400).json({ message: "Category ID is required." });
-  }
-
-  if (!allow) {
-    return res.status(400).json({ message: "Allow is required." });
-  }
-
-  if (!deny) {
-    return res.status(400).json({ message: "Deny is required." });
-  }
-
-  try {
-    const response = await graphQLClient().request(
-      categoryMutations.CREATE_CATEGORY_PERMISSION,
-      {
-        category_id,
-        input: { server_role_id, user_id, is_user, allow, deny },
-      }
-    );
-
-    return res
-      .status(200)
-      .json({ permission: response.createCategoryPermission });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const updateCategoryPermission = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const { permission_id } = req.params;
-  const { allow, deny } = req.body;
-
-  if (!permission_id) {
-    return res.status(400).json({ message: "Permission ID is required." });
-  }
-
-  try {
-    const response = await graphQLClient().request(
-      categoryMutations.UPDATE_CATEGORY_PERMISSION,
-      {
-        permission_id,
-        input: { allow, deny },
-      }
-    );
-
-    return res
-      .status(200)
-      .json({ permission: response.updateCategoryPermission });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const deleteCategoryPermission = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  const { id } = req.params;
-
-  if (!id) {
-    return res.status(400).json({ message: "Permission ID is required." });
-  }
-
-  try {
-    await graphQLClient().request(
-      categoryMutations.DELETE_CATEGORY_PERMISSION,
-      {
-        id,
-      }
-    );
-
-    return res.status(200).json({ message: "Permission deleted." });
   } catch (error) {
     return next(error);
   }

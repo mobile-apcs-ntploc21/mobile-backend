@@ -1,11 +1,7 @@
 import { Router } from "express";
+import { BaseRolePermissions as BRP } from "../../constants/permissions";
 import { authMiddleware } from "../../utils/authMiddleware";
 import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
-import {
-  BaseRolePermissions as BRP,
-  CategoryPermissions,
-  ChannelPermissions,
-} from "../../constants/permissions";
 
 import * as serverCtrl from "../../controllers/servers/server";
 import {
@@ -13,19 +9,21 @@ import {
   joinServer,
   removeSelf,
 } from "../../controllers/servers/server_member";
-import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
-import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
-import serverOwnerRouter from "./server_owner";
-import serverRoleRouter from "./server_permission";
 import {
   getCurrentUserPermissions,
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
 } from "../../controllers/servers/server_permission";
 import { checkCategoryExistenceMiddleware } from "../../utils/checkCategoryExistenceMiddleware";
+import { checkChannelExistenceMiddleware } from "../../utils/checkChannelExistenceMiddleware";
+import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
+import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
 import categoryRouter from "./channels/category";
 import channelRouter from "./channels/channel";
-import { checkChannelExistenceMiddleware } from "../../utils/checkChannelExistenceMiddleware";
+import serverOwnerRouter from "./server_owner";
+import serverRoleRouter from "./server_permission";
+import { getCategories } from "@/controllers/servers/channels/category";
+import { getChannels } from "@/controllers/servers/channels/channel";
 
 const serverRouter = Router();
 
@@ -46,7 +44,7 @@ serverRouter.delete(
   removeSelf
 );
 
-// Server CRUD operations routes
+// ================== Server CRUD operations ==================
 serverRouter.get("/list/", authMiddleware, serverCtrl.getUserServers);
 serverRouter.get("/:serverId", serverCtrl.getServer);
 
@@ -80,7 +78,7 @@ serverRouter.delete(
   serverCtrl.deleteServer
 );
 
-// Invite Link CRUD operations routes
+// ================== Server Invites ==================
 serverRouter.get(
   "/:serverId/invite",
   authMiddleware,
@@ -110,6 +108,8 @@ serverRouter.post(
   serverCtrl.transferOwnership
 );
 
+// ============ Roles ============
+
 serverRouter.use(
   "/:serverId/roles",
   authMiddleware,
@@ -138,12 +138,28 @@ serverRouter.get(
   getCurrentUserPermissions
 );
 
+// ============ Categories and Channels ============
+
+serverRouter.get(
+  "/:serverId/categories/",
+  authMiddleware,
+  checkMembershipMiddleware,
+  getCategories
+);
+
 serverRouter.use(
   "/:serverId/categories/:categoryId",
   authMiddleware,
   checkMembershipMiddleware,
   checkCategoryExistenceMiddleware,
   categoryRouter
+);
+
+serverRouter.get(
+  "/:serverId/channels/",
+  authMiddleware,
+  checkMembershipMiddleware,
+  getChannels
 );
 
 serverRouter.use(
