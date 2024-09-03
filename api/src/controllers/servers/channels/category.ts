@@ -147,7 +147,7 @@ export const moveCategory = async (
     return res.status(400).json({ message: "Category ID is required." });
   }
 
-  if (!new_position) {
+  if (new_position === undefined) {
     return res.status(400).json({ message: "New position is required." });
   }
 
@@ -155,7 +155,7 @@ export const moveCategory = async (
     const response = await graphQLClient().request(
       categoryMutations.MOVE_CATEGORY,
       {
-        categoryId,
+        category_id: categoryId,
         new_position,
       }
     );
