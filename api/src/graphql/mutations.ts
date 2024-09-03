@@ -381,7 +381,7 @@ export const channelMutations = {
 
 export const categoryMutations = {
   CREATE_CATEGORY: gql`
-    mutation createCategory($server_id: ID!, $input: CreateCategoryInput!) {
+    mutation createCategory($server_id: ID!, $input: createCategoryInput!) {
       createCategory(server_id: $server_id, input: $input) {
         id
         server_id
@@ -391,7 +391,7 @@ export const categoryMutations = {
     }
   `,
   UPDATE_CATEGORY: gql`
-    mutation updateCategory($category_id: ID!, $input: UpdateCategoryInput!) {
+    mutation updateCategory($category_id: ID!, $input: updateCategoryInput!) {
       updateCategory(category_id: $category_id, input: $input) {
         id
         server_id
