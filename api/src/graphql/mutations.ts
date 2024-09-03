@@ -308,12 +308,12 @@ export const channelMutations = {
       createChannel(server_id: $server_id, input: $input) {
         id
         server_id
+        conversation_id
         category_id
         name
+        description
+        last_message_id
         position
-        private {
-          is_private
-        }
         is_nsfw
         is_archived
         is_deleted
@@ -325,12 +325,14 @@ export const channelMutations = {
       updateChannel(channel_id: $channel_id, input: $input) {
         id
         server_id
+        conversation_id
         category_id
+
         name
+        description
+        last_message_id
         position
-        private {
-          is_private
-        }
+
         is_nsfw
         is_archived
         is_deleted
@@ -361,55 +363,18 @@ export const channelMutations = {
       ) {
         id
         server_id
+        conversation_id
         category_id
+
         name
+        description
+        last_message_id
         position
-        private {
-          is_private
-        }
+
         is_nsfw
         is_archived
         is_deleted
       }
-    }
-  `,
-
-  // Channel Permissions
-  CREATE_CHANNEL_PERMISSION: gql`
-    mutation createChannelPermission(
-      $channel_id: ID!
-      $input: CreateChannelPermissionInput!
-    ) {
-      createChannelPermission(channel_id: $channel_id, input: $input) {
-        id
-        channel_id
-        server_role_id
-        user_id
-        is_user
-        allow
-        deny
-      }
-    }
-  `,
-  UPDATE_CHANNEL_PERMISSION: gql`
-    mutation updateChannelPermission(
-      $channel_id: ID!
-      $input: UpdateChannelPermissionInput!
-    ) {
-      updateChannelPermission(channel_id: $channel_id, input: $input) {
-        id
-        channel_id
-        server_role_id
-        user_id
-        is_user
-        allow
-        deny
-      }
-    }
-  `,
-  DELETE_CHANNEL_PERMISSION: gql`
-    mutation deleteChannelPermission($id: ID!) {
-      deleteChannelPermission(id: $id)
     }
   `,
 };
@@ -451,47 +416,8 @@ export const categoryMutations = {
       }
     }
   `,
-
-  // Permission
-  CREATE_CATEGORY_PERMISSION: gql`
-    mutation createCategoryPermission(
-      $category_id: ID!
-      $input: CreateCategoryPermissionInput!
-    ) {
-      createCategoryPermission(category_id: $category_id, input: $input) {
-        id
-        channel_id
-        server_role_id
-        user_id
-        is_user
-        allow
-        deny
-      }
-    }
-  `,
-  UPDATE_CATEGORY_PERMISSION: gql`
-    mutation updateCategoryPermission(
-      $category_id: ID!
-      $input: UpdateCategoryPermissionInput!
-    ) {
-      updateCategoryPermission(category_id: $category
-      _id, input: $input) {
-        id
-        channel_id
-        server_role_id
-        user_id
-        is_user
-        allow
-        deny
-      }
-    }
-  `,
-  DELETE_CATEGORY_PERMISSION: gql`
-    mutation deleteCategoryPermission($id: ID!) {
-      deleteCategoryPermission(id: $id)
-    }
-  `,
 };
+
 export const serverBansMutations = {
   CREATE_SERVER_BAN: gql`
     mutation createServerBan($server_id: ID!, $user_id: ID!) {
@@ -715,11 +641,11 @@ export const serverCategoryPermissionMutations = {
     }
   `,
   DELETE_CATEGORY_ROLE_PERMISSION: gql`
-    mutation deleteCategoryRolePermission(
-      $role_id: ID!
-      $category_id: ID!
-    ) {
-      deleteCategoryRolePermission(role_id: $role_id, category_id: $category_id) {
+    mutation deleteCategoryRolePermission($role_id: ID!, $category_id: ID!) {
+      deleteCategoryRolePermission(
+        role_id: $role_id
+        category_id: $category_id
+      ) {
         id
         server_id
         name
@@ -735,11 +661,11 @@ export const serverCategoryPermissionMutations = {
     }
   `,
   DELETE_CATEGORY_USER_PERMISSION: gql`
-    mutation deleteCategoryUserPermission(
-      $user_id: ID!
-      $category_id: ID!
-    ) {
-      deleteCategoryUserPermission(user_id: $user_id, category_id: $category_id) {
+    mutation deleteCategoryUserPermission($user_id: ID!, $category_id: ID!) {
+      deleteCategoryUserPermission(
+        user_id: $user_id
+        category_id: $category_id
+      ) {
         id
         username
         display_name
@@ -750,7 +676,7 @@ export const serverCategoryPermissionMutations = {
       }
     }
   `,
-}
+};
 
 export const serverChannelPermissionMutations = {
   CREATE_CHANNEL_ROLE_PERMISSION: gql`
@@ -846,10 +772,7 @@ export const serverChannelPermissionMutations = {
     }
   `,
   DELETE_CHANNEL_ROLE_PERMISSION: gql`
-    mutation deleteChannelRolePermission(
-      $role_id: ID!
-      $channel_id: ID!
-    ) {
+    mutation deleteChannelRolePermission($role_id: ID!, $channel_id: ID!) {
       deleteChannelRolePermission(role_id: $role_id, channel_id: $channel_id) {
         id
         server_id
@@ -866,10 +789,7 @@ export const serverChannelPermissionMutations = {
     }
   `,
   DELETE_CHANNEL_USER_PERMISSION: gql`
-    mutation deleteChannelUserPermission(
-      $user_id: ID!
-      $channel_id: ID!
-    ) {
+    mutation deleteChannelUserPermission($user_id: ID!, $channel_id: ID!) {
       deleteChannelUserPermission(user_id: $user_id, channel_id: $channel_id) {
         id
         username
@@ -881,5 +801,4 @@ export const serverChannelPermissionMutations = {
       }
     }
   `,
-}
-
+};
