@@ -75,7 +75,6 @@ export const getChannels = async (
   next: express.NextFunction
 ) => {
   const server_id = res.locals.server_id;
-  console.log(server_id);
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
@@ -234,7 +233,7 @@ export const moveChannel = async (
     return res.status(400).json({ message: "Channel ID is required." });
   }
 
-  if (!new_position) {
+  if (new_position === undefined) {
     return res.status(400).json({ message: "New position is required." });
   }
 
