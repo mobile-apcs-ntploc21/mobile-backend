@@ -91,10 +91,10 @@ export const updateCategory = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { category_id } = req.params;
+  const { categoryId } = req.params;
   const { name } = req.body;
 
-  if (!category_id) {
+  if (!categoryId) {
     return res.status(400).json({ message: "Category ID is required." });
   }
 
@@ -102,7 +102,7 @@ export const updateCategory = async (
     const response = await graphQLClient().request(
       categoryMutations.UPDATE_CATEGORY,
       {
-        category_id,
+        categoryId,
         input: { name },
       }
     );
@@ -118,15 +118,15 @@ export const deleteCategory = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { category_id } = req.params;
+  const { categoryId } = req.params;
 
-  if (!category_id) {
+  if (!categoryId) {
     return res.status(400).json({ message: "Category ID is required." });
   }
 
   try {
     await graphQLClient().request(categoryMutations.DELETE_CATEGORY, {
-      id: category_id,
+      id: categoryId,
     });
 
     return res.status(200).json({ message: "Category deleted." });
@@ -140,10 +140,10 @@ export const moveCategory = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { category_id } = req.params;
+  const { categoryId } = req.params;
   const { new_position } = req.body;
 
-  if (!category_id) {
+  if (!categoryId) {
     return res.status(400).json({ message: "Category ID is required." });
   }
 
@@ -155,7 +155,7 @@ export const moveCategory = async (
     const response = await graphQLClient().request(
       categoryMutations.MOVE_CATEGORY,
       {
-        category_id,
+        categoryId,
         new_position,
       }
     );

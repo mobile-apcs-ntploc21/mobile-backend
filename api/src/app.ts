@@ -14,8 +14,6 @@ import serverRouter from "./routes/servers/server";
 import serverEmojiRouter from "./routes/servers/serverEmojis";
 import serverBansRouter from "./routes/servers/server_bans";
 import settingsRouter from "./routes/settings";
-import categoryRouter from "./routes/servers/channels/category";
-import channelRouter from "./routes/servers/channels/channel";
 import userRouter from "./routes/user";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";

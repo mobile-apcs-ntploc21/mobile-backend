@@ -1,8 +1,5 @@
 import { Router } from "express";
 import { BaseRolePermissions as BRP } from "../../constants/permissions";
-import { authMiddleware } from "../../utils/authMiddleware";
-import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
-
 import * as serverCtrl from "../../controllers/servers/server";
 import {
   getServerMembers,
@@ -14,16 +11,14 @@ import {
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
 } from "../../controllers/servers/server_permission";
-import { checkCategoryExistenceMiddleware } from "../../utils/checkCategoryExistenceMiddleware";
-import { checkChannelExistenceMiddleware } from "../../utils/checkChannelExistenceMiddleware";
+import { authMiddleware } from "../../utils/authMiddleware";
 import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
 import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
+import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
 import categoryRouter from "./channels/category";
 import channelRouter from "./channels/channel";
 import serverOwnerRouter from "./server_owner";
 import serverRoleRouter from "./server_permission";
-import { getCategories } from "@/controllers/servers/channels/category";
-import { getChannels } from "@/controllers/servers/channels/channel";
 
 const serverRouter = Router();
 
@@ -140,33 +135,17 @@ serverRouter.get(
 
 // ============ Categories and Channels ============
 
-serverRouter.get(
+serverRouter.use(
   "/:serverId/categories/",
   authMiddleware,
   checkMembershipMiddleware,
-  getCategories
-);
-
-serverRouter.use(
-  "/:serverId/categories/:categoryId",
-  authMiddleware,
-  checkMembershipMiddleware,
-  checkCategoryExistenceMiddleware,
   categoryRouter
 );
 
-serverRouter.get(
+serverRouter.use(
   "/:serverId/channels/",
   authMiddleware,
   checkMembershipMiddleware,
-  getChannels
-);
-
-serverRouter.use(
-  "/:serverId/channels/:channelId",
-  authMiddleware,
-  checkMembershipMiddleware,
-  checkChannelExistenceMiddleware,
   channelRouter
 );
 

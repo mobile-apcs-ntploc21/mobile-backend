@@ -1,6 +1,12 @@
 import { Router } from "express";
 import channelPermissionRouter from "./channel_permission";
 import { checkChannelExistenceMiddleware } from "../../../utils/checkChannelExistenceMiddleware";
+import { checkServerPermissionMiddleware } from "../../../utils/checkServerPermissionMiddleware";
+import {
+  BaseRolePermissions as BRP,
+  CategoryPermissions,
+  ChannelPermissions,
+} from "../../../constants/permissions";
 import * as channelCtrl from "../../../controllers/servers/channels/channel";
 
 const channelRouter = Router({ mergeParams: true });
@@ -13,14 +19,31 @@ channelRouter.use(
 );
 
 // Channel CRUD operations routes
-channelRouter.get("/:channelId", channelCtrl.getChannel);
+channelRouter.get("/", channelCtrl.getChannels);
+channelRouter.get(
+  "/:channelId",
+  checkChannelExistenceMiddleware,
+  channelCtrl.getChannel
+);
 
 channelRouter.post("/", channelCtrl.createChannel);
-channelRouter.patch("/:channelId", channelCtrl.updateChannel);
+channelRouter.patch(
+  "/:channelId",
+  checkChannelExistenceMiddleware,
+  channelCtrl.updateChannel
+);
 
-channelRouter.delete("/:channelId", channelCtrl.deleteChannel);
+channelRouter.delete(
+  "/:channelId",
+  checkChannelExistenceMiddleware,
+  channelCtrl.deleteChannel
+);
 
 // Move channel to a new category
-channelRouter.patch("/:channelId/move", channelCtrl.moveChannel);
+channelRouter.patch(
+  "/:channelId/move",
+  checkChannelExistenceMiddleware,
+  channelCtrl.moveChannel
+);
 
 export default channelRouter;
