@@ -1,6 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
 import ModelNames from "./../../modelNames";
-import validator from "validator";
 
 interface IChannel {
   server_id: { type: Schema.Types.ObjectId };
@@ -14,11 +13,6 @@ interface IChannel {
   position: number;
 
   // Settings
-  private: {
-    is_private: boolean;
-    role_id: [{ type: Schema.Types.ObjectId }];
-    user_id: [{ type: Schema.Types.ObjectId }];
-  };
   is_nsfw: boolean;
   is_archived: boolean;
   is_deleted: boolean;
@@ -56,26 +50,6 @@ const channelSchema = new Schema<IChannel>(
     position: {
       type: Number,
       required: [true, "Channel position is required!"],
-    },
-    private: {
-      is_private: {
-        type: Boolean,
-        default: false,
-      },
-      role_id: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "ServerRole",
-          required: false,
-        },
-      ],
-      user_id: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          required: false,
-        },
-      ],
     },
     is_nsfw: {
       type: Boolean,
