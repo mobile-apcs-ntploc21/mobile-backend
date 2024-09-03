@@ -30,6 +30,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "root": "file:..",
     "sharp": "^0.33.4",
     "streamifier": "^0.1.1",
     "uuid": "^10.0.0",

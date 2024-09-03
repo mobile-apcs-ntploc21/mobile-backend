@@ -9,13 +9,13 @@ import morgan from "morgan";
 import xss from "xss-clean";
 
 import globalErrorHandler from "./controllers/error";
-import categoryRouter from "./routes/category";
-import channelRouter from "./routes/channel";
 import friendRouter from "./routes/friend";
 import serverRouter from "./routes/servers/server";
 import serverEmojiRouter from "./routes/servers/serverEmojis";
 import serverBansRouter from "./routes/servers/server_bans";
 import settingsRouter from "./routes/settings";
+import categoryRouter from "./routes/servers/channels/category";
+import channelRouter from "./routes/servers/channels/channel";
 import userRouter from "./routes/user";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
@@ -61,18 +61,6 @@ app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 /// Server
 app.use("/api/v1/servers", serverRouter);
 app.use("/api/v1/servers", serverEmojiRouter);
-app.use(
-  "/api/v1/servers/:serverId",
-  authMiddleware,
-  checkMembershipMiddleware,
-  channelRouter
-);
-app.use(
-  "/api/v1/servers/:serverId",
-  authMiddleware,
-  checkMembershipMiddleware,
-  categoryRouter
-);
 app.use(
   "/api/v1/servers/:serverId/emojis",
   authMiddleware,

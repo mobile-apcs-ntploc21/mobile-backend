@@ -11,7 +11,9 @@ const gqlTypes = gql`
 `;
 
 const gqlAPI = gql`
->>>>>>> origin/master
+  input createCategoryInput {
+    name: String!
+    is_private: Boolean
   }
 
   input updateCategoryInput {
