@@ -185,11 +185,16 @@ const channelAPI: IResolvers = {
       }
 
       // Get all channel in the category and sort by position
-      const channels = await ChannelModel.find({ category_id }).sort({
+      let channels = await ChannelModel.find({
+        server_id: channel.server_id,
+        category_id: category_id,
+        is_deleted: false,
+      }).sort({
         position: 1,
       });
+
       // Remove the current channel from the list
-      channels.filter((c) => c._id.toString() !== channel_id);
+      channels = channels.filter((c) => c._id.toString() !== channel_id);
 
       // Normalize the new position
       new_position = Math.max(0, Math.min(new_position, channels.length));

@@ -186,10 +186,10 @@ const resolvers: IResolvers = {
           throw new UserInputError("Category not found");
         }
 
-        const categories = await CategoryModel.find({
+        let categories = await CategoryModel.find({
           server_id: category.server_id,
         });
-        categories.filter((c) => c._id !== category_id);
+        categories = categories.filter((c) => c._id !== category_id);
 
         // Normalize the new position
         new_position = Math.max(0, Math.min(new_position, categories.length));
