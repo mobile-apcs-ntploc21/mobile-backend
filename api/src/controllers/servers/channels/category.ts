@@ -102,7 +102,7 @@ export const updateCategory = async (
     const response = await graphQLClient().request(
       categoryMutations.UPDATE_CATEGORY,
       {
-        categoryId,
+        category_id: categoryId,
         input: { name },
       }
     );
@@ -126,7 +126,7 @@ export const deleteCategory = async (
 
   try {
     await graphQLClient().request(categoryMutations.DELETE_CATEGORY, {
-      id: categoryId,
+      category_id: categoryId,
     });
 
     return res.status(200).json({ message: "Category deleted." });

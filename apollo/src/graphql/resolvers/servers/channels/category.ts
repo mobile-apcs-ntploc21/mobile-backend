@@ -72,6 +72,10 @@ const deleteCategoryTransaction = async (category_id) => {
   const opts = { session, new: true };
 
   try {
+    if (category_id === null) {
+      throw new UserInputError("You cannot delete the default category");
+    }
+
     const category = await CategoryModel.findById(category_id).session(session);
 
     if (!category) {
@@ -91,6 +95,17 @@ const deleteCategoryTransaction = async (category_id) => {
 
     // Set all the channels of the category to null
     await ChannelModel.updateMany({ category_id }, { category_id: null }, opts);
+    // Fix the position of the channels in the default category
+    const channels = await ChannelModel.find({
+      server_id: category.server_id,
+      category_id: null,
+      is_deleted: false,
+    }).session(session);
+
+    for (let i = 0; i < channels.length; i++) {
+      channels[i].position = i * POSITION_CONST;
+      await channels[i].save({ session: session });
+    }
 
     await session.commitTransaction();
     session.endSession();
