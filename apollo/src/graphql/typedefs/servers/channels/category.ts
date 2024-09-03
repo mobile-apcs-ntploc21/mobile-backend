@@ -1,32 +1,21 @@
 import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
-  type privateCategory {
-    is_private: Boolean
-    role_id: [ID]
-    user_id: [ID]
-  }
-
   type Category {
     id: ID
 
     server_id: ID
     name: String
     position: Int
-
-    private: privateCategory
   }
 `;
 
 const gqlAPI = gql`
-  input createCategoryInput {
-    name: String!
-    is_private: Boolean
+>>>>>>> origin/master
   }
 
   input updateCategoryInput {
     name: String
-    is_private: Boolean
   }
 
   extend type Query {
@@ -40,13 +29,6 @@ const gqlAPI = gql`
     deleteCategory(category_id: ID!): Boolean
 
     moveCategory(category_id: ID!, new_position: Int!): Category
-
-    addPrivateCategoryID(category_id: ID!, id: ID!, is_user: Boolean): Category
-    removePrivateCategoryID(
-      category_id: ID!
-      id: ID!
-      is_user: Boolean
-    ): Category
   }
 `;
 

@@ -8,7 +8,7 @@ import ChannelModel from "../../../../models/servers/channels/channel";
 import CategoryModel from "../../../../models/servers/channels/category";
 import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 import ServerRoleModel from "@models/servers/server_role";
-import {defaultChannelRole} from "@resolvers/servers/channels/channel_role_permission";
+import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
 import ChannelRolePermission from "@models/servers/channels/channel_role_permission";
 import ChannelUserPermission from "@models/servers/channels/channel_user_permission";
 
@@ -20,7 +20,7 @@ const createChannelTransaction = async (server_id, input) => {
   session.startTransaction();
   const opts = { session, new: true };
 
-  const { name, category_id, is_private } = input;
+  const { name, category_id } = input;
   let position = 0;
   try {
     if (!ServerModel.findById(server_id).session(session)) {
@@ -41,12 +41,9 @@ const createChannelTransaction = async (server_id, input) => {
       [
         {
           server_id,
-          category_id: ({ category_id } && category_id) || null,
+          category_id: category_id,
           name,
           position,
-          private: {
-            is_private,
-          },
         },
       ],
       opts
@@ -150,8 +147,12 @@ const channelAPI: IResolvers = {
       // This is a hard delete
       try {
         const channel = await ChannelModel.findByIdAndDelete(channel_id);
-        await ChannelRolePermission.deleteMany({ "_id.channel_id": channel_id });
-        await ChannelUserPermission.deleteMany({ "_id.channel_id": channel_id });
+        await ChannelRolePermission.deleteMany({
+          "_id.channel_id": channel_id,
+        });
+        await ChannelUserPermission.deleteMany({
+          "_id.channel_id": channel_id,
+        });
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelDeleted,
@@ -162,33 +163,6 @@ const channelAPI: IResolvers = {
       } catch (error) {
         throw new UserInputError("Channel not found");
       }
-    },
-
-    addPrivateChannelID: async (_, { channel_id, id, is_user }) => {
-      const channel = await ChannelModel.findByIdAndUpdate(
-        channel_id,
-        {
-          $addToSet: {
-            [`private.${is_user ? "user_id" : "role_id"}`]: id,
-          },
-        },
-        { new: true }
-      );
-
-      return channel;
-    },
-    removePrivateChannelID: async (_, { channel_id, id, is_user }) => {
-      const channel = await ChannelModel.findByIdAndUpdate(
-        channel_id,
-        {
-          $pull: {
-            [`private.${is_user ? "user_id" : "role_id"}`]: id,
-          },
-        },
-        { new: true }
-      );
-
-      return channel;
     },
 
     moveChannel: async (_, { channel_id, category_id, new_position }) => {

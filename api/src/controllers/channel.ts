@@ -61,6 +61,9 @@ export const getChannel = async (
   const server_id = res.locals.server_id;
   const channel_id = req.params?.channelId;
 
+  if (!server_id) {
+    return res.status(400).json({ message: "Server ID is required." });
+  }
   if (!channel_id) {
     return res.status(400).json({ message: "Channel ID is required." });
   }
@@ -133,7 +136,7 @@ export const createChannel = async (
   next: express.NextFunction
 ) => {
   const server_id = res.locals.server_id;
-  const { name, category_id, is_private } = req.body;
+  const { name, category_id } = req.body;
 
   if (!server_id || !name) {
     return res.status(400).json({ message: "Server ID and name is required." });
@@ -147,7 +150,6 @@ export const createChannel = async (
         input: {
           name,
           category_id,
-          is_private,
         },
       }
     );
@@ -165,8 +167,7 @@ export const updateChannel = async (
 ) => {
   const server_id = res.locals.server_id;
   const channel_id = req.params?.channelId;
-  const { name, description, is_private, is_nsfw, is_archived, is_deleted } =
-    req.body;
+  const { name, description, is_nsfw, is_archived, is_deleted } = req.body;
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
@@ -189,7 +190,6 @@ export const updateChannel = async (
         input: {
           name,
           description,
-          is_private,
           is_nsfw,
           is_archived,
           is_deleted,
@@ -308,7 +308,7 @@ export const createChannelPermission = async (
 ) => {
   const server_id = req.params?.serverId;
   const channel_id = req.params?.channelId;
-  const { role_id, user_id, is_user, allow, deny } = req.body;
+  const { role_id, user_id, allow, deny } = req.body;
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
@@ -319,19 +319,41 @@ export const createChannelPermission = async (
   }
 
   try {
-    const permission = await graphQLClient().request(
-      channelMutations.CREATE_CHANNEL_PERMISSION,
-      {
-        channel_id,
-        input: {
-          server_role_id: role_id,
-          user_id,
-          is_user,
-          allow,
-          deny,
-        },
-      }
-    );
+    let permission = null;
+
+    if (role_id) {
+      permission = await graphQLClient().request(
+        channelMutations.CREATE_CHANNEL_PERMISSION,
+        {
+          channel_id,
+          input: {
+            server_role_id: role_id,
+            is_user: false,
+            allow,
+            deny,
+          },
+        }
+      );
+    } else if (user_id) {
+      permission = await graphQLClient().request(
+        channelMutations.CREATE_CHANNEL_PERMISSION,
+        {
+          channel_id,
+          input: {
+            user_id,
+            is_user: true,
+            allow,
+            deny,
+          },
+        }
+      );
+    }
+
+    if (!permission) {
+      return res
+        .status(400)
+        .json({ message: "Role ID or User ID is required." });
+    }
 
     return res.status(200).json({ ...permission.createChannelPermission });
   } catch (error) {
@@ -347,7 +369,7 @@ export const updateChannelPermission = async (
   const server_id = req.params?.serverId;
   const channel_id = req.params?.channelId;
   const permission_id = req.params?.permissionId;
-  const { role_id, user_id, is_user, allow, deny } = req.body;
+  const { allow, deny } = req.body;
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
@@ -361,15 +383,26 @@ export const updateChannelPermission = async (
     return res.status(400).json({ message: "Permission ID is required." });
   }
 
+  const permissions = await _getChannelPermissions(channel_id).catch(
+    () => null
+  );
+
+  if (!permissions) {
+    return res.status(404).json({ message: "Channel permissions not found." });
+  }
+
+  if (!permissions.find((p: any) => p.id === permission_id)) {
+    return res
+      .status(404)
+      .json({ message: "Permission not found in the channel." });
+  }
+
   try {
     const permission = await graphQLClient().request(
       channelMutations.UPDATE_CHANNEL_PERMISSION,
       {
-        channel_id,
+        permission_id,
         input: {
-          server_role_id: role_id,
-          user_id,
-          is_user,
           allow,
           deny,
         },

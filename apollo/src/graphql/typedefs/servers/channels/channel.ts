@@ -1,12 +1,6 @@
 import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
-  type privateChannel {
-    is_private: Boolean
-    role_id: [ID]
-    user_id: [ID]
-  }
-
   type Channel {
     id: ID
     server_id: ID
@@ -18,7 +12,6 @@ const gqlTypes = gql`
     last_message_id: ID
     position: Int
 
-    private: privateChannel
     is_nsfw: Boolean
     is_archived: Boolean
     is_deleted: Boolean
@@ -51,9 +44,6 @@ const gqlAPI = gql`
     updateChannel(channel_id: ID!, input: updateChannelInput!): Channel
     deleteChannel(channel_id: ID!): Boolean
     hardDeleteChannel(channel_id: ID!): Boolean
-
-    addPrivateChannelID(channel_id: ID!, id: ID!, is_user: Boolean): Channel
-    removePrivateChannelID(channel_id: ID!, id: ID!, is_user: Boolean): Channel
 
     # Move channel to a new category
     moveChannel(channel_id: ID!, category_id: ID, new_position: Int): Channel

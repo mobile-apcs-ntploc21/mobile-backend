@@ -1,24 +1,26 @@
-import express, { Request, Response, NextFunction } from "express";
-import morgan from "morgan";
-import cors from "cors";
-import helmet from "helmet";
-import rateLimit from "express-rate-limit";
-import xss from "xss-clean";
-import mongoSanitize from "express-mongo-sanitize";
 import bodyParser from "body-parser";
+import cors from "cors";
 import dotenv from "dotenv";
+import express, { NextFunction, Request, Response } from "express";
+import mongoSanitize from "express-mongo-sanitize";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import morgan from "morgan";
+import xss from "xss-clean";
 
 import globalErrorHandler from "./controllers/error";
-import { authMiddleware } from "./utils/authMiddleware";
-import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
-import userRouter from "./routes/user";
+import categoryRouter from "./routes/category";
+import channelRouter from "./routes/channel";
 import friendRouter from "./routes/friend";
+import serverRouter from "./routes/servers/server";
+import serverEmojiRouter from "./routes/servers/serverEmojis";
+import serverBansRouter from "./routes/servers/server_bans";
 import settingsRouter from "./routes/settings";
+import userRouter from "./routes/user";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
-import serverRouter from "./routes/server";
-import serverEmojiRouter from "./routes/serverEmojis";
-import channelRouter from "./routes/channel";
+import { authMiddleware } from "./utils/authMiddleware";
+import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
 
 dotenv.config({ path: "./config.env" });
 
@@ -65,6 +67,19 @@ app.use(
   checkMembershipMiddleware,
   channelRouter
 );
+app.use(
+  "/api/v1/servers/:serverId",
+  authMiddleware,
+  checkMembershipMiddleware,
+  categoryRouter
+);
+app.use(
+  "/api/v1/servers/:serverId/emojis",
+  authMiddleware,
+  checkMembershipMiddleware,
+  serverEmojiRouter
+);
+app.use("/api/v1/servers", authMiddleware, serverBansRouter);
 
 // Handle when go to undefined route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {

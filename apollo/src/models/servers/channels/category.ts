@@ -1,6 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
-import ModelNames from './../../modelNames';
-import validator from "validator";
+import ModelNames from "./../../modelNames";
 
 interface ICategory {
   server_id: { type: Schema.Types.ObjectId };
@@ -8,13 +7,6 @@ interface ICategory {
   // Overview
   name: string;
   position: number;
-
-  // Settings
-  private: {
-    is_private: boolean;
-    role_id: [{ type: Schema.Types.ObjectId }];
-    user_id: [{ type: Schema.Types.ObjectId }];
-  };
 }
 
 const categorySchema = new Schema<ICategory>(
@@ -32,24 +24,6 @@ const categorySchema = new Schema<ICategory>(
     position: {
       type: Number,
       required: [true, "Category position is required!"],
-    },
-    private: {
-      is_private: {
-        type: Boolean,
-        default: false,
-      },
-      role_id: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "Role",
-        },
-      ],
-      user_id: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-        },
-      ],
     },
   },
   { timestamps: true }
