@@ -100,7 +100,7 @@ const addServerMemberTransaction = async ({
       default: true,
     });
     await AssignedUserRoleModel.create(
-      user_ids.map((user_id) => ({
+      filteredUsers.map((user_id) => ({
         _id: {
           server_role_id: defaultRole._id,
           user_id,
