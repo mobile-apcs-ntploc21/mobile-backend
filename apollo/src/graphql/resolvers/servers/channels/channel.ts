@@ -94,7 +94,12 @@ const channelAPI: IResolvers = {
     getChannels: async (_, { server_id }) => {
       const channels = await ChannelModel.find({ server_id });
 
-      return channels;
+      // Filter out the deleted channels
+      const filteredChannels = channels.filter(
+        (channel) => !channel.is_deleted
+      );
+
+      return filteredChannels;
     },
   },
   Mutation: {

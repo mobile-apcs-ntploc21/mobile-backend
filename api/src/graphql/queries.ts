@@ -391,8 +391,17 @@ export const serverChannelQueries = {
       getChannel(channel_id: $channel_id) {
         id
         server_id
+        conversation_id
+        category_id
+
         name
+        description
+        last_message_id
         position
+
+        is_nsfw
+        is_archived
+        is_deleted
       }
     }
   `,
