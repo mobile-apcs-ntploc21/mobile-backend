@@ -1,15 +1,16 @@
-import { IResolvers } from "@graphql-tools/utils";
-import { UserInputError } from "apollo-server-core";
-import { ObjectId, Schema } from "mongoose";
-import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
+import { IResolvers } from '@graphql-tools/utils';
+import { UserInputError } from 'apollo-server-core';
+import { ObjectId, Schema } from 'mongoose';
+import { publishEvent, ServerEvents } from '../../pubsub/pubsub';
 
-import UserStatusModel from "@/models/user_status";
-import UserProfileModel from "@/models/user_profile";
-import serverModel from "../../../models/servers/server";
-import ServerMemberModel from "../../../models/servers/server_member";
-import ServerBan from "@/models/servers/server_bans";
-import ServerRoleModel from "../../../models/servers/server_role";
-import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
+import UserStatusModel from '@/models/user_status';
+import UserProfileModel from '@/models/user_profile';
+import serverModel from '../../../models/servers/server';
+import ServerMemberModel from '../../../models/servers/server_member';
+import ServerBan from '@/models/servers/server_bans';
+import ServerRoleModel from '../../../models/servers/server_role';
+import AssignedUserRoleModel from '../../../models/servers/assigned_user_role';
+import server from './server';
 
 type ServerMembers = {
   server_id: ObjectId;
@@ -24,7 +25,7 @@ interface InviteCode {
 }
 
 const validateInviteCode = async (url: string) => {
-  if (!url) throw new Error("Invite code URL is required");
+  if (!url) throw new Error('Invite code URL is required');
 
   const response = await serverModel.findOne({
     invite_code: {
@@ -32,16 +33,16 @@ const validateInviteCode = async (url: string) => {
     },
   });
 
-  if (!response) throw new Error("This server does not have any invite codes");
+  if (!response) throw new Error('This server does not have any invite codes');
 
   const inviteCodes = response.invite_code;
   const index = inviteCodes.findIndex((code: InviteCode) => code.url === url);
   const inviteCode = inviteCodes[index];
 
   if (inviteCode.expiredAt && new Date(inviteCode.expiredAt) < new Date())
-    throw new Error("Invite code has expired");
+    throw new Error('Invite code has expired');
   if (inviteCode.maxUses > 0 && inviteCode.currentUses >= inviteCode.maxUses)
-    throw new Error("Invite code has reached its maximum uses");
+    throw new Error('Invite code has reached its maximum uses');
 
   return {
     server: response,
@@ -67,12 +68,12 @@ const addServerMemberTransaction = async ({
 
   try {
     if (!validateUsers(user_ids))
-      throw new UserInputError("Invalid server member input!");
+      throw new UserInputError('Invalid server member input!');
 
     // Filter out banned users
     const bannedUsers = await ServerBan.find({
-      "_id.server_id": server_id,
-      "_id.user_id": { $in: user_ids },
+      '_id.server_id': server_id,
+      '_id.user_id': { $in: user_ids },
     });
     const filteredUsers = user_ids.filter(
       (user_id) =>
@@ -128,24 +129,24 @@ const removeServerMemberTransaction = async ({
 
   try {
     if (!validateUsers(user_ids))
-      throw new UserInputError("Invalid server member input!");
+      throw new UserInputError('Invalid server member input!');
 
     const server = await serverModel.findById(server_id);
-    if (!server) throw new UserInputError("Server not found!");
+    if (!server) throw new UserInputError('Server not found!');
 
     if (
       user_ids.some((user_id) => server.owner.toString() === user_id.toString())
     )
-      throw new UserInputError("Owner cannot be removed!");
+      throw new UserInputError('Owner cannot be removed!');
 
     const res = await ServerMemberModel.deleteMany({
       $or: user_ids.map((user_id) => ({
-        "_id.server_id": server_id,
-        "_id.user_id": user_id,
+        '_id.server_id': server_id,
+        '_id.user_id': user_id,
       })),
     });
 
-    if (res.deletedCount === 0) throw new UserInputError("Member not found!");
+    if (res.deletedCount === 0) throw new UserInputError('Member not found!');
 
     await serverModel.updateOne(
       { _id: server_id },
@@ -161,14 +162,14 @@ const removeServerMemberTransaction = async ({
 
     // Get all assigned roles
     const assignedRoles = await AssignedUserRoleModel.find({
-      "_id.server_role_id": { $in: roles.map((role) => role._id) },
-      "_id.user_id": { $in: user_ids },
+      '_id.server_role_id': { $in: roles.map((role) => role._id) },
+      '_id.user_id': { $in: user_ids },
     });
 
     // Delete assigned roles
     await AssignedUserRoleModel.deleteMany({
-      "_id.server_role_id": { $in: roles.map((role) => role._id) },
-      "_id.user_id": { $in: user_ids },
+      '_id.server_role_id': { $in: roles.map((role) => role._id) },
+      '_id.user_id': { $in: user_ids },
     });
 
     await session.commitTransaction();
@@ -190,11 +191,11 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
 
     // Check user has been banned
     const bannedUser = await ServerBan.findOne({
-      "_id.server_id": server._id,
-      "_id.user_id": user_id,
+      '_id.server_id': server._id,
+      '_id.user_id': user_id,
     });
     if (bannedUser) {
-      throw new Error("You are banned from this server!");
+      throw new Error('You are banned from this server!');
     }
 
     const newdoc = {
@@ -239,7 +240,7 @@ const API: IResolvers = {
       try {
         // Get all members of the server
         const members = await ServerMemberModel.find({
-          "_id.server_id": server_id,
+          '_id.server_id': server_id,
         }).limit(limit);
 
         // Get the user profile of each member (contains default and server profile)
@@ -251,6 +252,8 @@ const API: IResolvers = {
         const allStatuses = await UserStatusModel.find({
           user_id: { $in: user_ids },
         });
+
+        let serverRoles = await ServerRoleModel.find({ server_id });
 
         let profiles = [];
         for (let i = 0; i < user_ids.length; i++) {
@@ -270,6 +273,11 @@ const API: IResolvers = {
             );
           }
 
+          const roles = await AssignedUserRoleModel.find({
+            '_id.user_id': user_ids[i],
+            '_id.server_role_id': { $in: serverRoles.map((role) => role._id) },
+          });
+
           profiles.push({
             id: profile._id,
             user_id: profile.user_id,
@@ -278,7 +286,8 @@ const API: IResolvers = {
             about_me: profile.about_me,
             avatar_url: profile.avatar_url,
             banner_url: profile.banner_url,
-            status: status,
+            status,
+            roleIds: roles.map((role) => role._id.server_role_id),
           });
         }
 
@@ -291,8 +300,8 @@ const API: IResolvers = {
       try {
         return (
           (await ServerMemberModel.exists({
-            "_id.server_id": server_id,
-            "_id.user_id": user_id,
+            '_id.server_id': server_id,
+            '_id.user_id': user_id,
           })) !== null
         );
       } catch (error) {
@@ -303,8 +312,8 @@ const API: IResolvers = {
   Mutation: {
     joinServer: async (_, { url, user_id }) => {
       try {
-        if (!url) throw new UserInputError("Invite url is required!");
-        if (!user_id) throw new UserInputError("User ID is required!");
+        if (!url) throw new UserInputError('Invite url is required!');
+        if (!user_id) throw new UserInputError('User ID is required!');
 
         const res = await joinServerTransaction(url, user_id);
         publishEvent(ServerEvents.serverUpdated, {
