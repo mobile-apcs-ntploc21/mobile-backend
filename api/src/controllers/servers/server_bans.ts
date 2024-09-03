@@ -268,7 +268,7 @@ export const deleteServerBan = async (
       });
     }
 
-    return res.status(204);
+    return res.status(204).send();
   } catch (error) {
     return next(error);
   }
