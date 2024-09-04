@@ -4,16 +4,20 @@ import { publishEvent, ServerEvents } from '../graphql/pubsub/pubsub';
 
 export const userComeBack = async (user_id: string) => {
   try {
-    const res = await UserStatusModel.findOneAndUpdate(
-      { user_id },
-      { $set: { last_seen: new Date(), is_online: true } },
-      { new: true }
-    );
-    publishEvent(ServerEvents.userStatusChanged, {
-      type: ServerEvents.userStatusChanged,
-      data: res,
-    });
-    publishStatusChanged(res);
+    const res = await UserStatusModel.findOne({ user_id });
+
+    if (res.count_access === 0) res.is_online = true;
+    res.count_access++;
+
+    if (res.count_access === 1) {
+      publishEvent(ServerEvents.userStatusChanged, {
+        type: ServerEvents.userStatusChanged,
+        data: res,
+      });
+      publishStatusChanged(res);
+    }
+
+    res.save();
   } catch (error) {
     console.log(error);
   }
@@ -22,16 +26,22 @@ export const userComeBack = async (user_id: string) => {
 export const userLeave = async (user_id: string) => {
   if (!user_id) return;
   try {
-    const res = await UserStatusModel.findOneAndUpdate(
-      { user_id },
-      { $set: { last_seen: new Date(), is_online: false } },
-      { new: true }
-    );
-    publishEvent(ServerEvents.userStatusChanged, {
-      type: ServerEvents.userStatusChanged,
-      data: res,
-    });
-    publishStatusChanged(res);
+    const res = await UserStatusModel.findOne({ user_id });
+
+    if (res.count_access === 0)
+      throw new Error('Number of access when leaving is 0');
+    res.count_access--;
+
+    if (res.count_access === 0) {
+      res.is_online = false;
+      publishEvent(ServerEvents.userStatusChanged, {
+        type: ServerEvents.userStatusChanged,
+        data: res,
+      });
+      publishStatusChanged(res);
+    }
+
+    res.save();
   } catch (error) {
     console.log(error);
   }
