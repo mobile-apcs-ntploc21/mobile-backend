@@ -2,10 +2,11 @@ import { Router } from "express";
 import channelPermissionRouter from "./channel_permission";
 import { checkChannelExistenceMiddleware } from "../../../utils/checkChannelExistenceMiddleware";
 import { checkServerPermissionMiddleware } from "../../../utils/checkServerPermissionMiddleware";
+import { checkChannelPermissionMiddleware } from "../../../utils/checkChannelPermissionMiddleware";
 import {
   BaseRolePermissions as BRP,
-  CategoryPermissions,
-  ChannelPermissions,
+  CategoryPermissions as CP,
+  ChannelPermissions as ChP,
 } from "../../../constants/permissions";
 import * as channelCtrl from "../../../controllers/servers/channels/channel";
 
@@ -23,19 +24,26 @@ channelRouter.get("/", channelCtrl.getChannels);
 channelRouter.get(
   "/:channelId",
   checkChannelExistenceMiddleware,
+  checkChannelPermissionMiddleware([ChP.VIEW_CHANNEL]),
   channelCtrl.getChannel
 );
 
-channelRouter.post("/", channelCtrl.createChannel);
+channelRouter.post(
+  "/",
+  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
+  channelCtrl.createChannel
+);
 channelRouter.patch(
   "/:channelId",
   checkChannelExistenceMiddleware,
+  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.updateChannel
 );
 
 channelRouter.delete(
   "/:channelId",
   checkChannelExistenceMiddleware,
+  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.deleteChannel
 );
 
@@ -43,6 +51,7 @@ channelRouter.delete(
 channelRouter.patch(
   "/:channelId/move",
   checkChannelExistenceMiddleware,
+  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.moveChannel
 );
 
