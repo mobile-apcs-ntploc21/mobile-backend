@@ -1,4 +1,4 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
 // Create user
 export const CREATE_USER = gql`
@@ -267,7 +267,10 @@ export const serverMemberMutations = {
   `,
   REMOVE_SERVER_MEMBERS: gql`
     mutation RemoveServerMembers($input: ServerMembersInput!) {
-      removeServerMembers(input: $input)
+      removeServerMembers(input: $input) {
+        server_id
+        user_id
+      }
     }
   `,
 };

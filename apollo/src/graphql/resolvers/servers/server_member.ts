@@ -139,6 +139,13 @@ const removeServerMemberTransaction = async ({
     )
       throw new UserInputError('Owner cannot be removed!');
 
+    const documentsToDelete = await ServerMemberModel.find({
+      $or: user_ids.map((user_id) => ({
+        '_id.server_id': server_id,
+        '_id.user_id': user_id,
+      })),
+    });
+
     const res = await ServerMemberModel.deleteMany({
       $or: user_ids.map((user_id) => ({
         '_id.server_id': server_id,
@@ -173,7 +180,7 @@ const removeServerMemberTransaction = async ({
     });
 
     await session.commitTransaction();
-    return res;
+    return documentsToDelete;
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -328,26 +335,32 @@ const API: IResolvers = {
     },
     addServerMembers: async (_, { input }) => {
       try {
-        const res = await addServerMemberTransaction(input);
-        publishEvent(ServerEvents.serverUpdated, {
-          type: ServerEvents.memberAdded,
-          server_id: input.server_id,
-          data: input.user_ids,
-        });
-        return res.map((member) => member._id);
+        const res = (await addServerMemberTransaction(input)).map(
+          ({ _id }) => _id
+        );
+        if (res && res.length > 0)
+          publishEvent(ServerEvents.serverUpdated, {
+            type: ServerEvents.memberAdded,
+            server_id: input.server_id,
+            data: res.map((member) => member.user_id),
+          });
+        return res;
       } catch (error) {
         throw new UserInputError(error.message);
       }
     },
     removeServerMembers: async (_, { input }) => {
       try {
-        await removeServerMemberTransaction(input);
-        publishEvent(ServerEvents.serverUpdated, {
-          type: ServerEvents.memberRemoved,
-          server_id: input.server_id,
-          data: input.user_ids,
-        });
-        return true;
+        const res = (await removeServerMemberTransaction(input)).map(
+          ({ _id }) => _id
+        );
+        if (res && res.length > 0)
+          publishEvent(ServerEvents.serverUpdated, {
+            type: ServerEvents.memberRemoved,
+            server_id: input.server_id,
+            data: res.map((member) => member.user_id),
+          });
+        return res;
       } catch (error) {
         throw new UserInputError(error.message);
       }
