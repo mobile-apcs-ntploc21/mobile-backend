@@ -33,7 +33,7 @@ const gqlAPI = gql`
   extend type Mutation {
     joinServer(url: String!, user_id: ID!): ServerMember
     addServerMembers(input: ServerMembersInput!): [ServerMember]
-    removeServerMembers(input: ServerMembersInput!): Boolean
+    removeServerMembers(input: ServerMembersInput!): [ServerMember]
   }
 `;
 
