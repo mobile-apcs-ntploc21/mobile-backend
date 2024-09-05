@@ -1,14 +1,15 @@
-import { IResolvers } from "@graphql-tools/utils";
-import { AuthenticationError, UserInputError } from "apollo-server";
-import { GraphQLJSON } from "graphql-scalars";
-import mongoose from "mongoose";
+import { IResolvers } from '@graphql-tools/utils';
+import { AuthenticationError, UserInputError } from 'apollo-server';
+import { GraphQLJSON } from 'graphql-scalars';
+import mongoose from 'mongoose';
 
-import UserModel from "@/models/user";
-import UserProfileModel from "@/models/user_profile";
-import ServerModel from "@/models/servers/server";
-import ServerBansModel from "@/models/servers/server_bans";
-import ServerMemberModel from "@/models/servers/server_member";
-import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
+import UserModel from '@/models/user';
+import UserProfileModel from '@/models/user_profile';
+import ServerModel from '@/models/servers/server';
+import ServerBansModel from '@/models/servers/server_bans';
+import ServerMemberModel from '@/models/servers/server_member';
+import AssignedUserRoleModel from '@/models/servers/assigned_user_role';
+import { publishEvent, ServerEvents } from '@/graphql/pubsub/pubsub';
 
 // This will check these conditions:
 // - Is a user_id exists?
@@ -16,25 +17,25 @@ import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 const checkPrequisites = async (server_id, user_id) => {
   const user = await UserModel.findById(user_id);
   if (!user) {
-    return "User not found!";
+    return 'User not found!';
   }
 
   const server = await ServerModel.findById(server_id);
   if (!server) {
-    return "Server not found!";
+    return 'Server not found!';
   }
 
   if (String(server.owner) === String(user_id)) {
-    return "Cannot kick/ban server owner!";
+    return 'Cannot kick/ban server owner!';
   }
 
   const serverMember = await ServerMemberModel.findOne({
-    "_id.server_id": server_id,
-    "_id.user_id": user_id,
+    '_id.server_id': server_id,
+    '_id.user_id': user_id,
   });
 
   if (!serverMember) {
-    return "User is not a member of the server!";
+    return 'User is not a member of the server!';
   }
 
   return null;
@@ -59,12 +60,18 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
 
     // Remove user from server members
     const _ = await ServerMemberModel.findOneAndDelete(
-      { "_id.server_id": server_id, "_id.user_id": user_id },
+      { '_id.server_id': server_id, '_id.user_id': user_id },
       opts
     );
 
+    publishEvent(ServerEvents.serverUpdated, {
+      type: ServerEvents.memberRemoved,
+      server_id,
+      data: [user_id],
+    });
+
     // Remove all roles assigned to the user
-    await AssignedUserRoleModel.deleteMany({ "_id.user_id": user_id }, opts);
+    await AssignedUserRoleModel.deleteMany({ '_id.user_id': user_id }, opts);
 
     // Decrease server total members (if exists in server members)
     if (_) {
@@ -96,12 +103,17 @@ const serverKickUser = async ({ server_id, user_id }) => {
     }
 
     const _ = await ServerMemberModel.findOneAndDelete(
-      { "_id.server_id": server_id, "_id.user_id": user_id },
+      { '_id.server_id': server_id, '_id.user_id': user_id },
       opts
     );
+    publishEvent(ServerEvents.serverUpdated, {
+      type: ServerEvents.memberRemoved,
+      server_id,
+      data: [user_id],
+    });
 
     // Remove all roles assigned to the user
-    await AssignedUserRoleModel.deleteMany({ "_id.user_id": user_id }, opts);
+    await AssignedUserRoleModel.deleteMany({ '_id.user_id': user_id }, opts);
 
     // Decrease server total members (if exists in server members)
     if (_) {
@@ -123,8 +135,8 @@ const resolvers: IResolvers = {
     getServerBan: async (_, { server_id, user_id }) => {
       try {
         const serverBan = await ServerBansModel.findOne({
-          "_id.server_id": server_id,
-          "_id.user_id": user_id,
+          '_id.server_id': server_id,
+          '_id.user_id': user_id,
         });
 
         if (!serverBan) {
@@ -146,7 +158,7 @@ const resolvers: IResolvers = {
 
       try {
         const serverBans = await ServerBansModel.find({
-          "_id.server_id": server_id,
+          '_id.server_id': server_id,
         }).limit(limit);
 
         // Get user profiles of the banned users
@@ -200,8 +212,8 @@ const resolvers: IResolvers = {
     deleteServerBan: async (_, { server_id, user_id }) => {
       try {
         const serverBan = await ServerBansModel.findOne({
-          "_id.server_id": server_id,
-          "_id.user_id": user_id,
+          '_id.server_id': server_id,
+          '_id.user_id': user_id,
         });
 
         if (!serverBan) {
@@ -209,8 +221,8 @@ const resolvers: IResolvers = {
         }
 
         await ServerBansModel.findOneAndDelete({
-          "_id.server_id": server_id,
-          "_id.user_id": user_id,
+          '_id.server_id': server_id,
+          '_id.user_id': user_id,
         });
 
         return true;
