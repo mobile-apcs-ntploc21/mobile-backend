@@ -1,11 +1,12 @@
 import graphQLClient from "./graphql";
 import {
-  serverCategoryPermissionQueries, serverChannelPermissionQueries,
+  serverCategoryPermissionQueries,
+  serverChannelPermissionQueries,
   serverChannelQueries,
   serverQueries,
-  serverRoleQueries
+  serverRoleQueries,
 } from "../graphql/queries";
-import {ChannelPermissions} from "../constants/permissions";
+import { ChannelPermissions } from "../constants/permissions";
 
 /*
 - get all server roles assigned with the current user
@@ -27,14 +28,14 @@ export const getUserChannelPermissionsFunc = async (
   userId: string,
   channelId: string,
   serverId: string
-)=> {
+) => {
   let isAdmin = false;
   let isServerOwner = false;
   let categoryId = null;
 
   try {
     // get server details
-    const {server: server} = await graphQLClient().request(
+    const { server: server } = await graphQLClient().request(
       serverQueries.GET_SERVER_BY_ID,
       {
         server_id: serverId,
@@ -48,17 +49,21 @@ export const getUserChannelPermissionsFunc = async (
     throw new Error(e);
   }
 
-  try {
-    // get category id associated with the channel, also check if the channel exists
-    const {getChannel: channel} = await graphQLClient().request(
-      serverChannelQueries.GET_CHANNEL,
-      {
-        channel_id: channelId,
-      }
-    );
-    categoryId = channel.category_id;
-  } catch (e) {
-    throw new Error(e);
+  if (channelId) {
+    try {
+      // get category id associated with the channel, also check if the channel exists
+      const { getChannel: channel } = await graphQLClient().request(
+        serverChannelQueries.GET_CHANNEL,
+        {
+          channel_id: channelId,
+        }
+      );
+      categoryId = channel.category_id;
+    } catch (e) {
+      throw new Error(e);
+    }
+  } else {
+    categoryId = null; // The channel is not in any category
   }
 
   // get all server roles assigned with the current user
@@ -74,7 +79,7 @@ export const getUserChannelPermissionsFunc = async (
 
   // for each server role, get the category permissions associated with that role (if exists)
   for (const role of roles) {
-    isAdmin = (isAdmin ? isAdmin : role.is_admin);
+    isAdmin = isAdmin ? isAdmin : role.is_admin;
     let parsedServerRolePermissions = null;
     try {
       parsedServerRolePermissions = JSON.parse(role.permissions);
@@ -82,7 +87,7 @@ export const getUserChannelPermissionsFunc = async (
       throw new Error(error);
     }
 
-    let category = null
+    let category = null;
     try {
       const response = await graphQLClient().request(
         serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
@@ -112,18 +117,20 @@ export const getUserChannelPermissionsFunc = async (
       }
     }
 
-    let channel = null
-    try {
-      const response = await graphQLClient().request(
-        serverChannelPermissionQueries.GET_CHANNEL_ROLE_PERMISSION,
-        {
-          role_id: role.id,
-          channel_id: channelId,
-        }
-      );
-      channel = response.getChannelRolePermission;
-    } catch (e) {
-      // throw new Error(e);
+    let channel = null;
+    if (channelId) {
+      try {
+        const response = await graphQLClient().request(
+          serverChannelPermissionQueries.GET_CHANNEL_ROLE_PERMISSION,
+          {
+            role_id: role.id,
+            channel_id: channelId,
+          }
+        );
+        channel = response.getChannelRolePermission;
+      } catch (e) {
+        // throw new Error(e);
+      }
     }
 
     if (channel) {
@@ -156,7 +163,7 @@ export const getUserChannelPermissionsFunc = async (
   if (categoryId) {
     try {
       // get category permissions assigned with the current user (if exists)
-      const {getCategoryUserPermission: user} = await graphQLClient().request(
+      const { getCategoryUserPermission: user } = await graphQLClient().request(
         serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
         {
           user_id: userId,
@@ -171,21 +178,23 @@ export const getUserChannelPermissionsFunc = async (
   }
 
   let parsedChannelUserPermissions = {};
-  try {
-    // get category permissions assigned with the current user (if exists)
-    const {getChannelUserPermission: user} = await graphQLClient().request(
-      serverChannelPermissionQueries.GET_CHANNEL_USER_PERMISSION,
-      {
-        user_id: userId,
-        channel_id: channelId,
-      }
-    );
+  if (channelId) {
+    try {
+      // get category permissions assigned with the current user (if exists)
+      const { getChannelUserPermission: user } = await graphQLClient().request(
+        serverChannelPermissionQueries.GET_CHANNEL_USER_PERMISSION,
+        {
+          user_id: userId,
+          channel_id: channelId,
+        }
+      );
 
-    parsedChannelUserPermissions = JSON.parse(user.permissions);
-  } catch (e) {
-    // throw new Error(e);
+      parsedChannelUserPermissions = JSON.parse(user.permissions);
+    } catch (e) {
+      // throw new Error(e);
+    }
   }
-  
+
   if (parsedChannelUserPermissions) {
     // Calculate the final category permissions associated with that user
     for (const key in parsedChannelUserPermissions) {
@@ -215,4 +224,4 @@ export const getUserChannelPermissionsFunc = async (
   }
 
   return filteredChannelPermissions;
-}
+};

@@ -1,6 +1,10 @@
 import graphQLClient from "./graphql";
-import {serverCategoryPermissionQueries, serverQueries, serverRoleQueries} from "../graphql/queries";
-import {CategoryPermissions} from "../constants/permissions";
+import {
+  serverCategoryPermissionQueries,
+  serverQueries,
+  serverRoleQueries,
+} from "../graphql/queries";
+import { CategoryPermissions } from "../constants/permissions";
 
 /*
 - get all server roles assigned with the current user
@@ -19,13 +23,13 @@ export const getUserCategoryPermissionsFunc = async (
   userId: string,
   categoryId: string,
   serverId: string
-)=> {
+) => {
   let isAdmin = false;
   let isServerOwner = false;
 
   try {
     // get server details
-    const {server: server} = await graphQLClient().request(
+    const { server: server } = await graphQLClient().request(
       serverQueries.GET_SERVER_BY_ID,
       {
         server_id: serverId,
@@ -52,7 +56,7 @@ export const getUserCategoryPermissionsFunc = async (
 
   // for each server role, get the category permissions associated with that role (if exists)
   for (const role of roles) {
-    isAdmin = (isAdmin ? isAdmin : role.is_admin);
+    isAdmin = isAdmin ? isAdmin : role.is_admin;
     let parsedServerRolePermissions = null;
     try {
       parsedServerRolePermissions = JSON.parse(role.permissions);
@@ -60,18 +64,20 @@ export const getUserCategoryPermissionsFunc = async (
       throw new Error(error);
     }
 
-    let category = null
-    try {
-      const response = await graphQLClient().request(
-        serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
-        {
-          role_id: role.id,
-          category_id: categoryId,
-        }
-      );
-      category = response.getCategoryRolePermission;
-    } catch (e) {
-      // throw new Error(e);
+    let category = null;
+    if (categoryId) {
+      try {
+        const response = await graphQLClient().request(
+          serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
+          {
+            role_id: role.id,
+            category_id: categoryId,
+          }
+        );
+        category = response.getCategoryRolePermission;
+      } catch (e) {
+        // throw new Error(e);
+      }
     }
 
     if (category) {
@@ -101,19 +107,21 @@ export const getUserCategoryPermissionsFunc = async (
   }
 
   let parsedUserPermissions = null;
-  try {
-    // get category permissions assigned with the current user (if exists)
-    const {getCategoryUserPermission: user} = await graphQLClient().request(
-      serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
-      {
-        user_id: userId,
-        category_id: categoryId,
-      }
-    );
+  if (categoryId) {
+    try {
+      // get category permissions assigned with the current user (if exists)
+      const { getCategoryUserPermission: user } = await graphQLClient().request(
+        serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
+        {
+          user_id: userId,
+          category_id: categoryId,
+        }
+      );
 
-    parsedUserPermissions = JSON.parse(user.permissions);
-  } catch (e) {
-    // throw new Error(e);
+      parsedUserPermissions = JSON.parse(user.permissions);
+    } catch (e) {
+      // throw new Error(e);
+    }
   }
 
   if (parsedUserPermissions) {
@@ -138,4 +146,4 @@ export const getUserCategoryPermissionsFunc = async (
   }
 
   return filteredCategoryPermissions;
-}
+};
