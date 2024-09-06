@@ -2,7 +2,7 @@ import { Router } from "express";
 import categoryPermissionRouter from "./category_permission";
 import { checkCategoryExistenceMiddleware } from "../../../utils/checkCategoryExistenceMiddleware";
 import { checkServerPermissionMiddleware } from "../../../utils/checkServerPermissionMiddleware";
-import { checkCategoryPermissionMiddleware } from "@/utils/checkCategoryPermissionMiddleware";
+import { checkCategoryPermissionMiddleware } from "../../../utils/checkCategoryPermissionMiddleware";
 import {
   BaseRolePermissions as BRP,
   CategoryPermissions as CP,
