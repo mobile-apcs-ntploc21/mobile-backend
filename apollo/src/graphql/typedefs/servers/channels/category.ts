@@ -20,6 +20,11 @@ const gqlAPI = gql`
     name: String
   }
 
+  input moveAllCategoryInput {
+    category_id: ID!
+    position: Int!
+  }
+
   extend type Query {
     getCategory(category_id: ID!): Category
     getCategories(server_id: ID!): [Category]
@@ -31,6 +36,7 @@ const gqlAPI = gql`
     deleteCategory(category_id: ID!): Boolean
 
     moveCategory(category_id: ID!, new_position: Int!): Category
+    moveAllCategory(server_id: ID!, input: [moveAllCategoryInput!]!): [Category]
   }
 `;
 

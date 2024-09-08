@@ -34,6 +34,12 @@ const gqlAPI = gql`
     is_deleted: Boolean
   }
 
+  input moveChannelInput {
+    channel_id: ID!
+    category_id: ID
+    position: Int
+  }
+
   extend type Query {
     getChannel(channel_id: ID!): Channel
     getChannels(server_id: ID!): [Channel]
@@ -47,6 +53,7 @@ const gqlAPI = gql`
 
     # Move channel to a new category
     moveChannel(channel_id: ID!, category_id: ID, new_position: Int): Channel
+    moveAllChannel(server_id: ID!, input: [moveChannelInput!]!): [Channel]
   }
 `;
 
