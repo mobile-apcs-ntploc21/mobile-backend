@@ -1,4 +1,4 @@
-import { gql } from 'graphql-request';
+import { gql } from "graphql-request";
 
 // Create user
 export const CREATE_USER = gql`
@@ -380,6 +380,26 @@ export const channelMutations = {
       }
     }
   `,
+
+  MOVE_ALL_CHANNEL: gql`
+    mutation moveAllChannel($server_id: ID!, $input: [moveChannelInput!]!) {
+      moveAllChannel(server_id: $server_id, input: $input) {
+        id
+        server_id
+        conversation_id
+        category_id
+
+        name
+        description
+        last_message_id
+        position
+
+        is_nsfw
+        is_archived
+        is_deleted
+      }
+    }
+  `,
 };
 
 export const categoryMutations = {
@@ -412,6 +432,20 @@ export const categoryMutations = {
   MOVE_CATEGORY: gql`
     mutation moveCategory($category_id: ID!, $new_position: Int!) {
       moveCategory(category_id: $category_id, new_position: $new_position) {
+        id
+        server_id
+        name
+        position
+      }
+    }
+  `,
+
+  MOVE_ALL_CATEGORY: gql`
+    mutation moveAllCategory(
+      $server_id: ID!
+      $input: [moveAllCategoryInput!]!
+    ) {
+      moveAllCategory(server_id: $server_id, input: $input) {
         id
         server_id
         name
