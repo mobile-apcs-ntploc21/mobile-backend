@@ -12,6 +12,13 @@ import * as categoryCtrl from "../../../controllers/servers/channels/category";
 
 const categoryRouter = Router({ mergeParams: true });
 
+// Move all category route
+categoryRouter.patch(
+  "/move",
+  checkCategoryPermissionMiddleware([CP.MANAGE_CHANNEL]),
+  categoryCtrl.moveAllCategory
+);
+
 // Category Role and User Permissions
 categoryRouter.use(
   "/:categoryId",
@@ -50,11 +57,6 @@ categoryRouter.patch(
   checkCategoryExistenceMiddleware,
   checkCategoryPermissionMiddleware([CP.MANAGE_CHANNEL]),
   categoryCtrl.moveCategory
-);
-categoryRouter.patch(
-  "/move",
-  checkCategoryPermissionMiddleware([CP.MANAGE_CHANNEL]),
-  categoryCtrl.moveAllCategory
 );
 
 export default categoryRouter;

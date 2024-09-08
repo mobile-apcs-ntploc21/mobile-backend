@@ -12,6 +12,13 @@ import * as channelCtrl from "../../../controllers/servers/channels/channel";
 
 const channelRouter = Router({ mergeParams: true });
 
+// Move all channel route
+channelRouter.patch(
+  "/move",
+  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
+  channelCtrl.moveAllChannel
+);
+
 // Category Role and User Permissions
 channelRouter.use(
   "/:channelId/",
@@ -53,11 +60,6 @@ channelRouter.patch(
   checkChannelExistenceMiddleware,
   checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.moveChannel
-);
-channelRouter.patch(
-  "/move",
-  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
-  channelCtrl.moveAllChannel
 );
 
 export default channelRouter;
