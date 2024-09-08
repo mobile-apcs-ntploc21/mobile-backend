@@ -257,3 +257,43 @@ export const moveChannel = async (
     return next(error);
   }
 };
+
+export const moveAllChannel = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const server_id = res.locals.server_id;
+  const { channels } = req.body;
+
+  if (!server_id) {
+    return res.status(400).json({ message: "Server ID is required." });
+  }
+
+  if (!channels) {
+    return res.status(400).json({
+      message:
+        "An input of array of channels is required. Eg., channels: [channel_id, category_id, position]",
+    });
+  }
+
+  if (!Array.isArray(channels)) {
+    return res
+      .status(400)
+      .json({ message: "Input of array of channels must be an array." });
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      channelMutations.MOVE_ALL_CHANNEL,
+      {
+        server_id,
+        input: channels,
+      }
+    );
+
+    return res.status(200).json({ ...response.moveAllChannel });
+  } catch (error) {
+    return next(error);
+  }
+};
