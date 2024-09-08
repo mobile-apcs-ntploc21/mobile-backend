@@ -262,6 +262,41 @@ const resolvers: IResolvers = {
         throw new Error(error);
       }
     },
+
+    /**
+     * Move all the categories to the new position
+     * @param server_id: The server ID
+     * @param input.category_id: The category ID
+     * @param input.position: The new position
+     */
+    moveAllCategory: async (_, { server_id, input }) => {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      const opts = { session, new: true };
+
+      try {
+        const promises = input.map(async ({ category_id, position }) => {
+          const category = await CategoryModel.findById(category_id).session(
+            session
+          );
+          if (!category || String(category.server_id) !== server_id) {
+            throw new UserInputError("Category not found in the server");
+          }
+
+          // Assign the new position
+          category.position = position * POSITION_CONST;
+          await category.save(opts);
+        });
+
+        await Promise.all(promises);
+        await session.commitTransaction();
+        session.endSession();
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw new Error(error);
+      }
+    },
   },
 };
 
