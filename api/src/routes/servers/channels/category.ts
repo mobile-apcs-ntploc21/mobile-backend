@@ -51,5 +51,10 @@ categoryRouter.patch(
   checkCategoryPermissionMiddleware([CP.MANAGE_CHANNEL]),
   categoryCtrl.moveCategory
 );
+categoryRouter.patch(
+  "/move",
+  checkCategoryPermissionMiddleware([CP.MANAGE_CHANNEL]),
+  categoryCtrl.moveAllCategory
+);
 
 export default categoryRouter;

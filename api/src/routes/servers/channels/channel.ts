@@ -54,5 +54,10 @@ channelRouter.patch(
   checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.moveChannel
 );
+channelRouter.patch(
+  "/move",
+  checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
+  channelCtrl.moveAllChannel
+);
 
 export default channelRouter;
