@@ -16,6 +16,13 @@ enum ModelNames {
   ChannelRolePermission = "channel_role_permissions",
   ChannelUserPermission = "channel_user_permissions",
   Server_Emoji = "server_emojis",
+  Conversation = "conversations",
+  DirectMessage = "direct_messages",
+  Message = "messages",
+  Reaction = "reactions",
+  Attachment = "attachments",
+  LastRead = "last_reads",
+  Mention = "mentions",
 }
 
 export default ModelNames;
