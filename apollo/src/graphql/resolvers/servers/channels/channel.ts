@@ -80,6 +80,43 @@ const createChannelTransaction = async (server_id, input) => {
   }
 };
 
+const moveChannelTransaction = async (
+  server_id,
+  channel_id,
+  category_id,
+  new_position
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const opts = { session, new: true };
+
+  try {
+    const channel = await ChannelModel.findById(channel_id).session(session);
+    if (!channel || String(channel.server_id) !== server_id) {
+      throw new UserInputError("Channel not found");
+    }
+
+    const category = await CategoryModel.findById(category_id).session(session);
+    if (category && String(category.server_id) !== String(channel.server_id)) {
+      throw new UserInputError("Category not found in the current server.");
+    }
+
+    // Calculate the position of the channel
+    new_position = new_position * POSITION_CONST;
+
+    // Update the channel
+    channel.category_id = category_id;
+    channel.position = new_position;
+    await channel.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
 const channelAPI: IResolvers = {
   Query: {
     getChannel: async (_, { channel_id }) => {
@@ -262,63 +299,40 @@ const channelAPI: IResolvers = {
       // Check if all the channels are in the same server
       const channels = await ChannelModel.find({
         server_id: server_id,
+        is_deleted: false,
       });
+
       if (channels.length !== input.length) {
         throw new UserInputError(
           "Please provide all the channels in the server. There are missing or extra channels."
         );
       }
 
-      // Start a Mongoose transaction
-      const session = await mongoose.startSession();
-      session.startTransaction();
-      const opts = { session, new: true };
-
-      try {
-        const promises = input.map(
-          async ({ channel_id, category_id, position }) => {
-            // Check if the channel is in the server
-            const channel = await ChannelModel.findById(channel_id).session(
-              session
-            );
-            if (!channel || String(channel.server_id) !== server_id) {
-              throw new UserInputError(
-                "Channel not found in the current server."
-              );
-            }
-
-            // Check if the category is in the server
-            const category = await CategoryModel.findById(category_id).session(
-              session
-            );
-            if (
-              category &&
-              String(category.server_id) !== String(channel.server_id)
-            ) {
-              throw new UserInputError(
-                "Category not found in the current server."
-              );
-            }
-
-            // Calculate the position of the channel
-            position = position * POSITION_CONST;
-
-            // Update the channel
-            channel.category_id = category_id;
-            channel.position = position;
-            await channel.save(opts);
-          }
+      for (let i = 0; i < input.length; i++) {
+        const channel = input[i];
+        await moveChannelTransaction(
+          server_id,
+          channel.channel_id,
+          channel.category_id,
+          channel.position
         );
-
-        await Promise.all(promises);
-        await session.commitTransaction();
-        session.endSession();
-      } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-
-        throw new Error(error);
       }
+
+      const updatedChannels = await ChannelModel.find({
+        server_id: server_id,
+        is_deleted: false,
+      });
+
+      // Publish the event
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.channelUpdated,
+        server_id: server_id,
+        data: {
+          ...updatedChannels,
+        },
+      });
+
+      return updatedChannels;
     },
   },
 };

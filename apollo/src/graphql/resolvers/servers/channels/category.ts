@@ -118,6 +118,33 @@ const deleteCategoryTransaction = async (category_id) => {
   }
 };
 
+const moveCategoryTransaction = async (
+  server_id,
+  category_id,
+  new_position
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  const opts = { session, new: true };
+
+  try {
+    const category = await CategoryModel.findById(category_id).session(session);
+    if (!category || String(category.server_id) !== server_id) {
+      throw new UserInputError("Category not found in the server");
+    }
+
+    // Assign the new position
+    category.position = new_position * POSITION_CONST;
+    await category.save(opts);
+    await session.commitTransaction();
+    session.endSession();
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error);
+  }
+};
+
 const resolvers: IResolvers = {
   Query: {
     getCategory: async (_, { category_id }) => {
@@ -270,32 +297,30 @@ const resolvers: IResolvers = {
      * @param input.position: The new position
      */
     moveAllCategory: async (_, { server_id, input }) => {
-      const session = await mongoose.startSession();
-      session.startTransaction();
-      const opts = { session, new: true };
-
-      try {
-        const promises = input.map(async ({ category_id, position }) => {
-          const category = await CategoryModel.findById(category_id).session(
-            session
-          );
-          if (!category || String(category.server_id) !== server_id) {
-            throw new UserInputError("Category not found in the server");
-          }
-
-          // Assign the new position
-          category.position = position * POSITION_CONST;
-          await category.save(opts);
-        });
-
-        await Promise.all(promises);
-        await session.commitTransaction();
-        session.endSession();
-      } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
-        throw new Error(error);
+      // Count the number of categories
+      const categories = await CategoryModel.find({ server_id });
+      if (categories.length !== input.length) {
+        throw new UserInputError(
+          "Please provide all the categories in the server. There are missing or extra categories."
+        );
       }
+
+      for (let i = 0; i < input.length; i++) {
+        await moveCategoryTransaction(server_id, input[i].category_id, i);
+      }
+
+      const updated_categories = await CategoryModel.find({ server_id });
+
+      // Publish the event
+      publishEvent(ServerEvents.serverUpdated, {
+        type: ServerEvents.categoryUpdated,
+        server_id: server_id,
+        data: {
+          ...updated_categories,
+        },
+      });
+
+      return updated_categories;
     },
   },
 };
