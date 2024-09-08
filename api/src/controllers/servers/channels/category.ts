@@ -165,3 +165,43 @@ export const moveCategory = async (
     return next(error);
   }
 };
+
+export const moveAllCategory = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const server_id = res.locals.server_id;
+  const { categories } = req.body;
+
+  if (!server_id) {
+    return res.status(400).json({ message: "Server ID is required." });
+  }
+
+  if (!categories) {
+    return res.status(400).json({
+      message:
+        "Input of array of categories is required. Eg., categories: [category_id, position].",
+    });
+  }
+
+  if (!Array.isArray(categories)) {
+    return res
+      .status(400)
+      .json({ message: "Input of array of categories must be an array." });
+  }
+
+  try {
+    const response = await graphQLClient().request(
+      categoryMutations.MOVE_ALL_CATEGORY,
+      {
+        server_id,
+        input: categories,
+      }
+    );
+
+    return res.status(200).json({ categories: response.moveAllCategory });
+  } catch (error) {
+    return next(error);
+  }
+};
