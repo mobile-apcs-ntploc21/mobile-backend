@@ -1,5 +1,6 @@
 import { Router } from "express";
 import channelPermissionRouter from "./channel_permission";
+import messageRouter from "./messages";
 import { checkChannelExistenceMiddleware } from "../../../utils/checkChannelExistenceMiddleware";
 import { checkServerPermissionMiddleware } from "../../../utils/checkServerPermissionMiddleware";
 import { checkChannelPermissionMiddleware } from "../../../utils/checkChannelPermissionMiddleware";
@@ -17,13 +18,6 @@ channelRouter.patch(
   "/move",
   checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.moveAllChannel
-);
-
-// Category Role and User Permissions
-channelRouter.use(
-  "/:channelId/",
-  checkChannelExistenceMiddleware,
-  channelPermissionRouter
 );
 
 // Channel CRUD operations routes
@@ -60,6 +54,21 @@ channelRouter.patch(
   checkChannelExistenceMiddleware,
   checkChannelPermissionMiddleware([ChP.MANAGE_CHANNEL]),
   channelCtrl.moveChannel
+);
+
+// Category Role and User Permissions
+channelRouter.use(
+  "/:channelId/",
+  checkChannelExistenceMiddleware,
+  channelPermissionRouter
+);
+
+// Message routes
+channelRouter.use(
+  "/:channelId/messages",
+  checkChannelExistenceMiddleware,
+  checkChannelPermissionMiddleware([ChP.VIEW_CHANNEL]),
+  messageRouter
 );
 
 export default channelRouter;
