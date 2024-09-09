@@ -4,7 +4,7 @@ import graphQLClient from "../../../utils/graphql";
 import { serverChannelQueries } from "../../../graphql/queries";
 import { channelMutations } from "../../../graphql/mutations";
 
-const _getChannel = async (channel_id: string) => {
+export const _getChannel = async (channel_id: string) => {
   try {
     const response = await graphQLClient().request(
       serverChannelQueries.GET_CHANNEL,
