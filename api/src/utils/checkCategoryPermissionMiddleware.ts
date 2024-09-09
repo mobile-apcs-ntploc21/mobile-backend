@@ -24,6 +24,8 @@ export const checkCategoryPermissionMiddleware = (
     if (!hasPermission) {
       return res.status(403).json({ message: "Forbidden" });
     }
+
+    res.locals.userCategoryPermissions = currentUserPermissions;
     next();
   };
 };
