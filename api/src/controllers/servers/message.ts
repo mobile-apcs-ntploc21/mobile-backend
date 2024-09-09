@@ -79,12 +79,7 @@ export const getMessages = async (
     return res.status(400).json({ message: "Limit must be a number." });
   }
 
-  const channel = await _getChannel(channelId).catch(() => null);
-  if (!channel) {
-    return res
-      .status(404)
-      .json({ message: "Channel not found in the server." });
-  }
+  const channel = res.locals.channelObject;
   if (!channel.conversation_id) {
     return res.status(404).json({
       message:
@@ -127,7 +122,7 @@ export const searchMessages = async (
     author_id,
     mentions,
     has,
-    in: inChannel,
+    in: _inChannel,
     conversationIds,
   } = req.query;
 
@@ -135,44 +130,17 @@ export const searchMessages = async (
     return res.status(400).json({ message: "Query is required." });
   }
 
-  // If conversationIds is provided, search in those conversations
-  let conversationId = [];
-  if (conversationIds) {
-    conversationId = Array.isArray(conversationIds)
-      ? conversationIds
-      : [conversationIds];
-  } else if (inChannel) {
-    // Get conversation ID from each channel
-    let channels = Array.isArray(inChannel) ? inChannel : [inChannel];
-    for (let i = 0; i < channels.length; i++) {
-      const channel = await _getChannel(channels[i] as string).catch(
-        () => null
-      );
-      if (!channel) {
-        return res.status(404).json({
-          message: `Channel with ID ${channels[i]} not found.`,
-        });
-      }
-      if (!channel.conversation_id) {
-        return res.status(404).json({
-          message: `Channel with ID ${channels[i]} does not have a conversation.`,
-        });
-      }
-      conversationId.push(channel.conversation_id);
-    }
-  } else {
-    // TODO: Implement global search
-    return res.status(400).json({
-      message:
-        "Global search is not implemented. Please provide a channel ID or conversation ID.",
-    });
-  }
+  const inChannel = Array.isArray(_inChannel) ? _inChannel : [_inChannel];
+  const inConversation = Array.isArray(conversationIds)
+    ? conversationIds
+    : [conversationIds];
 
   try {
     const requestBody = {
       query: {
         text: content,
-        inConversation: conversationId,
+        inChannel: inChannel,
+        inConversation: inConversation,
         from: author_id,
         mention: mentions,
         has: has,
@@ -208,12 +176,7 @@ export const getPinnedMessages = async (
     return res.status(400).json({ message: "Channel ID is required." });
   }
 
-  const channel = await _getChannel(channelId).catch(() => null);
-  if (!channel) {
-    return res
-      .status(404)
-      .json({ message: "Channel not found in the server." });
-  }
+  const channel = res.locals.channelObject;
   if (!channel.conversation_id) {
     return res.status(404).json({
       message:
@@ -262,12 +225,7 @@ export const createMessage = async (
     });
   }
 
-  const channel = await _getChannel(channelId).catch(() => null);
-  if (!channel) {
-    return res
-      .status(404)
-      .json({ message: "Channel not found in the server." });
-  }
+  const channel = res.locals.channelObject;
   if (!channel.conversation_id) {
     return res.status(404).json({
       message:
