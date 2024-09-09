@@ -31,6 +31,14 @@ interface IMessage {
   is_pinned?: boolean;
 }
 
+interface ISearchQuery {
+  inConversation: string[];
+  text?: string;
+  from?: string;
+  mention?: string;
+  has?: string;
+}
+
 // ==========================
 
 /**
@@ -40,23 +48,48 @@ interface IMessage {
  * @param {?*} [extra] - Extra fields. If not provided, it will be initialized and fetched
  * @returns {IMessage}
  */
-const castToIMessage = (message: any, extra?: any): IMessage => {
+const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
+  if (!message) {
+    throw new UserInputError("Message not found!");
+  }
+
   let mention_users = extra?.mention_users || [];
   let mention_roles = extra?.mention_roles || [];
   let mention_channels = extra?.mention_channels || [];
   let emojis = extra?.emojis || [];
   let reactions = [];
-  let replied_message = null;
+  let replied_message: IMessage = null;
 
   // TODO: Implement these fields
   if (!extra) {
   }
 
+  // Fetch the mentioned message
+  if (message.replied_message_id && message.replied_message_id !== null) {
+    try {
+      const repliedMessage = await messageModel.findById(
+        message.replied_message_id
+      );
+
+      if (repliedMessage) {
+        replied_message = {
+          id: repliedMessage.id,
+          conversation_id: String(repliedMessage.conversation_id),
+          sender_id: String(repliedMessage.sender_id),
+          content: repliedMessage.content,
+          is_deleted: repliedMessage.is_deleted,
+        };
+      }
+    } catch (e) {
+      // Do nothing
+    }
+  }
+
   // Return the message
   return {
-    id: message._id,
-    conversation_id: message.conversation_id,
-    sender_id: message.sender_id,
+    id: String(message.id),
+    conversation_id: String(message.conversation_id),
+    sender_id: String(message.sender_id),
     content: message.content,
     replied_message_id: message.replied_message_id,
     forwarded_message_id: message.forwarded_message_id,
@@ -157,60 +190,69 @@ const getMessages = async (
 
     messages = [...lower, ...upper];
   } else {
-    // Throw an error
-    throw new UserInputError("Invalid arguments!");
+    // Get the latest messages
+    messages = await messageModel
+      .find({
+        conversation_id,
+        is_deleted: false,
+      })
+      .sort({ _id: -1 })
+      .limit(limit);
   }
 
   // Cast the messages to IMessage
-  return messages.map((message) => castToIMessage(message));
+  return await Promise.all(
+    messages.map(async (message) => await castToIMessage(message))
+  );
 };
 
 /**
  * Search messages in a server (or in a conversation) based on the given query
  *
  * @async
- * @param {string} server_id - The server ID. If not provided, inChannel must be provided
+ * @param {ISearchQuery} [query] - The search query. Contains inConversation, text, from, mention, and has
  * @param {number} offset - The offset (used for pagination)
  * @param {number} limit - The limit of messages to return. Automatically capped at 50
- * @param {?string} [inChannel] - The channel ID to search in
- * @param {?string} [text] - The text to search for
- * @param {?string} [from] - The user ID to search for
- * @param {?string} [mention] - The user ID to search for in mentions
- * @param {?*} [has] - The attachment type to search for
- * @returns {Promise<IMessage[]>}
+ * @returns {Promise<IMessage[]>} - Array of messages that match the search query
  */
 const searchMessages = async (
-  server_id: string,
-  offset: number,
-  limit: number,
+  query: ISearchQuery,
 
-  inChannel?: string,
-  text?: string,
-  from?: string,
-  mention?: string,
-  has?: any
+  offset: number,
+  limit: number
 ): Promise<IMessage[]> => {
   // Fix the limit range to [1; 50]
   limit = Math.min(Math.max(limit, 1), 50);
 
   // Initialize the messages array and query
   let messages = [];
+  const { inConversation, text, from, mention, has } = query;
 
-  // Check if server_id and inChannel is provided
-  if (!server_id && !inChannel) {
-    throw new UserInputError("Server ID or in field is required!");
+  return Promise.all(messages.map((message) => castToIMessage(message)));
+};
+
+/**
+ * Get all pinned messages from a conversation
+ *
+ * @async
+ * @param {string} conversation_id - The conversation ID
+ * @returns {Promise<IMessage[]>} - Array of pinned messages
+ */
+const getPinnedMessages = async (
+  conversation_id: string
+): Promise<IMessage[]> => {
+  const conversation = await conversationModel.findById(conversation_id);
+  if (!conversation) {
+    throw new UserInputError("Conversation/Chat not found!");
   }
 
-  if (server_id) {
-    const server = await serverModel.findById(server_id);
-    if (!server) {
-      throw new UserInputError("Server not found!");
-    }
-  }
+  const messages = await messageModel.find({
+    conversation_id,
+    is_deleted: false,
+    is_pinned: true,
+  });
 
-  // TODO: Implement the search query
-
-  return messages;
+  return await Promise.all(messages.map((message) => castToIMessage(message)));
 };
 
 /**
@@ -261,6 +303,10 @@ const createMessageTransaction = async (
       ],
       { session, new: true }
     );
+
+    if (!message) {
+      throw new UserInputError("Message not created. Try again later!");
+    }
 
     // Create the mentions
     await mentionModel.create(
@@ -328,9 +374,13 @@ const updateMessageTransaction = async (
     // Update the message
     const message = await messageModel.findByIdAndUpdate(
       message_id,
-      { content },
+      { content: content },
       { session, new: true }
     );
+
+    if (!message) {
+      throw new UserInputError("Message not found or cannot be update!");
+    }
 
     // Remove all mentions associated with the message
     await mentionModel.deleteMany({ message_id }, { session });
@@ -445,7 +495,9 @@ const pinMessage = async (message_id: string): Promise<IMessage[]> => {
     is_pinned: true,
   });
 
-  return pinnedMessages.map((message) => castToIMessage(message));
+  return await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message))
+  );
 };
 
 /**
@@ -475,16 +527,26 @@ const unpinMessage = async (message_id: string): Promise<IMessage[]> => {
     is_pinned: true,
   });
 
-  return pinnedMessages.map((message) => castToIMessage(message));
+  const pinnedIMessages = await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message))
+  );
+
+  return pinnedIMessages;
 };
 
 // ==========================
 
 const messageAPI: IResolvers = {
   Query: {
-    message: async (_, { id }) => getMessage(id),
+    message: async (_, { message_id }) => getMessage(message_id),
     messages: async (_, { conversation_id, limit, before, after, around }) =>
       getMessages(conversation_id, limit, before, after, around),
+
+    searchMessages: async (_, { query, offset, limit }) =>
+      searchMessages(query, offset, limit),
+
+    pinnedMessages: async (_, { conversation_id }) =>
+      getPinnedMessages(conversation_id),
   },
   Mutation: {
     createMessage: async (_, { conversation_id, input }) =>

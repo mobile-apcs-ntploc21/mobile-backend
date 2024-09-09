@@ -37,15 +37,23 @@ const gqlType = gql`
     reactions: [MessageReaction]
     replied_message: Message
 
-    is_deleted: Boolean!
-    is_pinned: Boolean!
+    is_deleted: Boolean
+    is_pinned: Boolean
   }
 `;
 
 const gqlQuery = gql`
+  input SearchQuery {
+    inConversation: [ID!]!
+    text: String
+    from: ID
+    mention: ID
+    has: AttachmentType
+  }
+
   extend type Query {
     # Get a message by ID
-    message(id: ID!): Message
+    message(message_id: ID!): Message
 
     # Get all messages, given limit, before, after, or around a message
     # before: Get messages before a message
@@ -68,16 +76,14 @@ const gqlQuery = gql`
     # mention: Get messages that mention some given users
     # has: Get messages that have attachments (IMAGE, VIDEO, FILE)
     searchMessages(
-      server_id: ID
-      offset: Int = 0
+      query: SearchQuery!
 
-      inChannel: ID
-      text: String
-      from: ID
-      mention: ID
-      has: AttachmentType
+      offset: Int = 0
       limit: Int! = 30
     ): [Message]
+
+    # Get all pinned messages in a conversation
+    pinnedMessages(conversation_id: ID!): [Message]
   }
 `;
 
@@ -110,16 +116,16 @@ const gqlMutation = gql`
     createMessage(conversation_id: ID!, input: AddMessageInput!): Message
 
     # Edit a message
-    editMessage(id: ID!, input: EditMessageInput): Message
+    editMessage(message_id: ID!, input: EditMessageInput): Message
 
     # Delete a message
-    deleteMessage(id: ID!): Boolean
+    deleteMessage(message_id: ID!): Boolean
 
     # Pin a message
-    pinMessage(id: ID!): [Message]
+    pinMessage(message_id: ID!): [Message]
 
     # Unpin a message
-    unpinMessage(id: ID!): [Message]
+    unpinMessage(message_id: ID!): [Message]
   }
 `;
 
