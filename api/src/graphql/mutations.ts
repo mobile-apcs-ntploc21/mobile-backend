@@ -839,3 +839,101 @@ export const serverChannelPermissionMutations = {
     }
   `,
 };
+
+export const messageMutations = {
+  CREATE_MESSAGE: gql`
+    mutation createMessage($conversation_id: ID!, $input: AddMessageInput!) {
+      createMessage(conversation_id: $conversation_id, input: $input) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+
+        is_deleted
+        is_pinned
+        createdAt
+      }
+    }
+  `,
+  UPDATE_MESSAGE: gql`
+    mutation editMessage($message_id: ID!, $input: EditMessageInput!) {
+      editMessage(message_id: $message_id, input: $input) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+      }
+    }
+  `,
+  DELETE_MESSAGE: gql`
+    mutation deleteMessage($message_id: ID!) {
+      deleteMessage(message_id: $message_id)
+    }
+  `,
+  PIN_MESSAGE: gql`
+    mutation pinMessage($message_id: ID!) {
+      pinMessage(message_id: $message_id) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+  UNPIN_MESSAGE: gql`
+    mutation unpinMessage($message_id: ID!) {
+      unpinMessage(message_id: $message_id) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+};

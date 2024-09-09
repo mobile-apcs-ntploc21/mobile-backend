@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { checkChannelExistenceMiddleware } from "../../../utils/checkChannelExistenceMiddleware";
 import { checkServerPermissionMiddleware } from "../../../utils/checkServerPermissionMiddleware";
 import { checkChannelPermissionMiddleware } from "../../../utils/checkChannelPermissionMiddleware";
 import {
@@ -12,11 +11,37 @@ import * as messageCtrl from "../../../controllers/servers/message";
 
 const messageRouter = Router({ mergeParams: true });
 
-// Message CRUD operations
+// Get list of messages in a channel
 messageRouter.get("/", messageCtrl.getMessages);
+
 // Get pinned messages
 messageRouter.get("/pins", messageCtrl.getPinnedMessages);
 
-// TODO: Add message CRUD operations
+// Create a message
+messageRouter.post(
+  "/",
+  checkChannelPermissionMiddleware([ChP.SEND_MESSAGE]),
+  messageCtrl.createMessage
+);
+
+// Edit a message
+messageRouter.put("/:messageId", messageCtrl.editMessage);
+
+// Delete a message
+messageRouter.delete("/:messageId", messageCtrl.deleteMessage);
+
+// Pin a message
+messageRouter.post(
+  "/:messageId/pin",
+  checkChannelPermissionMiddleware([ChP.MANAGE_MESSAGE]),
+  messageCtrl.pinMessage
+);
+
+// Unpin a message
+messageRouter.delete(
+  "/:messageId/pin",
+  checkChannelPermissionMiddleware([ChP.MANAGE_MESSAGE]),
+  messageCtrl.unpinMessage
+);
 
 export default messageRouter;
