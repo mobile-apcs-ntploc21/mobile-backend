@@ -1,15 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import {serverQueries, serverRoleQueries} from '../graphql/queries';
+import { Request, Response, NextFunction } from "express";
+import graphQLClient from "../utils/graphql";
+import { serverQueries, serverRoleQueries } from "../graphql/queries";
 
-export const checkServerPermissionMiddleware = (requiredPermissions: string[]) => {
+export const checkServerPermissionMiddleware = (
+  requiredPermissions: string[]
+) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const { uid, server_id } = res.locals;
 
     if (!server_id)
       return res
         .status(400)
-        .json({ status: 'fail', message: 'Server ID is required.' });
+        .json({ status: "fail", message: "Server ID is required." });
 
     try {
       const {
@@ -39,7 +41,6 @@ export const checkServerPermissionMiddleware = (requiredPermissions: string[]) =
         return;
       }
 
-
       // check if user has required permission, the way we check is first, we will merge all the permissions into one final permission array
       // the way we merge, considering arbitrary permission, it will be set to "ALLOWED" if any of the role has it "ALLOWED"
       // then we will check if all the required permissions are in the final permission array (has "ALLOWED" status)
@@ -50,20 +51,20 @@ export const checkServerPermissionMiddleware = (requiredPermissions: string[]) =
         try {
           role_permissions = JSON.parse(role.permissions);
         } catch (e) {
-          console.error('Invalid JSON in role.permissions:', role.permissions);
+          console.error("Invalid JSON in role.permissions:", role.permissions);
           return acc;
         }
 
         // Ensure role_permissions is an object
-        if (typeof role_permissions !== 'object' || role_permissions === null) {
-          console.error('role.permissions is not an object:', role_permissions);
+        if (typeof role_permissions !== "object" || role_permissions === null) {
+          console.error("role.permissions is not an object:", role_permissions);
           return acc;
         }
 
         for (const permission in role_permissions) {
           if (role_permissions.hasOwnProperty(permission)) {
             // All the permission that is 'ALLOWED', we will keep it in the final permission set
-            if (role_permissions[permission] !== 'DENIED') {
+            if (role_permissions[permission] !== "DENIED") {
               acc[permission] = role_permissions[permission];
             }
           }
@@ -72,14 +73,18 @@ export const checkServerPermissionMiddleware = (requiredPermissions: string[]) =
         return acc;
       }, {}); // Initialize the outer accumulator as an empty object
 
-      const hasAllPermissions = requiredPermissions.every((permission) => finalPermissions[permission] === 'ALLOWED');
+      const hasAllPermissions = requiredPermissions.every(
+        (permission) => finalPermissions[permission] === "ALLOWED"
+      );
 
       if (!hasAllPermissions) {
         return res.status(403).json({
-          status: 'fail',
-          message: 'You are not authorized to make this request',
+          status: "fail",
+          message: "You are not authorized to make this request",
         });
       }
+
+      res.locals.userServerPermissions = finalPermissions;
 
       next();
     } catch (error) {

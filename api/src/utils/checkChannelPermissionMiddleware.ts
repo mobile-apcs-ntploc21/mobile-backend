@@ -24,6 +24,8 @@ export const checkChannelPermissionMiddleware = (
     if (!hasPermission) {
       return res.status(403).json({ message: "Forbidden" });
     }
+
+    res.locals.userChannelPermissions = currentUserPermissions;
     next();
   };
 };
