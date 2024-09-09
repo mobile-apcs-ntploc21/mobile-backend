@@ -12,12 +12,10 @@ import * as messageCtrl from "../../../controllers/servers/message";
 
 const messageRouter = Router({ mergeParams: true });
 
+// Message CRUD operations
+messageRouter.get("/", messageCtrl.getMessages);
 // Get pinned messages
 messageRouter.get("/pins", messageCtrl.getPinnedMessages);
-
-// Message read routes
-messageRouter.get("/", messageCtrl.getMessages);
-messageRouter.get("/:messageId", messageCtrl.getMessage);
 
 // TODO: Add message CRUD operations
 

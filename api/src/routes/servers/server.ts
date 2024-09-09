@@ -11,7 +11,7 @@ import {
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
 } from "../../controllers/servers/server_permission";
-import { searchMessages } from "../../controllers/servers/message";
+import { getMessage, searchMessages } from "../../controllers/servers/message";
 import { authMiddleware } from "../../utils/authMiddleware";
 import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
 import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
@@ -156,6 +156,12 @@ serverRouter.get(
   authMiddleware,
   checkMembershipMiddleware,
   searchMessages
+);
+serverRouter.get(
+  "/:serverId/messages/:messageId",
+  authMiddleware,
+  checkMembershipMiddleware,
+  getMessage
 );
 
 export default serverRouter;
