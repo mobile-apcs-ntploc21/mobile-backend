@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import {serverCategoryQueries} from '../graphql/queries';
+import { Request, Response, NextFunction } from "express";
+import graphQLClient from "../utils/graphql";
+import { serverCategoryQueries } from "../graphql/queries";
 
 export const checkCategoryExistenceMiddleware = async (
   req: Request,
@@ -9,7 +9,10 @@ export const checkCategoryExistenceMiddleware = async (
 ) => {
   const { categoryId } = req.params;
 
-  console.log(categoryId);
+  // If the category_id is already in the locals object, we don't need to make a request to the server
+  if (res.locals.category_id === categoryId) {
+    return next();
+  }
 
   try {
     const { getCategory: category } = await graphQLClient().request(
@@ -20,7 +23,7 @@ export const checkCategoryExistenceMiddleware = async (
     );
 
     if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
+      return res.status(404).json({ message: "Category not found" });
     }
 
     res.locals.category_id = categoryId;
