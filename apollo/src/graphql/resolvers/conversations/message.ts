@@ -172,7 +172,7 @@ const getMessage = async (id: string): Promise<IMessage> => {
  *
  * @async
  * @param {string} conversation_id - The conversation ID
- * @param {number} limit - The limit of messages to return. Automatically capped at 50
+ * @param {number} limit - The limit of messages to return. Automatically capped at 100
  * @param {string} before - The message ID to get messages before
  * @param {string} after - The message ID to get messages after
  * @param {string} around - The message ID to get messages around
@@ -185,8 +185,8 @@ const getMessages = async (
   after?: string,
   around?: string
 ): Promise<IMessage[]> => {
-  // Fix the limit range to [1; 50]
-  limit = Math.min(Math.max(limit, 1), 50);
+  // Fix the limit range to [1; 100]
+  limit = Math.min(Math.max(limit, 1), 100);
 
   // Check if conversation ID exists
   const conversation = await conversationModel.findById(conversation_id);
@@ -262,7 +262,7 @@ const getMessages = async (
  * @async
  * @param {ISearchQuery} [query] - The search query. Contains inConversation, text, from, mention, and has
  * @param {number} offset - The offset (used for pagination)
- * @param {number} limit - The limit of messages to return. Automatically capped at 50
+ * @param {number} limit - The limit of messages to return. Automatically capped at 100
  * @returns {Promise<IMessage[]>} - Array of messages that match the search query
  */
 const searchMessages = async (
@@ -271,8 +271,8 @@ const searchMessages = async (
   offset: number,
   limit: number
 ): Promise<IMessage[]> => {
-  // Fix the limit range to [1; 50]
-  limit = Math.min(Math.max(limit, 1), 50);
+  // Fix the limit range to [1; 100]
+  limit = Math.min(Math.max(limit, 1), 100);
 
   // Initialize the messages array and query
   let messages = [];
