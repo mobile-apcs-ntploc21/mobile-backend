@@ -9,8 +9,15 @@ import conversationModel from "@models/conversations/conversation";
 import mentionModel from "@/models/conversations/mention";
 import attachmentModel from "@models/conversations/attachment";
 import MentionModel from "@/models/conversations/mention";
+import ReactionModel from "@/models/conversations/reaction";
 
 // ==========================
+interface IMessageReaction {
+  emoji_id: string;
+  count: number;
+  reactors: string[];
+}
+
 interface IMessage {
   id: string;
 
@@ -25,7 +32,7 @@ interface IMessage {
   mention_roles?: string[];
   mention_channels?: string[];
   emojis?: string[];
-  reactions?: string[];
+  reactions?: IMessageReaction[];
   replied_message?: IMessage;
 
   is_deleted?: boolean;
@@ -66,7 +73,31 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
   if (!extra) {
   }
 
-  // Fetch the mentioned message
+  // Fetch the reactions of the message
+  try {
+    const reactions_ = await ReactionModel.aggregate([
+      {
+        $match: { message_id: message.id },
+      },
+      {
+        $group: {
+          _id: "$emoji_id",
+          count: { $sum: 1 },
+          reactors: { $push: "$senter_id" },
+        },
+      },
+    ]);
+
+    reactions = reactions_.map((reaction) => ({
+      emoji_id: reaction._id,
+      count: reaction.count,
+      reactors: reaction.reactors,
+    }));
+  } catch (e) {
+    // Do nothing
+  }
+
+  // Fetch the replied message
   if (message.replied_message_id && message.replied_message_id !== null) {
     try {
       const repliedMessage = await messageModel.findById(
@@ -86,8 +117,6 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
       // Do nothing
     }
   }
-
-  console.log("message", message);
 
   // Return the message
   return {
