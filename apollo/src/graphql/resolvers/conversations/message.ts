@@ -2,6 +2,7 @@ import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
 import mongoose from "mongoose";
 
+import UserProfileModel from "@/models/user_profile";
 import serverModel from "@models/servers/server";
 import channelModel from "@models/servers/channels/channel";
 import messageModel from "@models/conversations/message";
@@ -51,7 +52,7 @@ interface ISearchQuery {
 // ==========================
 
 /**
- * Cast a message to IMessage
+ * Cast a message to IMessage object
  *
  * @param {*} message - The message object
  * @param {?*} [extra] - Extra fields. If not provided, it will be initialized and fetched
@@ -62,16 +63,26 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
     throw new UserInputError("Message not found!");
   }
 
-  let mention_users = extra?.mention_users || [];
-  let mention_roles = extra?.mention_roles || [];
-  let mention_channels = extra?.mention_channels || [];
-  let emojis = extra?.emojis || [];
-  let reactions = [];
+  let mention_users = extra?.mention_users || []; // List of user IDs
+  let mention_roles = extra?.mention_roles || []; // List of role IDs
+  let mention_channels = extra?.mention_channels || []; // List of channel IDs
+  let emojis = extra?.emojis || []; // List of emoji IDs
+  let reactions: IMessageReaction[] = []; // List of reactions
   let replied_message: IMessage = null;
 
-  // TODO: Implement these fields
-  if (!extra) {
-  }
+  // Fetch the mention users of the message
+  // if (mention_users.length > 0) {
+  //   try {
+  //     // Fetch the user profile
+  //     const userProfiles = await UserProfileModel.find({
+  //       user_id: { $in: mention_users },
+  //     });
+
+  //     mention_users = userProfiles.map((profile) => profile.user_id);
+  //   } catch (e) {
+  //     // Do nothing
+  //   }
+  // }
 
   // Fetch the reactions of the message
   try {
@@ -124,8 +135,8 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
     conversation_id: String(message.conversation_id),
     sender_id: String(message.sender_id),
     content: message.content,
-    replied_message_id: message.replied_message_id,
-    forwarded_message_id: message.forwarded_message_id,
+    replied_message_id: String(message.replied_message_id),
+    forwarded_message_id: String(message.forwarded_message_id),
 
     mention_users: mention_users,
     mention_roles: mention_roles,
