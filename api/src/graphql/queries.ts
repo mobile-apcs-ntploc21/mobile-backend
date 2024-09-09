@@ -570,3 +570,126 @@ export const serverCategoryPermissionQueries = {
     }
   `,
 };
+
+export const messageQueries = {
+  GET_MESSAGE: gql`
+    query message($message_id: ID!) {
+      message(message_id: $message_id) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        createdAt
+      }
+    }
+  `,
+  GET_MESSAGES: gql`
+    query messages(
+      $conversation_id: ID!
+      $before: ID
+      $after: ID
+      $around: ID
+      $limit: Int
+    ) {
+      messages(
+        conversation_id: $conversation_id
+        before: $before
+        after: $after
+        around: $around
+        limit: $limit
+      ) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        createdAt
+      }
+    }
+  `,
+  SEARCH_MESSAGES: gql`
+    query searchMessages($query: SearchQuery!, $offset: Int, $limit: Int) {
+      searchMessages(query: $query, offset: $offset, limit: $limit) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        createdAt
+      }
+    }
+  `,
+  GET_PINNED_MESSAGES: gql`
+    query pinnedMessages($conversation_id: ID!) {
+      pinnedMessages(conversation_id: $conversation_id) {
+        id
+        conversation_id
+        sender_id
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        mention_roles
+        mention_channels
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+};
