@@ -131,12 +131,12 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
 
   // Return the message
   return {
-    id: String(message.id),
+    id: String(message._id || message.id),
     conversation_id: String(message.conversation_id),
     sender_id: String(message.sender_id),
     content: message.content,
-    replied_message_id: String(message.replied_message_id),
-    forwarded_message_id: String(message.forwarded_message_id),
+    replied_message_id: message.replied_message_id,
+    forwarded_message_id: message.forwarded_message_id,
 
     mention_users: mention_users,
     mention_roles: mention_roles,
@@ -159,7 +159,7 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
  * @returns {Promise<IMessage>} - The message object
  */
 const getMessage = async (id: string): Promise<IMessage> => {
-  const message = await messageModel.findById(id);
+  const message = await messageModel.findById(id).lean();
   if (!message || message.is_deleted) {
     throw new UserInputError("Message not found or has been deleted!");
   }
@@ -204,7 +204,8 @@ const getMessages = async (
         _id: { $lt: before },
       })
       .sort({ _id: -1 })
-      .limit(limit);
+      .limit(limit)
+      .lean();
   } else if (after) {
     messages = await messageModel
       .find({
@@ -213,7 +214,8 @@ const getMessages = async (
         _id: { $gt: after },
       })
       .sort({ _id: 1 })
-      .limit(limit);
+      .limit(limit)
+      .lean();
   } else if (around) {
     const halfLimit = Math.floor(limit / 2);
     const upper = await messageModel
@@ -223,7 +225,8 @@ const getMessages = async (
         _id: { $gt: around },
       })
       .sort({ _id: 1 })
-      .limit(halfLimit);
+      .limit(halfLimit)
+      .lean();
     const lower = await messageModel
       .find({
         conversation_id,
@@ -231,7 +234,8 @@ const getMessages = async (
         _id: { $lt: around },
       })
       .sort({ _id: -1 })
-      .limit(limit - halfLimit);
+      .limit(limit - halfLimit)
+      .lean();
 
     messages = [...lower, ...upper];
   } else {
@@ -242,7 +246,8 @@ const getMessages = async (
         is_deleted: false,
       })
       .sort({ _id: -1 })
-      .limit(limit);
+      .limit(limit)
+      .lean();
   }
 
   // Cast the messages to IMessage
@@ -271,7 +276,9 @@ const searchMessages = async (
 
   // Initialize the messages array and query
   let messages = [];
-  const messageQuery: any = {};
+  const messageQuery: any = {
+    is_deleted: false, // Only get messages that are not deleted
+  };
   const { inConversation, text, from, mention, has } = query;
 
   // TODO: If this is empty then do a global search
@@ -302,13 +309,17 @@ const searchMessages = async (
   }
 
   // 5. Filter by attachment (TODO)
+  if (has) {
+    // const attachments = await AttachmentModel.find({ attachment_id: has });
+  }
 
   // Execute the query with pagination
   messages = await messageModel
     .find(messageQuery)
     .sort({ _id: -1 })
     .skip(offset)
-    .limit(limit);
+    .limit(limit)
+    .lean();
 
   return Promise.all(messages.map((message) => castToIMessage(message)));
 };
@@ -328,11 +339,13 @@ const getPinnedMessages = async (
     throw new UserInputError("Conversation/Chat not found!");
   }
 
-  const messages = await messageModel.find({
-    conversation_id,
-    is_deleted: false,
-    is_pinned: true,
-  });
+  const messages = await messageModel
+    .find({
+      conversation_id,
+      is_deleted: false,
+      is_pinned: true,
+    })
+    .lean();
 
   return await Promise.all(messages.map((message) => castToIMessage(message)));
 };
@@ -379,8 +392,8 @@ const createMessageTransaction = async (
           conversation_id,
           sender_id,
           content,
-          replied_message_id,
-          forwarded_message_id,
+          replied_message_id: replied_message_id || null,
+          forwarded_message_id: forwarded_message_id || null,
         },
       ],
       { session, new: true }
