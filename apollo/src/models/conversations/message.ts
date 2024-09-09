@@ -27,14 +27,17 @@ const messageSchema = new Schema<IMessage>(
     },
     content: {
       type: String,
+      required: [true, "Content is required!"], // Ensure content is always provided.
     },
     replied_message_id: {
       type: Schema.Types.ObjectId,
       ref: ModelNames.Message,
+      default: null,
     },
     forwarded_message_id: {
       type: Schema.Types.ObjectId,
       ref: ModelNames.Message,
+      default: null,
     },
     is_deleted: {
       type: Boolean,
@@ -52,6 +55,10 @@ const messageSchema = new Schema<IMessage>(
   { timestamps: true }
 );
 
+// Create indexes for the message schema
+messageSchema.index({ content: "text" });
+
+// Create a Message model from the message schema
 const MessageModel = mongoose.model<IMessage>(
   ModelNames.Message,
   messageSchema
