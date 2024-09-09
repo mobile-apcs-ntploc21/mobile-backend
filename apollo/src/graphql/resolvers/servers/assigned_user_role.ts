@@ -1,13 +1,13 @@
-import AssignedUserRoleModel from '../../../models/servers/assigned_user_role';
-import { IResolvers } from '@graphql-tools/utils';
-import { UserInputError } from 'apollo-server-core';
-import { ObjectId } from 'mongoose';
-import { publishEvent, ServerEvents } from '../../pubsub/pubsub';
-import ServerModel from '../../../models/servers/server';
-import UserModel from '../../../models/user';
-import ServerRoleModel from '../../../models/servers/server_role';
-import ServerMemberModel from '../../../models/servers/server_member';
-import UserProfileModel from '../../../models/user_profile';
+import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError } from "apollo-server-core";
+import { ObjectId } from "mongoose";
+import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
+import ServerModel from "../../../models/servers/server";
+import UserModel from "../../../models/user";
+import ServerRoleModel from "../../../models/servers/server_role";
+import ServerMemberModel from "../../../models/servers/server_member";
+import UserProfileModel from "../../../models/user_profile";
 
 type AssignedUserRole = {
   role_id: ObjectId;
@@ -23,32 +23,32 @@ const addUserToRoleTransaction = async ({
 
   try {
     if (!UserModel.findById(user_id).session(session)) {
-      throw new UserInputError('Server not found');
+      throw new UserInputError("Server not found");
     }
 
     const serverRole = await ServerRoleModel.findById(role_id).session(session);
     if (!serverRole) {
-      throw new UserInputError('Server role not found');
+      throw new UserInputError("Server role not found");
     }
     const server_id = serverRole.server_id;
 
     if (!ServerModel.findById(server_id).session(session)) {
-      throw new UserInputError('Server not found');
+      throw new UserInputError("Server not found");
     }
 
     // check if user is a member of the server
     if (!ServerMemberModel.exists({ server_id, user_id })) {
-      throw new UserInputError('User is not a member of the server');
+      throw new UserInputError("User is not a member of the server");
     }
 
     // check if the user has already been assigned the role
     if (
       await AssignedUserRoleModel.exists({
-        '_id.server_role_id': role_id,
-        '_id.user_id': user_id,
+        "_id.server_role_id": role_id,
+        "_id.user_id": user_id,
       })
     ) {
-      throw new UserInputError('User already has the role');
+      throw new UserInputError("User already has the role");
     }
 
     const assignedUserRole = new AssignedUserRoleModel(
@@ -76,13 +76,13 @@ const addUserToRoleTransaction = async ({
 const getServerRoleMembers = async (role_id: ObjectId) => {
   const serverRole = await ServerRoleModel.findById(role_id);
   if (!serverRole) {
-    throw new UserInputError('Server role not found');
+    throw new UserInputError("Server role not found");
   }
 
   const server_id = serverRole.server_id;
 
   const serverRoleUsers = await AssignedUserRoleModel.find({
-    '_id.server_role_id': role_id,
+    "_id.server_role_id": role_id,
   });
 
   // console.log(serverRoleUsers);
@@ -124,29 +124,29 @@ const removeUserFromRoleTransaction = async ({
 
   try {
     if (!UserModel.findById(user_id).session(session)) {
-      throw new UserInputError('User not found');
+      throw new UserInputError("User not found");
     }
 
     if (!ServerRoleModel.findById(role_id).session(session)) {
-      throw new UserInputError('Server role not found');
+      throw new UserInputError("Server role not found");
     }
 
     // if the role is the default role, do not allow the user to be removed
     const serverRole = await ServerRoleModel.findById(role_id);
     if (serverRole.default) {
-      throw new UserInputError('Cannot remove user from default role');
+      throw new UserInputError("Cannot remove user from default role");
     }
 
     const assignedUserRole = await AssignedUserRoleModel.findOneAndDelete(
       {
-        '_id.server_role_id': role_id,
-        '_id.user_id': user_id,
+        "_id.server_role_id": role_id,
+        "_id.user_id": user_id,
       },
       { session }
     );
 
     if (!assignedUserRole) {
-      throw new UserInputError('User is not assigned the role');
+      throw new UserInputError("User is not assigned the role");
     }
 
     await session.commitTransaction();
@@ -165,38 +165,57 @@ const assignedUserRoleAPI: IResolvers = {
   Query: {
     getRolesAssignedWithUser: async (_, { user_id, server_id }) => {
       try {
-        const server_roles = await ServerRoleModel.find({
-          server_id,
-        });
+        const server_roles = await ServerRoleModel.find({ server_id }).lean();
 
+        // Get the list of role IDs from the server roles
+        const serverRoleIds = server_roles.map((role) => role._id);
+
+        // Fetch the roles assigned to the user in a single query
         const roles = await AssignedUserRoleModel.find({
-          '_id.user_id': user_id,
-          '_id.server_role_id': { $in: server_roles.map((role) => role._id) },
+          "_id.user_id": user_id,
+          "_id.server_role_id": { $in: serverRoleIds },
+        }).lean();
+
+        // Fetch all the users assigned to these roles in a single query
+        const userCounts = await AssignedUserRoleModel.aggregate([
+          {
+            $match: { "_id.server_role_id": { $in: serverRoleIds } },
+          },
+          {
+            $group: {
+              _id: "$_id.server_role_id",
+              count: { $sum: 1 },
+            },
+          },
+        ]);
+
+        // Create a lookup map to easily fetch the user counts for each role
+        const userCountMap = userCounts.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {});
+
+        // Build the result by merging role data with user count
+        const result = roles.map((role) => {
+          const role_id = String(role._id.server_role_id);
+          const serverRole = server_roles.find((r) => r._id.equals(role_id));
+
+          return {
+            id: serverRole._id,
+            server_id: serverRole.server_id,
+            name: serverRole.name,
+            color: serverRole.color,
+            allow_anyone_mention: serverRole.allow_anyone_mention,
+            position: serverRole.position,
+            permissions: serverRole.permissions,
+            is_admin: serverRole.is_admin,
+            default: serverRole.default,
+            last_modified: serverRole.last_modified,
+            number_of_users: userCountMap[role_id] || 0, // Use the precomputed user count
+          };
         });
 
-        return await Promise.all(
-          roles.map(async (role) => {
-            const role_id = role._id.server_role_id;
-            const serverRole = await ServerRoleModel.findById(role_id);
-            const users = await AssignedUserRoleModel.find({
-              '_id.server_role_id': role_id,
-            });
-
-            return {
-              id: serverRole._id,
-              server_id: serverRole.server_id,
-              name: serverRole.name,
-              color: serverRole.color,
-              allow_anyone_mention: serverRole.allow_anyone_mention,
-              position: serverRole.position,
-              permissions: serverRole.permissions,
-              is_admin: serverRole.is_admin,
-              default: serverRole.default,
-              last_modified: serverRole.last_modified,
-              number_of_users: users.length,
-            };
-          })
-        );
+        return result;
       } catch (error) {
         throw new UserInputError(error.message);
       }
@@ -212,8 +231,8 @@ const assignedUserRoleAPI: IResolvers = {
       try {
         return (
           (await AssignedUserRoleModel.exists({
-            '_id.server_role_id': role_id,
-            '_id.user_id': user_id,
+            "_id.server_role_id": role_id,
+            "_id.user_id": user_id,
           })) !== null
         );
       } catch (error) {
