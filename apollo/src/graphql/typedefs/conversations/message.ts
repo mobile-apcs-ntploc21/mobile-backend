@@ -15,9 +15,9 @@ const gqlType = gql`
   }
 
   type MessageReaction {
-    emoji: ServerEmoji!
+    emoji_id: ID!
     count: Int!
-    reactors: [UserProfile]
+    reactors: [ID!]
   }
 
   type Message {
@@ -31,9 +31,9 @@ const gqlType = gql`
     forwarded_message_id: ID
 
     mention_users: [UserProfile]
-    mention_roles: [ServerRole]
-    mention_channels: [Channel]
-    emojis: [ServerEmoji]
+    mention_roles: [ID]
+    mention_channels: [ID]
+    emojis: [ID]
     reactions: [MessageReaction]
     replied_message: Message
 
