@@ -40,7 +40,7 @@ const gqlType = gql`
     is_deleted: Boolean
     is_pinned: Boolean
 
-    createdAt: DateTime!
+    createdAt: DateTime
   }
 `;
 
