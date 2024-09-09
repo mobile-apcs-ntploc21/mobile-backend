@@ -1,7 +1,7 @@
-import express from 'express';
-import graphQLClient from '../utils/graphql';
-import { GET_USER_BY_ID } from '../graphql/queries';
-import jwt from 'jsonwebtoken';
+import express from "express";
+import graphQLClient from "../utils/graphql";
+import { GET_USER_BY_ID } from "../graphql/queries";
+import jwt from "jsonwebtoken";
 
 // Get user by ID
 const getUserById = async (id: string) => {
@@ -17,26 +17,30 @@ export const authMiddleware = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
+  if (res.locals.uid) {
+    return next();
+  }
+
   try {
     let token: string | undefined;
 
     // Check if token is in header
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
+      req.headers.authorization.startsWith("Bearer")
     ) {
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(" ")[1];
     } else {
       return res.status(401).json({
-        status: 'fail',
-        message: 'You are not authorized to access this route',
+        status: "fail",
+        message: "You are not authorized to access this route",
       });
     }
 
     if (!token) {
       return res.status(401).json({
-        status: 'fail',
-        message: 'You are not authorized to access this route',
+        status: "fail",
+        message: "You are not authorized to access this route",
       });
     }
 
@@ -44,8 +48,8 @@ export const authMiddleware = async (
     const user = await getUserById(decoded.id);
     if (!user) {
       return res.status(401).json({
-        status: 'fail',
-        message: 'The user belonging to this token does no longer exist',
+        status: "fail",
+        message: "The user belonging to this token does no longer exist",
       });
     }
 
@@ -54,8 +58,8 @@ export const authMiddleware = async (
       const changedTimestamp = user.passwordChangedAt / 1000;
       if (decoded.iat < changedTimestamp) {
         return res.status(401).json({
-          status: 'fail',
-          message: 'User recently changed password, please login again',
+          status: "fail",
+          message: "User recently changed password, please login again",
         });
       }
     }

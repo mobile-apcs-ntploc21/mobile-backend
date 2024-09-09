@@ -15,6 +15,11 @@ export const checkMembershipMiddleware = async (
       .status(400)
       .json({ status: "fail", message: "Server ID is required." });
 
+  // Skip this step if we already have the server_id in res.locals
+  if (res.locals?.server_id === serverId) {
+    return next();
+  }
+
   try {
     const flag = await graphQLClient().request(
       serverMemberQueries.CHECK_SERVER_MEMBER,
