@@ -21,6 +21,9 @@ import channel_role_permission from "./servers/channels/channel_role_permission"
 import channel_user_permission from "./servers/channels/channel_user_permission";
 import category_role_permission from "./servers/channels/category_role_permission";
 import category_user_permission from "./servers/channels/category_user_permission";
+/// Conversation
+import messageResolver from "./conversations/message";
+import reactionResolver from "./conversations/reaction";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -44,6 +47,9 @@ export const apiResolvers = mergeResolvers([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
+
+  messageResolver.API,
+  reactionResolver.API,
 ]);
 
 export const wsResolvers = mergeResolvers([
