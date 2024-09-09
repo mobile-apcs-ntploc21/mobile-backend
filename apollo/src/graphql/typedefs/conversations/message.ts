@@ -46,7 +46,8 @@ const gqlType = gql`
 
 const gqlQuery = gql`
   input SearchQuery {
-    inConversation: [ID!]!
+    inChannel: [ID]
+    inConversation: [ID]
     text: String
     from: ID
     mention: ID

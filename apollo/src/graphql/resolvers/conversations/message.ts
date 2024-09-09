@@ -43,6 +43,7 @@ interface IMessage {
 
 interface ISearchQuery {
   inConversation: string[];
+  inChannel?: string[];
   text?: string;
   from?: string;
   mention?: string;
@@ -85,27 +86,29 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
   // }
 
   // Fetch the reactions of the message
-  try {
-    const reactions_ = await ReactionModel.aggregate([
-      {
-        $match: { message_id: message.id },
-      },
-      {
-        $group: {
-          _id: "$emoji_id",
-          count: { $sum: 1 },
-          reactors: { $push: "$senter_id" },
+  if (message.reactions && message.reactions.length > 0) {
+    try {
+      const reactions_ = await ReactionModel.aggregate([
+        {
+          $match: { message_id: message.id },
         },
-      },
-    ]);
+        {
+          $group: {
+            _id: "$emoji_id",
+            count: { $sum: 1 },
+            reactors: { $push: "$senter_id" },
+          },
+        },
+      ]);
 
-    reactions = reactions_.map((reaction) => ({
-      emoji_id: reaction._id,
-      count: reaction.count,
-      reactors: reaction.reactors,
-    }));
-  } catch (e) {
-    // Do nothing
+      reactions = reactions_.map((reaction) => ({
+        emoji_id: reaction._id,
+        count: reaction.count,
+        reactors: reaction.reactors,
+      }));
+    } catch (e) {
+      // Do nothing
+    }
   }
 
   // Fetch the replied message
@@ -279,16 +282,26 @@ const searchMessages = async (
   const messageQuery: any = {
     is_deleted: false, // Only get messages that are not deleted
   };
-  const { inConversation, text, from, mention, has } = query;
+  const { inConversation, inChannel, text, from, mention, has } = query;
+
+  // 0. If given inChannel, then convert it to inConversation
+  let convertsationIds: string[] = inConversation;
+  if (inChannel && inChannel.length > 0) {
+    const channels = await channelModel.find({ _id: { $in: inChannel } });
+    convertsationIds = [
+      ...convertsationIds,
+      ...channels.map((c) => String(c.conversation_id)),
+    ];
+  }
 
   // TODO: If this is empty then do a global search
-  if (inConversation.length === 0) {
+  if (convertsationIds.length === 0) {
     throw new UserInputError("No conversation specified for search!");
   }
 
   // 1. Filter by conversation (if provided)
-  if (inConversation && inConversation.length > 0) {
-    messageQuery.conversation_id = { $in: inConversation };
+  if (convertsationIds && convertsationIds.length > 0) {
+    messageQuery.conversation_id = { $in: convertsationIds };
   }
 
   // 2. Filter by text
