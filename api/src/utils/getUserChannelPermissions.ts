@@ -32,185 +32,148 @@ export const getUserChannelPermissionsFunc = async (
 ) => {
   let isAdmin = false;
   let isServerOwner = false;
-  let categoryId = null;
+  let categoryId = extra?.channelObject?.category_id ?? null;
+  let combinedPermissions = {};
 
   try {
-    // get server details
-    const { server: server } = await graphQLClient().request(
+    // Get server details and check if the user is the server owner
+    const { server } = await graphQLClient().request(
       serverQueries.GET_SERVER_BY_ID,
-      {
-        server_id: serverId,
-      }
+      { server_id: serverId }
     );
-
-    if (server.owner === userId) {
-      isServerOwner = true;
-    }
-  } catch (e) {
-    throw new Error(e);
+    if (server.owner === userId) isServerOwner = true;
+  } catch (error) {
+    throw new Error("Error fetching server details: " + error.message);
   }
 
-  if (channelId) {
-    categoryId = extra.channelObject?.category_id ?? null;
-  }
-
-  // Get all server roles assigned with the current user
+  // Fetch roles assigned to the user
   const { getRolesAssignedWithUser: roles } = await graphQLClient().request(
     serverRoleQueries.GET_ROLES_ASSIGNED_WITH_USER,
-    {
-      server_id: serverId,
-      user_id: userId,
-    }
+    { server_id: serverId, user_id: userId }
   );
 
-  let combinedChannelPermissions = {};
-
-  // For each server role, get the category permissions associated with that role (if exists)
-  for (const role of roles) {
-    isAdmin = isAdmin ? isAdmin : role.is_admin;
-
-    let parsedServerRolePermissions = null;
-    try {
-      parsedServerRolePermissions = JSON.parse(role.permissions);
-    } catch (error) {
-      throw new Error(error);
-    }
-
-    let category = null;
-    try {
-      const response = await graphQLClient().request(
-        serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
-        {
-          role_id: role.id,
-          category_id: categoryId,
-        }
-      );
-      category = response.getCategoryRolePermission;
-    } catch (e) {
-      // throw new Error(e);
-    }
-
-    if (category) {
-      let parsedCategoryRolePermissions = null;
-      try {
-        parsedCategoryRolePermissions = JSON.parse(category.permissions);
-      } catch (error) {
-        throw new Error(error);
-      }
-
-      // Calculate the final category permissions associated with that role
-      for (const key in parsedCategoryRolePermissions) {
-        if (parsedCategoryRolePermissions[key] !== "DEFAULT") {
-          parsedServerRolePermissions[key] = parsedCategoryRolePermissions[key];
-        }
-      }
-    }
-
-    let channel = null;
-    if (channelId) {
-      try {
-        const response = await graphQLClient().request(
-          serverChannelPermissionQueries.GET_CHANNEL_ROLE_PERMISSION,
+  // Fetch all category and channel permissions in parallel
+  const roleIds = roles.map((role) => role.id);
+  let [categoryPermissions, channelPermissions] = await Promise.all([
+    categoryId
+      ? graphQLClient().request(
+          serverCategoryPermissionQueries.GET_CATEGORY_ROLES_PERMISSION,
           {
-            role_id: role.id,
+            role_ids: roleIds,
+            category_id: categoryId,
+          }
+        )
+      : null,
+    channelId
+      ? graphQLClient().request(
+          serverChannelPermissionQueries.GET_CHANNEL_ROLES_PERMISSION,
+          {
+            role_ids: roleIds,
             channel_id: channelId,
           }
-        );
-        channel = response.getChannelRolePermission;
-      } catch (e) {
-        // throw new Error(e);
-      }
-    }
+        )
+      : null,
+  ]);
 
-    if (channel) {
-      let parsedChannelRolePermissions = null;
-      try {
-        parsedChannelRolePermissions = JSON.parse(channel.permissions);
-      } catch (error) {
-        throw new Error(error);
-      }
+  // Filter category and channel permissions with our roleIds
+  categoryPermissions =
+    categoryPermissions?.getCategoryRolesPermissions.filter((perm) =>
+      roleIds.includes(perm.id)
+    ) ?? null;
+  channelPermissions =
+    channelPermissions?.getChannelRolesPermissions.filter((perm) =>
+      roleIds.includes(perm.id)
+    ) ?? null;
 
-      // Calculate the final category permissions associated with that role
-      for (const key in parsedChannelRolePermissions) {
-        if (parsedChannelRolePermissions[key] !== "DEFAULT") {
-          parsedServerRolePermissions[key] = parsedChannelRolePermissions[key];
-        }
-      }
-    }
+  // Combine permissions from roles
+  for (const role of roles) {
+    isAdmin = isAdmin || role.is_admin;
 
-    // Calculate the combined category permissions associated with those roles
-    for (const key in parsedServerRolePermissions) {
-      if (parsedServerRolePermissions[key] === "ALLOWED") {
-        combinedChannelPermissions[key] = "ALLOWED";
-      } else if (!combinedChannelPermissions[key]) {
-        combinedChannelPermissions[key] = "DENIED";
-      }
-    }
-  }
+    // Parse role permissions
+    const parsedRolePermissions = JSON.parse(role.permissions);
 
-  let parsedUserPermissions = {};
-  if (categoryId) {
-    try {
-      // get category permissions assigned with the current user (if exists)
-      const { getCategoryUserPermission: user } = await graphQLClient().request(
-        serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
-        {
-          user_id: userId,
-          category_id: categoryId,
-        }
-      );
+    // Apply category permissions if available
+    const categoryPerm = categoryPermissions?.find(
+      (perm) => perm.role_id === role.id
+    );
+    const parsedCategoryPerms = categoryPerm
+      ? JSON.parse(categoryPerm.permissions)
+      : {};
 
-      parsedUserPermissions = JSON.parse(user.permissions);
-    } catch (e) {
-      // throw new Error(e);
-    }
-  }
+    // Apply channel permissions if available
+    const channelPerm = channelPermissions?.find(
+      (perm) => perm.role_id === role.id
+    );
+    const parsedChannelPerms = channelPerm
+      ? JSON.parse(channelPerm.permissions)
+      : {};
 
-  let parsedChannelUserPermissions = {};
-  if (channelId) {
-    try {
-      // get category permissions assigned with the current user (if exists)
-      const { getChannelUserPermission: user } = await graphQLClient().request(
-        serverChannelPermissionQueries.GET_CHANNEL_USER_PERMISSION,
-        {
-          user_id: userId,
-          channel_id: channelId,
-        }
-      );
+    // Merge role, category, and channel permissions
+    const finalPermissions = {
+      ...parsedRolePermissions,
+      ...parsedCategoryPerms,
+      ...parsedChannelPerms,
+    };
 
-      parsedChannelUserPermissions = JSON.parse(user.permissions);
-    } catch (e) {
-      // throw new Error(e);
-    }
-  }
-
-  if (parsedChannelUserPermissions) {
-    // Calculate the final category permissions associated with that user
-    for (const key in parsedChannelUserPermissions) {
-      if (parsedChannelUserPermissions[key] !== "DEFAULT") {
-        parsedUserPermissions[key] = parsedChannelUserPermissions[key];
+    // Update the combinedPermissions
+    for (const key in finalPermissions) {
+      if (finalPermissions[key] === "ALLOWED") {
+        combinedPermissions[key] = "ALLOWED";
+      } else if (!combinedPermissions[key]) {
+        combinedPermissions[key] = "DENIED";
       }
     }
   }
 
-  // Calculate the final category permissions associated with that user
-  for (const key in parsedUserPermissions) {
-    if (parsedUserPermissions[key] !== "DEFAULT") {
-      combinedChannelPermissions[key] = parsedUserPermissions[key];
+  // Handle user-specific permissions
+  const [userCategoryPermissions, userChannelPermissions] = await Promise.all([
+    categoryId
+      ? graphQLClient()
+          .request(
+            serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
+            {
+              user_id: userId,
+              category_id: categoryId,
+            }
+          )
+          .catch((e) => {})
+      : null,
+    channelId
+      ? graphQLClient()
+          .request(serverChannelPermissionQueries.GET_CHANNEL_USER_PERMISSION, {
+            user_id: userId,
+            channel_id: channelId,
+          })
+          .catch((e) => {})
+      : null,
+  ]);
+
+  const parsedUserCategoryPerms = userCategoryPermissions
+    ? JSON.parse(userCategoryPermissions.permissions)
+    : {};
+  const parsedUserChannelPerms = userChannelPermissions
+    ? JSON.parse(userChannelPermissions.permissions)
+    : {};
+
+  // Merge user-specific permissions into combinedPermissions
+  const userFinalPermissions = {
+    ...parsedUserCategoryPerms,
+    ...parsedUserChannelPerms,
+  };
+  for (const key in userFinalPermissions) {
+    if (userFinalPermissions[key] !== "DEFAULT") {
+      combinedPermissions[key] = userFinalPermissions[key];
     }
   }
 
-  // filter out permissions those are not associated with category permissions (based on CategoryPermissions)
-  // iterate over CategoryPermissions and filter out the permissions that are not in the combinedChannelPermissions
-  const filteredChannelPermissions = {};
+  // Apply isServerOwner or isAdmin override
+  const finalFilteredPermissions = {};
   for (const key in ChannelPermissions) {
-    if (combinedChannelPermissions.hasOwnProperty(key)) {
-      filteredChannelPermissions[key] = combinedChannelPermissions[key];
-      if (isServerOwner || isAdmin) {
-        filteredChannelPermissions[key] = "ALLOWED";
-      }
+    if (combinedPermissions.hasOwnProperty(key)) {
+      finalFilteredPermissions[key] =
+        isServerOwner || isAdmin ? "ALLOWED" : combinedPermissions[key];
     }
   }
 
-  return filteredChannelPermissions;
+  return finalFilteredPermissions;
 };
