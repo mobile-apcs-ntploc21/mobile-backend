@@ -27,6 +27,9 @@ import channel_role_permission from "./servers/channels/channel_role_permission"
 import channel_user_permission from "./servers/channels/channel_user_permission";
 import category_role_permission from "./servers/channels/category_role_permission";
 import category_user_permission from "./servers/channels/category_user_permission";
+/// Conversation
+import message from "./conversations/message";
+import reaction from "./conversations/reaction";
 
 const linkedSchema = gql`
   type Query {
@@ -63,6 +66,9 @@ export const apiTypeDefs = mergeTypeDefs([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
+
+  message.API,
+  reaction.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
