@@ -30,7 +30,7 @@ const gqlType = gql`
     replied_message_id: ID
     forwarded_message_id: ID
 
-    mention_users: [UserProfile]
+    mention_users: [ID]
     mention_roles: [ID]
     mention_channels: [ID]
     emojis: [ID]
