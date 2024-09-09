@@ -1,4 +1,4 @@
-import mongoose, { Error, MongooseError } from "mongoose";
+import mongoose, { Error, MongooseError, Schema } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
 import { PubSub, withFilter } from "graphql-subscriptions";
 import { AuthenticationError, UserInputError } from "apollo-server";
@@ -11,6 +11,7 @@ import ServerRoleModel from "@models/servers/server_role";
 import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
 import ChannelRolePermission from "@models/servers/channels/channel_role_permission";
 import ChannelUserPermission from "@models/servers/channels/channel_user_permission";
+import ConversationModel from "@/models/conversations/conversation";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
@@ -34,14 +35,19 @@ const createChannelTransaction = async (server_id, input) => {
     const category = await ChannelModel.find({
       server_id,
       category_id,
+      is_deleted: false,
     }).session(session);
     position = category.length * POSITION_CONST;
+
+    // Create a conversation chat for the channel
+    const [conversation] = await ConversationModel.create([{}], opts);
 
     const channel = await ChannelModel.create(
       [
         {
           server_id,
           category_id: category_id,
+          conversation_id: conversation.id,
           name,
           position,
         },
@@ -49,7 +55,7 @@ const createChannelTransaction = async (server_id, input) => {
       opts
     );
 
-    // find the default server role and create a channel permission for it
+    // Find the default server role and create a channel permission for it
     const default_server_role = await ServerRoleModel.findOne({
       server_id,
       default: true,
@@ -68,6 +74,7 @@ const createChannelTransaction = async (server_id, input) => {
       opts
     );
 
+    // Commit the transaction
     await session.commitTransaction();
     session.endSession();
 
