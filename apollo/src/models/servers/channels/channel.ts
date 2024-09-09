@@ -2,9 +2,9 @@ import mongoose, { model, Schema } from "mongoose";
 import ModelNames from "./../../modelNames";
 
 interface IChannel {
-  server_id: { type: Schema.Types.ObjectId };
-  conversation_id: { type: Schema.Types.ObjectId };
-  category_id: { type: Schema.Types.ObjectId };
+  server_id: Schema.Types.ObjectId;
+  conversation_id: Schema.Types.ObjectId;
+  category_id: Schema.Types.ObjectId;
 
   // Overview
   name: string;
