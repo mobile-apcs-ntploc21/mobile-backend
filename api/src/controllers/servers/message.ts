@@ -1,10 +1,26 @@
 import express from "express";
 import graphQLClient from "../../utils/graphql";
 
+import { getUserChannelPermissionsFunc } from "../../utils/getUserChannelPermissions";
 import { messageQueries } from "../../graphql/queries";
+import { messageMutations } from "../../graphql/mutations";
 import { _getChannel } from "./channels/channel";
 
 // ==============
+
+const user_regex = /<@!?(.*?)>/g;
+const role_regex = /<@&(.*?)>/g;
+const channel_regex = /<#(.*?)>/g;
+const emoji_regex = /<:(.*?):(.*?)>/g;
+
+function getMatches(string: string, regex: RegExp, index: number) {
+  const matches = [];
+  let match;
+  while ((match = regex.exec(string))) {
+    matches.push(match[index]);
+  }
+  return matches;
+}
 
 const _getMessage = async (message_id: string): Promise<any> => {
   if (!message_id) {
@@ -58,6 +74,9 @@ export const getMessages = async (
 
   if (!channelId) {
     return res.status(400).json({ message: "Channel ID is required." });
+  }
+  if (limit && isNaN(parseInt(limit as string))) {
+    return res.status(400).json({ message: "Limit must be a number." });
   }
 
   const channel = await _getChannel(channelId).catch(() => null);
@@ -216,6 +235,226 @@ export const getPinnedMessages = async (
     }
 
     return res.status(200).json({ messages });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+// =========================
+
+export const createMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { channelId } = req.params;
+  const { content, repliedMessageId, forwardedMessageId } = req.body;
+
+  if (!channelId) {
+    return res.status(400).json({ message: "Channel ID is required." });
+  }
+  if (!content) {
+    return res.status(400).json({ message: "Content is required." });
+  }
+  if (content.length > 2000) {
+    return res.status(400).json({
+      message: "Content must be less than or equal to 2000 characters.",
+    });
+  }
+
+  const channel = await _getChannel(channelId).catch(() => null);
+  if (!channel) {
+    return res
+      .status(404)
+      .json({ message: "Channel not found in the server." });
+  }
+  if (!channel.conversation_id) {
+    return res.status(404).json({
+      message:
+        "Channel does not have a conversation. Please delete and create a new channel.",
+    });
+  }
+
+  // Get all user, role, channel, and emoji mentions
+  const mention_users = getMatches(content, user_regex, 1);
+  const mention_roles = getMatches(content, role_regex, 1);
+  const mention_channels = getMatches(content, channel_regex, 1);
+  const emojis = getMatches(content, emoji_regex, 2);
+
+  try {
+    const requestBody = {
+      conversation_id: channel.conversation_id,
+      input: {
+        sender_id: res.locals.uid,
+        content,
+
+        mention_users: mention_users,
+        mention_roles: mention_roles,
+        mention_channels: mention_channels,
+        emojis: emojis,
+
+        replied_message_id: repliedMessageId || null,
+        forwarded_message_id: forwardedMessageId || null,
+      },
+    };
+    const { createMessage: message } = await graphQLClient().request(
+      messageMutations.CREATE_MESSAGE,
+      requestBody
+    );
+
+    return res.status(201).json({ message });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const editMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+  const { content } = req.body;
+
+  if (!message_id) {
+    return res.status(400).json({ message: "Message ID is required." });
+  }
+
+  // Get the message and check if the user is the sender or they have permission to edit
+  const message = await _getMessage(message_id).catch(() => null);
+  if (!message) {
+    return res.status(404).json({ message: "Message not found." });
+  }
+  if (message.sender_id !== res.locals.uid) {
+    const permissions = res.locals.userChannelPermissions;
+
+    if (!permissions || permissions?.MANAGE_MESSAGE !== "ALLOWED") {
+      return res.status(403).json({
+        message: "You do not have permission to edit this message.",
+      });
+    }
+  }
+
+  if (!content) {
+    return res.status(400).json({ message: "Content is required." });
+  }
+
+  // Get all user, role, channel, and emoji mentions
+  const mention_users = getMatches(content, user_regex, 1);
+  const mention_roles = getMatches(content, role_regex, 1);
+  const mention_channels = getMatches(content, channel_regex, 1);
+  const emojis = getMatches(content, emoji_regex, 2);
+
+  try {
+    const requestBody = {
+      message_id,
+      input: {
+        content,
+
+        mention_users: mention_users,
+        mention_roles: mention_roles,
+        mention_channels: mention_channels,
+        emojis: emojis,
+      },
+    };
+
+    const { editMessage: message } = await graphQLClient().request(
+      messageMutations.UPDATE_MESSAGE,
+      requestBody
+    );
+
+    return res.status(200).json({ message });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const deleteMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id, serverId, channelId } = req.params;
+
+  if (!message_id) {
+    return res.status(400).json({ message: "Message ID is required." });
+  }
+
+  // Get the message and check if the user is the sender or they have permission to edit
+  const message = await _getMessage(message_id).catch(() => null);
+  if (!message) {
+    return res.status(404).json({ message: "Message not found." });
+  }
+  if (message.sender_id !== res.locals.uid) {
+    // Get the user role in the channel
+    const permissions = res.locals.userChannelPermissions;
+
+    if (!permissions || permissions?.MANAGE_MESSAGE !== "ALLOWED") {
+      return res.status(403).json({
+        message: "You do not have permission to delete this message.",
+      });
+    }
+  }
+
+  try {
+    const { deleteMessage: deleted } = await graphQLClient().request(
+      messageMutations.DELETE_MESSAGE,
+      {
+        message_id,
+      }
+    );
+
+    return res.status(200).json({ deleted });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const pinMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+
+  if (!message_id) {
+    return res.status(400).json({ message: "Message ID is required." });
+  }
+
+  try {
+    const { pinMessage: pinned } = await graphQLClient().request(
+      messageMutations.PIN_MESSAGE,
+      {
+        message_id,
+      }
+    );
+
+    return res.status(200).json({ pinned });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const unpinMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+
+  if (!message_id) {
+    return res.status(400).json({ message: "Message ID is required." });
+  }
+
+  try {
+    const { unpinMessage: unpinned } = await graphQLClient().request(
+      messageMutations.UNPIN_MESSAGE,
+      {
+        message_id,
+      }
+    );
+
+    return res.status(200).json({ unpinned });
   } catch (error: any) {
     return next(error);
   }
