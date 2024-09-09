@@ -11,11 +11,17 @@ export const checkChannelPermissionMiddleware = (
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const currentUserPermissions = await getUserChannelPermissionsFunc(
-      user_id,
-      channel_id,
-      server_id
-    );
+    let currentUserPermissions = null;
+    if (res.locals.userChannelPermissions) {
+      currentUserPermissions = res.locals.userChannelPermissions;
+    } else {
+      currentUserPermissions = await getUserChannelPermissionsFunc(
+        user_id,
+        channel_id,
+        server_id,
+        { channelObject: res.locals.channelObject }
+      );
+    }
 
     const hasPermission = requiredPermissions.every((permission) => {
       return currentUserPermissions[permission] === "ALLOWED";
