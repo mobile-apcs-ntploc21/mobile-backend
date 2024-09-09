@@ -8,6 +8,7 @@ import messageModel from "@models/conversations/message";
 import conversationModel from "@models/conversations/conversation";
 import mentionModel from "@/models/conversations/mention";
 import attachmentModel from "@models/conversations/attachment";
+import MentionModel from "@/models/conversations/mention";
 
 // ==========================
 interface IMessage {
@@ -29,6 +30,7 @@ interface IMessage {
 
   is_deleted?: boolean;
   is_pinned?: boolean;
+  createdAt?: Date;
 }
 
 interface ISearchQuery {
@@ -85,6 +87,8 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
     }
   }
 
+  console.log("message", message);
+
   // Return the message
   return {
     id: String(message.id),
@@ -103,6 +107,7 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
 
     is_deleted: message.is_deleted,
     is_pinned: message.is_pinned,
+    createdAt: message.createdAt,
   };
 };
 
@@ -226,7 +231,44 @@ const searchMessages = async (
 
   // Initialize the messages array and query
   let messages = [];
+  const messageQuery: any = {};
   const { inConversation, text, from, mention, has } = query;
+
+  // TODO: If this is empty then do a global search
+  if (inConversation.length === 0) {
+    throw new UserInputError("No conversation specified for search!");
+  }
+
+  // 1. Filter by conversation (if provided)
+  if (inConversation && inConversation.length > 0) {
+    messageQuery.conversation_id = { $in: inConversation };
+  }
+
+  // 2. Filter by text
+  if (text) {
+    // Using text index for searching
+    messageQuery.$text = { $search: text };
+  }
+
+  // 3. Filter by sender
+  if (from) {
+    messageQuery.sender_id = from;
+  }
+
+  // 4. Filter by mention
+  if (mention) {
+    const mentions = await MentionModel.find({ mention_user_id: mention });
+    messageQuery._id = { $in: mentions.map((mention) => mention.message_id) };
+  }
+
+  // 5. Filter by attachment (TODO)
+
+  // Execute the query with pagination
+  messages = await messageModel
+    .find(messageQuery)
+    .sort({ _id: -1 })
+    .skip(offset)
+    .limit(limit);
 
   return Promise.all(messages.map((message) => castToIMessage(message)));
 };
