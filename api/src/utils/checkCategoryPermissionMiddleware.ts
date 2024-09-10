@@ -22,8 +22,6 @@ export const checkCategoryPermissionMiddleware = (
       );
     }
 
-    console.log(currentUserPermissions);
-
     const hasPermission = requiredPermissions.every((permission) => {
       return currentUserPermissions[permission] === "ALLOWED";
     });
