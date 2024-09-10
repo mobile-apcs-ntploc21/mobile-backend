@@ -168,7 +168,7 @@ const assignedUserRoleAPI: IResolvers = {
         const server_roles = await ServerRoleModel.find({ server_id }).lean();
 
         // Get the list of role IDs from the server roles
-        const serverRoleIds = server_roles.map((role) => role._id);
+        const serverRoleIds = server_roles.map((role) => String(role._id));
 
         // Fetch the roles assigned to the user in a single query
         const roles = await AssignedUserRoleModel.find({
