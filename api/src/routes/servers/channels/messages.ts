@@ -44,4 +44,21 @@ messageRouter.delete(
   messageCtrl.unpinMessage
 );
 
+// Get reactions of a message
+messageRouter.get("/:messageId/reactions", messageCtrl.getReactions);
+
+// React to a message
+messageRouter.post(
+  "/:messageId/reactions",
+  checkChannelPermissionMiddleware([ChP.ADD_REACTION]),
+  messageCtrl.reactMessage
+);
+
+// Unreact to a message
+messageRouter.delete(
+  "/:messageId/reactions",
+  checkChannelPermissionMiddleware([ChP.ADD_REACTION]),
+  messageCtrl.unreactMessage
+);
+
 export default messageRouter;

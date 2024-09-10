@@ -10,6 +10,7 @@ import conversationModel from "@models/conversations/conversation";
 import mentionModel from "@/models/conversations/mention";
 import attachmentModel from "@models/conversations/attachment";
 import userModel from "@models/user";
+import ServerEmoji from "@/models/servers/serverEmoji";
 
 // ===========================
 
@@ -62,6 +63,22 @@ const reactMessage = async (
     const user = await userModel.findById(input.sender_id).session(session);
     if (!user) {
       throw new UserInputError("User not found!");
+    }
+
+    // Check if emoji exists
+    const emoji = await ServerEmoji.findById(input.emoji).session(session);
+    if (!emoji) {
+      throw new UserInputError("Emoji not found!");
+    }
+
+    // Check if the reaction already exists
+    const existingReaction = await reactionModel.findOne({
+      message_id: message_id,
+      sender_id: input.sender_id,
+      emoji_id: input.emoji,
+    });
+    if (existingReaction) {
+      throw new UserInputError("Reaction already exists!");
     }
 
     // Create a reaction document

@@ -41,6 +41,25 @@ const _getMessage = async (message_id: string): Promise<any> => {
   }
 };
 
+const _getReactions = async (message_id: string): Promise<any> => {
+  if (!message_id) {
+    throw new Error("Message ID is required.");
+  }
+
+  try {
+    const { reactions } = await graphQLClient().request(
+      messageQueries.GET_REACTIONS,
+      {
+        message_id,
+      }
+    );
+
+    return reactions;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
 // ==============
 
 export const getMessage = async (
@@ -198,6 +217,26 @@ export const getPinnedMessages = async (
     }
 
     return res.status(200).json({ messages });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const getReactions = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+
+  try {
+    const reactions = await _getReactions(message_id);
+
+    if (!reactions) {
+      return res.status(404).json({ message: "Reactions not found." });
+    }
+
+    return res.status(200).json({ reactions });
   } catch (error: any) {
     return next(error);
   }
@@ -413,6 +452,72 @@ export const unpinMessage = async (
     );
 
     return res.status(200).json({ unpinned });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const reactMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+  const { emoji_id } = req.body;
+
+  if (!message_id) {
+    return res.status(400).json({ message: "Message ID is required." });
+  }
+  if (!emoji_id) {
+    return res.status(400).json({ message: "Emoji is required." });
+  }
+
+  try {
+    const { reactMessage: reactions } = await graphQLClient().request(
+      messageMutations.REACT_MESSAGE,
+      {
+        message_id,
+        input: {
+          sender_id: res.locals.uid,
+          emoji: emoji_id,
+        },
+      }
+    );
+
+    return res.status(200).json({ reactions });
+  } catch (error: any) {
+    return next(error);
+  }
+};
+
+export const unreactMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+  const { emoji_id } = req.body;
+
+  if (!message_id) {
+    return res.status(400).json({ message: "Message ID is required." });
+  }
+  if (!emoji_id) {
+    return res.status(400).json({ message: "Emoji is required." });
+  }
+
+  try {
+    const { unreactMessage: reactions } = await graphQLClient().request(
+      messageMutations.UNREACT_MESSAGE,
+      {
+        message_id,
+        input: {
+          sender_id: res.locals.uid,
+          emoji: emoji_id,
+        },
+      }
+    );
+
+    return res.status(200).json({ reactions });
   } catch (error: any) {
     return next(error);
   }
