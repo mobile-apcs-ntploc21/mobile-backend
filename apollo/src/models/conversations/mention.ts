@@ -43,7 +43,7 @@ const mentionSchema = new Schema<IMention>(
       default: Date.now,
     },
   },
-  { timestamps: true, _id: false }
+  { timestamps: true, _id: true }
 );
 
 const MentionModel = mongoose.model<IMention>(
@@ -57,12 +57,23 @@ export default MentionModel;
 // mention_channel_id is required if mention_user_id and mention_role_id is not provided and vice versa
 // only one mention is allowed, either mention_user_id or mention_role_id or mention_channel_id
 mentionSchema.pre("save", function (next) {
-  let num_mentions = (this.mention_user_id ? 1 : 0) + (this.mention_role_id ? 1 : 0) + (this.mention_channel_id ? 1 : 0);
+  let num_mentions =
+    (this.mention_user_id ? 1 : 0) +
+    (this.mention_role_id ? 1 : 0) +
+    (this.mention_channel_id ? 1 : 0);
   if (num_mentions === 0) {
-    next(new Error("mention_user_id or mention_role_id or mention_channel_id is required!"));
+    next(
+      new Error(
+        "mention_user_id or mention_role_id or mention_channel_id is required!"
+      )
+    );
   }
   if (num_mentions > 1) {
-    next(new Error("only one mention is allowed, either mention_user_id or mention_role_id or mention_channel_id!"));
+    next(
+      new Error(
+        "only one mention is allowed, either mention_user_id or mention_role_id or mention_channel_id!"
+      )
+    );
   }
   next();
 });
