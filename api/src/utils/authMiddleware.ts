@@ -17,10 +17,6 @@ export const authMiddleware = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  if (res.locals.uid) {
-    return next();
-  }
-
   try {
     let token: string | undefined;
 
@@ -45,6 +41,12 @@ export const authMiddleware = async (
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload;
+
+    // Skip this if the request has already been authenticated
+    if (res.locals?.uid === decoded.id) {
+      return next();
+    }
+
     const user = await getUserById(decoded.id);
     if (!user) {
       return res.status(401).json({

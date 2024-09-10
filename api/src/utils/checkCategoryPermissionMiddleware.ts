@@ -11,11 +11,18 @@ export const checkCategoryPermissionMiddleware = (
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const currentUserPermissions = await getUserCategoryPermissionsFunc(
-      user_id,
-      category_id,
-      server_id
-    );
+    let currentUserPermissions = null;
+    if (category_id && res.locals?.userCategoryId === category_id) {
+      currentUserPermissions = res.locals.userCategoryPermissions;
+    } else {
+      currentUserPermissions = await getUserCategoryPermissionsFunc(
+        user_id,
+        category_id,
+        server_id
+      );
+    }
+
+    console.log(currentUserPermissions);
 
     const hasPermission = requiredPermissions.every((permission) => {
       return currentUserPermissions[permission] === "ALLOWED";
@@ -25,6 +32,7 @@ export const checkCategoryPermissionMiddleware = (
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    res.locals.userCategoryId = category_id;
     res.locals.userCategoryPermissions = currentUserPermissions;
     next();
   };

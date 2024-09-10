@@ -52,9 +52,14 @@ export const getUserChannelPermissionsFunc = async (
     { server_id: serverId, user_id: userId }
   );
 
-  // Fetch all category and channel permissions in parallel
   const roleIds = roles.map((role) => role.id);
-  let [categoryPermissions, channelPermissions] = await Promise.all([
+  // Fetch all category and channel permissions in parallel (with user-specific permission)
+  let [
+    categoryPermissions,
+    channelPermissions,
+    userCategoryPermissions,
+    userChannelPermissions,
+  ] = await Promise.all([
     categoryId
       ? graphQLClient().request(
           serverCategoryPermissionQueries.GET_CATEGORY_ROLES_PERMISSION,
@@ -72,6 +77,25 @@ export const getUserChannelPermissionsFunc = async (
             channel_id: channelId,
           }
         )
+      : null,
+    categoryId
+      ? graphQLClient()
+          .request(
+            serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
+            {
+              user_id: userId,
+              category_id: categoryId,
+            }
+          )
+          .catch((e) => {})
+      : null,
+    channelId
+      ? graphQLClient()
+          .request(serverChannelPermissionQueries.GET_CHANNEL_USER_PERMISSION, {
+            user_id: userId,
+            channel_id: channelId,
+          })
+          .catch((e) => {})
       : null,
   ]);
 
@@ -124,29 +148,6 @@ export const getUserChannelPermissionsFunc = async (
       }
     }
   }
-
-  // Handle user-specific permissions
-  const [userCategoryPermissions, userChannelPermissions] = await Promise.all([
-    categoryId
-      ? graphQLClient()
-          .request(
-            serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
-            {
-              user_id: userId,
-              category_id: categoryId,
-            }
-          )
-          .catch((e) => {})
-      : null,
-    channelId
-      ? graphQLClient()
-          .request(serverChannelPermissionQueries.GET_CHANNEL_USER_PERMISSION, {
-            user_id: userId,
-            channel_id: channelId,
-          })
-          .catch((e) => {})
-      : null,
-  ]);
 
   const parsedUserCategoryPerms = userCategoryPermissions
     ? JSON.parse(userCategoryPermissions.permissions)

@@ -12,7 +12,7 @@ export const checkChannelPermissionMiddleware = (
     }
 
     let currentUserPermissions = null;
-    if (res.locals.userChannelPermissions) {
+    if (channel_id && res.locals?.userChannelId === channel_id) {
       currentUserPermissions = res.locals.userChannelPermissions;
     } else {
       currentUserPermissions = await getUserChannelPermissionsFunc(
@@ -31,6 +31,7 @@ export const checkChannelPermissionMiddleware = (
       return res.status(403).json({ message: "Forbidden" });
     }
 
+    res.locals.userChannelId = channel_id;
     res.locals.userChannelPermissions = currentUserPermissions;
     next();
   };
