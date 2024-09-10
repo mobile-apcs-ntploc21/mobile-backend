@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import graphQLClient from "../utils/graphql";
 import { serverQueries, serverRoleQueries } from "../graphql/queries";
+import { createQuery } from "./getUserChannelPermissions";
+
+// ======================
 
 export const checkServerPermissionMiddleware = (
   requiredPermissions: string[]
@@ -13,25 +16,25 @@ export const checkServerPermissionMiddleware = (
         .status(400)
         .json({ status: "fail", message: "Server ID is required." });
 
+    const checkPermissionsQuery = createQuery(null, null);
+    const response = await graphQLClient().request(checkPermissionsQuery, {
+      server_id: server_id,
+      category_id: null,
+      channel_id: null,
+      user_id: uid,
+    });
+
     try {
       const {
         server: { owner },
-      } = await graphQLClient().request(serverQueries.GET_SERVER_BY_ID, {
-        server_id: server_id,
-      });
+      } = response;
 
       if (owner === uid) {
         next();
         return;
       }
 
-      const { getRolesAssignedWithUser: roles } = await graphQLClient().request(
-        serverRoleQueries.GET_ROLES_ASSIGNED_WITH_USER,
-        {
-          user_id: uid,
-          server_id: server_id,
-        }
-      );
+      const { getRolesAssignedWithUser: roles } = response;
 
       // check if there is any role with admin permission
       const isAdmin = roles.some((role: any) => role.is_admin);

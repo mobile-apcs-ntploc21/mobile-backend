@@ -59,7 +59,7 @@ const createServerTransaction = async (input) => {
       { session }
     );
 
-    await ServerRoleModel.create(
+    const [ServerRole] = await ServerRoleModel.create(
       [
         {
           server_id: server.id,
@@ -81,7 +81,7 @@ const createServerTransaction = async (input) => {
         {
           _id: {
             user_id: input.owner_id,
-            server_role_id: server.id,
+            server_role_id: String(ServerRole.id),
           },
         },
       ],
@@ -128,7 +128,7 @@ const deleteServerTransaction = async (server_id) => {
     const serverRoleIds = serverRoles.map((role) => role._id);
     await AssignedUserRoleModel.deleteMany(
       {
-        server_role_id: { $in: serverRoleIds },
+        "_id.server_role_id": { $in: serverRoleIds },
       },
       { session }
     );
