@@ -39,7 +39,8 @@ const limiter = rateLimit({
   message: `Too many requests from this IP, please try again after ${process.env.MAX_RATE_LIMIT_TIME} minutes !`,
 });
 
-app.use("/api", limiter);
+// Set rate limit if not in development
+if (process.env.NODE_ENV !== "development") app.use("/api", limiter);
 
 // Set environment
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));

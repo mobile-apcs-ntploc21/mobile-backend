@@ -92,7 +92,10 @@ const startApp = async () => {
     cors: true,
   });
 
-  app.use(config.GRAPHQL_ROUTE, limiter);
+  // Add rate limiter middleware if not in development mode
+  if (!config.IS_DEV) {
+    app.use(config.GRAPHQL_ROUTE, limiter);
+  }
 
   return httpserver;
 };
