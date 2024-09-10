@@ -29,6 +29,8 @@ const categorySchema = new Schema<ICategory>(
   { timestamps: true }
 );
 
+categorySchema.index({ server_id: 1 });
+
 const Category = model<ICategory>(ModelNames.Category, categorySchema);
 
 export default Category;
