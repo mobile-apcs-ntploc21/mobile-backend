@@ -34,6 +34,8 @@ const reactionSchema = new Schema<IReaction>(
   { timestamps: true }
 );
 
+reactionSchema.index({ message_id: 1 });
+
 const ReactionModel = mongoose.model<IReaction>(
   ModelNames.Reaction,
   reactionSchema

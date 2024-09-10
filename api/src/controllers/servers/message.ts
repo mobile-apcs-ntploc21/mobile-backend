@@ -135,6 +135,7 @@ export const searchMessages = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
+  const { serverId } = req.params;
   const { page, limit } = req.query;
   const {
     content,
@@ -153,6 +154,15 @@ export const searchMessages = async (
   const inConversation = Array.isArray(conversationIds)
     ? conversationIds
     : [conversationIds];
+
+  if (inChannel.length === 0 && inConversation.length === 0) {
+    // TODO: Do a global search for the server
+
+    return res.status(400).json({
+      message:
+        "At least one channel or conversation ID is required.\r\n Global search is not yet supported.",
+    });
+  }
 
   try {
     const requestBody = {

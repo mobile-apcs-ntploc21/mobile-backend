@@ -26,6 +26,9 @@ const serverBanSchema = new Schema<IServerBan>(
   { timestamps: true }
 );
 
+serverBanSchema.index({ server_id: 1 }); // Find all banned users in a server
+serverBanSchema.index({ user_id: 1 }); // Check if a user is banned from a server
+
 const ServerBan = mongoose.model(ModelNames.Server_Ban, serverBanSchema);
 
 export default ServerBan;

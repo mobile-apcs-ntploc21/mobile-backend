@@ -67,6 +67,9 @@ const channelSchema = new Schema<IChannel>(
   { timestamps: true }
 );
 
+channelSchema.index({ server_id: 1 }); // Find all channels in a server
+channelSchema.index({ category_id: 1 }); // Find all channels in a category
+
 const Channel = mongoose.model<IChannel>(ModelNames.Channel, channelSchema);
 
 export default Channel;

@@ -57,6 +57,9 @@ const messageSchema = new Schema<IMessage>(
 
 // Create indexes for the message schema
 messageSchema.index({ content: "text" });
+// Querying messages by conversation_id and sender_id
+messageSchema.index({ conversation_id: 1 });
+messageSchema.index({ sender_id: 1 });
 
 // Create a Message model from the message schema
 const MessageModel = mongoose.model<IMessage>(
