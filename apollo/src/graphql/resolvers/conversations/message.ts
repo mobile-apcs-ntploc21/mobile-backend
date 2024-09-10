@@ -172,13 +172,35 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
     // Handle error
   }
 
-  // 4. Return the extra fields
+  // 4. Fetch the replied messages
+  const repliedMessagesMap = new Map<string, IMessage>();
+  const repliedMessageIds = messages
+    .map((msg) => msg.replied_message_id)
+    .filter(Boolean);
+  if (repliedMessageIds.length > 0) {
+    const repliedMessages = await messageModel
+      .find({ _id: { $in: repliedMessageIds } })
+      .lean();
+
+    repliedMessages.forEach((msg) => {
+      repliedMessagesMap.set(String(msg._id), {
+        id: String(msg._id),
+        conversation_id: String(msg.conversation_id),
+        sender_id: String(msg.sender_id),
+        content: msg.content,
+        is_deleted: msg.is_deleted,
+      });
+    });
+  }
+
+  // 5. Return the extra fields
   return messages.map((msg) => ({
     mention_users: mentionUsersMap.get(String(msg._id)) || [],
     mention_roles: mentionRolesMap.get(String(msg._id)) || [],
     mention_channels: mentionChannelsMap.get(String(msg._id)) || [],
     emojis: emojis.find((e) => e.messageId === msg._id)?.emojis || [],
     reactions: reactionsMap.get(String(msg._id)) || [],
+    replied_message: repliedMessagesMap.get(String(msg.replied_message_id)),
   }));
 };
 
@@ -199,7 +221,7 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
   let mention_channels = extra?.mention_channels || []; // List of channel IDs
   let emojis = extra?.emojis || []; // List of emoji IDs
   let reactions: IMessageReaction[] = extra?.reactions || []; // List of reactions
-  let replied_message: IMessage = null;
+  let replied_message: IMessage = extra?.replied_message || null; // Replied message
 
   // Fetch the replied message
   if (message.replied_message_id && message.replied_message_id !== null) {
@@ -256,7 +278,7 @@ const getMessage = async (id: string): Promise<IMessage> => {
   if (!message || message.is_deleted) {
     throw new UserInputError("Message not found or has been deleted!");
   }
-  return castToIMessage(message);
+  return castToIMessage(message, fetchExtraFields([message])[0]);
 };
 
 /**
@@ -427,7 +449,13 @@ const searchMessages = async (
     .limit(limit)
     .lean();
 
-  return Promise.all(messages.map((message) => castToIMessage(message)));
+  // Cast the messages to IMessage
+  const extraFields = await fetchExtraFields(messages);
+  return Promise.all(
+    messages.map((message, index) =>
+      castToIMessage(message, extraFields[index])
+    )
+  );
 };
 
 /**
