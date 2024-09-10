@@ -8,10 +8,10 @@ import { _getChannel } from "./channels/channel";
 
 // ==============
 
-const user_regex = /<@!?(.*?)>/g;
-const role_regex = /<@&(.*?)>/g;
-const channel_regex = /<#(.*?)>/g;
-const emoji_regex = /<:(.*?):(.*?)>/g;
+const user_regex = /<@!?([a-f0-9]{24})>/g;
+const role_regex = /<@&([a-f0-9]{24})>/g;
+const channel_regex = /<#([a-f0-9]{24})>/g;
+const emoji_regex = /<:(.*?):([a-f0-9]{24})>/g;
 
 function getMatches(string: string, regex: RegExp, index: number) {
   const matches = [];

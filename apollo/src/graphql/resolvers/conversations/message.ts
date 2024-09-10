@@ -52,6 +52,19 @@ interface ISearchQuery {
 
 // ==========================
 
+const emoji_regex = /<:(.*?):([a-f0-9]{24})>/g;
+
+function getMatches(string: string, regex: RegExp, index: number) {
+  const matches = [];
+  let match;
+  while ((match = regex.exec(string))) {
+    matches.push(match[index]);
+  }
+  return matches;
+}
+
+// ==========================
+
 /**
  * Cast a message to IMessage object
  *
@@ -70,6 +83,22 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
   let emojis = extra?.emojis || []; // List of emoji IDs
   let reactions: IMessageReaction[] = []; // List of reactions
   let replied_message: IMessage = null;
+
+  if (!extra) {
+    // Fetch the mentions of the message ourselves
+    const mentions = await mentionModel.find({ message_id: message._id });
+    mention_users = mentions
+      .filter((mention) => mention.mention_user_id)
+      .map((mention) => mention.mention_user_id);
+    mention_roles = mentions
+      .filter((mention) => mention.mention_role_id)
+      .map((mention) => mention.mention_role_id);
+    mention_channels = mentions
+      .filter((mention) => mention.mention_channel_id)
+      .map((mention) => mention.mention_channel_id);
+
+    emojis = getMatches(message.content, emoji_regex, 2);
+  }
 
   // Fetch the mention users of the message
   // if (mention_users.length > 0) {
