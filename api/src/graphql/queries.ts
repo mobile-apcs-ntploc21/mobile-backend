@@ -692,4 +692,14 @@ export const messageQueries = {
       }
     }
   `,
+
+  GET_REACTIONS: gql`
+    query reactions($message_id: ID!) {
+      reactions(message_id: $message_id) {
+        message_id
+        sender_id
+        emoji_id
+      }
+    }
+  `,
 };

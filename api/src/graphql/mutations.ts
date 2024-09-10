@@ -936,4 +936,23 @@ export const messageMutations = {
       }
     }
   `,
+
+  REACT_MESSAGE: gql`
+    mutation reactMessage($message_id: ID!, $input: ReactMessageInput!) {
+      reactMessage(message_id: $message_id, input: $input) {
+        message_id
+        sender_id
+        emoji_id
+      }
+    }
+  `,
+  UNREACT_MESSAGE: gql`
+    mutation unreactMessage($message_id: ID!, $input: ReactMessageInput!) {
+      unreactMessage(message_id: $message_id, input: $input) {
+        message_id
+        sender_id
+        emoji_id
+      }
+    }
+  `,
 };

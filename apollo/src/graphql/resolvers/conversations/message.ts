@@ -66,6 +66,123 @@ function getMatches(string: string, regex: RegExp, index: number) {
 // ==========================
 
 /**
+ * This will fetch extra fields of all messages at once
+ * And return them into mention_users, mention_roles, mention_channels, emojis, and reactions
+ *
+ * @async
+ * @param {any[]} messages - The list of messages
+ * @returns {Promise<any>} - The extra fields
+ */
+const fetchExtraFields = async (messages: any[]): Promise<any> => {
+  const messageIds = messages.map((message) => message._id);
+
+  // 1. Fetch the mentions of the messages
+  const mentions = await mentionModel
+    .find({ message_id: { $in: messageIds } })
+    .lean();
+  const mentionUsersMap = new Map<string, string[]>();
+  const mentionRolesMap = new Map<string, string[]>();
+  const mentionChannelsMap = new Map<string, string[]>();
+
+  mentions.forEach((mention) => {
+    if (mention.mention_user_id) {
+      if (!mentionUsersMap.has(String(mention.message_id)))
+        mentionUsersMap.set(String(mention.message_id), []);
+      mentionUsersMap
+        .get(String(mention.message_id))
+        .push(String(mention.mention_user_id));
+    }
+    if (mention.mention_role_id) {
+      if (!mentionRolesMap.has(String(mention.message_id)))
+        mentionRolesMap.set(String(mention.message_id), []);
+      mentionRolesMap
+        .get(String(mention.message_id))
+        .push(String(mention.mention_role_id));
+    }
+    if (mention.mention_channel_id) {
+      if (!mentionChannelsMap.has(String(mention.message_id)))
+        mentionChannelsMap.set(String(mention.message_id), []);
+      mentionChannelsMap
+        .get(String(mention.message_id))
+        .push(String(mention.mention_channel_id));
+    }
+  });
+
+  // 2. Update emojis for all messages
+  const emojis = messages.map((msg) => ({
+    messageId: msg._id,
+    emojis: getMatches(msg.content, emoji_regex, 2),
+  }));
+
+  // 3. Fetch the reactions of the messages
+  const reactionsMap = new Map<string, IMessageReaction[]>();
+  try {
+    const reactions = await ReactionModel.aggregate([
+      { $match: { message_id: { $in: messageIds } } },
+      {
+        $group: {
+          _id: "$message_id",
+          reactions: {
+            $push: {
+              emoji_id: "$emoji_id",
+              reactors: "$sender_id",
+            },
+          },
+        },
+      },
+      {
+        $unwind: "$reactions",
+      },
+      {
+        $group: {
+          _id: {
+            message_id: "$_id",
+            emoji_id: "$reactions.emoji_id",
+          },
+          reactors: {
+            $push: "$reactions.reactors",
+          },
+        },
+      },
+      {
+        $project: {
+          _id: "$_id.message_id",
+          emoji_id: "$_id.emoji_id",
+          reactors: 1,
+          count: { $size: "$reactors" },
+        },
+      },
+    ]);
+
+    reactions.forEach((reaction) => {
+      const reactionData = {
+        emoji_id: String(reaction.emoji_id),
+        count: reaction.count,
+        reactors: reaction.reactors.map((r) => String(r)),
+      };
+      const messageId = String(reaction._id);
+
+      if (!reactionsMap.has(messageId)) {
+        reactionsMap.set(messageId, []);
+      }
+      reactionsMap.get(messageId).push(reactionData);
+    });
+  } catch (e) {
+    console.log(e);
+    // Handle error
+  }
+
+  // 4. Return the extra fields
+  return messages.map((msg) => ({
+    mention_users: mentionUsersMap.get(String(msg._id)) || [],
+    mention_roles: mentionRolesMap.get(String(msg._id)) || [],
+    mention_channels: mentionChannelsMap.get(String(msg._id)) || [],
+    emojis: emojis.find((e) => e.messageId === msg._id)?.emojis || [],
+    reactions: reactionsMap.get(String(msg._id)) || [],
+  }));
+};
+
+/**
  * Cast a message to IMessage object
  *
  * @param {*} message - The message object
@@ -81,64 +198,8 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
   let mention_roles = extra?.mention_roles || []; // List of role IDs
   let mention_channels = extra?.mention_channels || []; // List of channel IDs
   let emojis = extra?.emojis || []; // List of emoji IDs
-  let reactions: IMessageReaction[] = []; // List of reactions
+  let reactions: IMessageReaction[] = extra?.reactions || []; // List of reactions
   let replied_message: IMessage = null;
-
-  if (!extra) {
-    // Fetch the mentions of the message ourselves
-    const mentions = await mentionModel.find({ message_id: message._id });
-    mention_users = mentions
-      .filter((mention) => mention.mention_user_id)
-      .map((mention) => mention.mention_user_id);
-    mention_roles = mentions
-      .filter((mention) => mention.mention_role_id)
-      .map((mention) => mention.mention_role_id);
-    mention_channels = mentions
-      .filter((mention) => mention.mention_channel_id)
-      .map((mention) => mention.mention_channel_id);
-
-    emojis = getMatches(message.content, emoji_regex, 2);
-  }
-
-  // Fetch the mention users of the message
-  // if (mention_users.length > 0) {
-  //   try {
-  //     // Fetch the user profile
-  //     const userProfiles = await UserProfileModel.find({
-  //       user_id: { $in: mention_users },
-  //     });
-
-  //     mention_users = userProfiles.map((profile) => profile.user_id);
-  //   } catch (e) {
-  //     // Do nothing
-  //   }
-  // }
-
-  // Fetch the reactions of the message
-  if (message.reactions && message.reactions.length > 0) {
-    try {
-      const reactions_ = await ReactionModel.aggregate([
-        {
-          $match: { message_id: message.id },
-        },
-        {
-          $group: {
-            _id: "$emoji_id",
-            count: { $sum: 1 },
-            reactors: { $push: "$senter_id" },
-          },
-        },
-      ]);
-
-      reactions = reactions_.map((reaction) => ({
-        emoji_id: reaction._id,
-        count: reaction.count,
-        reactors: reaction.reactors,
-      }));
-    } catch (e) {
-      // Do nothing
-    }
-  }
 
   // Fetch the replied message
   if (message.replied_message_id && message.replied_message_id !== null) {
@@ -283,8 +344,11 @@ const getMessages = async (
   }
 
   // Cast the messages to IMessage
-  return await Promise.all(
-    messages.map(async (message) => await castToIMessage(message))
+  const extraFields = await fetchExtraFields(messages);
+  return Promise.all(
+    messages.map((message, index) =>
+      castToIMessage(message, extraFields[index])
+    )
   );
 };
 
