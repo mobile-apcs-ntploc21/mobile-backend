@@ -5,7 +5,12 @@ import {
   serverRoleQueries,
 } from "../graphql/queries";
 import { CategoryPermissions } from "../constants/permissions";
+import { createQuery } from "./getUserChannelPermissions";
 
+// ======================
+// This is for graphQL query
+
+// ======================
 /*
 - get all server roles assigned with the current user
 - for each server role, get the category permissions associated with that role (if exists)
@@ -28,47 +33,28 @@ export const getUserCategoryPermissionsFunc = async (
   let isServerOwner = false;
   let combinedPermissions = {};
 
+  const checkPermissionsQuery = createQuery(null, categoryId);
+  const response = await graphQLClient().request(checkPermissionsQuery, {
+    server_id: serverId,
+    category_id: categoryId,
+    channel_id: null,
+    user_id: userId,
+  });
+
   try {
     // Get server details and check if the user is the server owner
-    const { server } = await graphQLClient().request(
-      serverQueries.GET_SERVER_BY_ID,
-      { server_id: serverId }
-    );
+    const { server } = response;
     if (server.owner === userId) isServerOwner = true;
   } catch (error) {
     throw new Error("Error fetching server details: " + error.message);
   }
 
   // Fetch roles assigned to the user
-  const { getRolesAssignedWithUser: roles } = await graphQLClient().request(
-    serverRoleQueries.GET_ROLES_ASSIGNED_WITH_USER,
-    { server_id: serverId, user_id: userId }
-  );
+  const { getRolesAssignedWithUser: roles } = response;
   const roleIds = roles.map((role) => role.id);
 
   // Fetch all category and channel permissions in parallel (with user-specific permission)
-  let [categoryPermissions, userCategoryPermissions] = await Promise.all([
-    categoryId
-      ? graphQLClient().request(
-          serverCategoryPermissionQueries.GET_CATEGORY_ROLES_PERMISSION,
-          {
-            role_ids: roleIds,
-            category_id: categoryId,
-          }
-        )
-      : null,
-    categoryId
-      ? graphQLClient()
-          .request(
-            serverCategoryPermissionQueries.GET_CATEGORY_USER_PERMISSION,
-            {
-              user_id: userId,
-              category_id: categoryId,
-            }
-          )
-          .catch((e) => {})
-      : null,
-  ]);
+  let { categoryPermissions, userCategoryPermissions } = response;
 
   // Filter category and channel permissions with our roleIds
   categoryPermissions =

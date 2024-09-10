@@ -1,14 +1,18 @@
-import {IResolvers} from "@graphql-tools/utils";
-import {UserInputError} from "apollo-server";
-import mongoose, {ObjectId} from "mongoose";
-import {publishEvent, ServerEvents} from "../../../pubsub/pubsub";
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError } from "apollo-server";
+import mongoose, { ObjectId } from "mongoose";
+import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 import UserModel from "../../../../models/user";
 import Category from "../../../../models/servers/channels/category";
 import CategoryUserPermission from "../../../../models/servers/channels/category_user_permission";
 import UserProfileModel from "@models/user_profile";
-import {defaultCategoryRole} from "./category_role_permission";
+import { defaultCategoryRole } from "./category_role_permission";
 
-const createCategoryUserPermission = async (user_id: ObjectId, category_id: ObjectId,  permissions: String ) => {
+const createCategoryUserPermission = async (
+  user_id: ObjectId,
+  category_id: ObjectId,
+  permissions: String
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -24,17 +28,21 @@ const createCategoryUserPermission = async (user_id: ObjectId, category_id: Obje
       throw new UserInputError("Category not found");
     }
     // check if user is already assigned with the category
-    if (await CategoryUserPermission.exists({
-      '_id.user_id': user_id,
-      '_id.category_id': category_id
-    })) {
-      throw new UserInputError("User is already assigned to category permissions!");
+    if (
+      await CategoryUserPermission.exists({
+        "_id.user_id": user_id,
+        "_id.category_id": category_id,
+      })
+    ) {
+      throw new UserInputError(
+        "User is already assigned to category permissions!"
+      );
     }
 
     const category_user_permission = await CategoryUserPermission.create({
       _id: {
         user_id,
-        category_id
+        category_id,
       },
       permissions,
     });
@@ -70,38 +78,40 @@ const categoryUserPermissionAPI: IResolvers = {
         const server_id = category.server_id;
 
         const categoryUsers = await CategoryUserPermission.find({
-          '_id.category_id': category_id,
+          "_id.category_id": category_id,
         });
 
-
         // Use Promise.all to fetch all users
-        return await Promise.all(categoryUsers.map(async (categoryUser) => {
-          const user_id = categoryUser._id.user_id;
-          let user = await UserProfileModel.findOne({
-            user_id: user_id,
-            server_id: server_id,
-          });
-
-          if (!user) {
-            user = await UserProfileModel.findOne({
+        return await Promise.all(
+          categoryUsers.map(async (categoryUser) => {
+            const user_id = categoryUser._id.user_id;
+            let user = await UserProfileModel.findOne({
               user_id: user_id,
-              server_id: null,
+              server_id: server_id,
             });
-          }
 
-          return {
-            id: user_id,
-            username: user.username,
-            display_name: user.display_name,
-            avatar_url: user.avatar_url,
-            banner_url: user.banner_url,
-            about_me: user.about_me,
-            permissions: categoryUser.permissions,
-          };
-        }));
+            if (!user) {
+              user = await UserProfileModel.findOne({
+                user_id: user_id,
+                server_id: null,
+              });
+            }
 
+            return {
+              id: user_id,
+              username: user.username,
+              display_name: user.display_name,
+              avatar_url: user.avatar_url,
+              banner_url: user.banner_url,
+              about_me: user.about_me,
+              permissions: categoryUser.permissions,
+            };
+          })
+        );
       } catch (err) {
-        throw new UserInputError("Cannot get category permissions associated with this user!");
+        throw new UserInputError(
+          "Cannot get category permissions associated with this user!"
+        );
       }
     },
     getCategoryUserPermission: async (_, { user_id, category_id }) => {
@@ -113,11 +123,12 @@ const categoryUserPermissionAPI: IResolvers = {
         const server_id = category.server_id;
 
         const category_user_permission = await CategoryUserPermission.findOne({
-          '_id.user_id': user_id,
-          '_id.category_id': category_id
+          "_id.user_id": user_id,
+          "_id.category_id": category_id,
         });
 
         if (!category_user_permission) {
+          return null;
           throw new UserInputError("Category user permission not found");
         }
 
@@ -143,15 +154,23 @@ const categoryUserPermissionAPI: IResolvers = {
           permissions: category_user_permission.permissions,
         };
       } catch (err) {
-        throw new UserInputError("Cannot get category permissions associated with this user!");
+        throw new UserInputError(
+          "Cannot get category permissions associated with this user!"
+        );
       }
     },
   },
   Mutation: {
-    createCategoryUserPermission: async (_, { user_id, category_id, permissions }) => {
+    createCategoryUserPermission: async (
+      _,
+      { user_id, category_id, permissions }
+    ) => {
       try {
-
-        const category_user_permission = await createCategoryUserPermission(user_id, category_id, permissions);
+        const category_user_permission = await createCategoryUserPermission(
+          user_id,
+          category_id,
+          permissions
+        );
 
         const category = await Category.findById(category_id);
 
@@ -164,39 +183,45 @@ const categoryUserPermissionAPI: IResolvers = {
         });
 
         const categoryUsers = await CategoryUserPermission.find({
-          '_id.category_id': category_id
+          "_id.category_id": category_id,
         });
 
-        return await Promise.all(categoryUsers.map(async (categoryUser) => {
-          const user_id = categoryUser._id.user_id;
-          let user = await UserProfileModel.findOne({
-            user_id: user_id,
-            server_id: category.server_id,
-          });
-
-          if (!user) {
-            user = await UserProfileModel.findOne({
+        return await Promise.all(
+          categoryUsers.map(async (categoryUser) => {
+            const user_id = categoryUser._id.user_id;
+            let user = await UserProfileModel.findOne({
               user_id: user_id,
-              server_id: null,
+              server_id: category.server_id,
             });
-          }
 
-          return {
-            id: user_id,
-            username: user.username,
-            display_name: user.display_name,
-            avatar_url: user.avatar_url,
-            banner_url: user.banner_url,
-            about_me: user.about_me,
-            permissions: categoryUser.permissions
-          };
-        }));
+            if (!user) {
+              user = await UserProfileModel.findOne({
+                user_id: user_id,
+                server_id: null,
+              });
+            }
+
+            return {
+              id: user_id,
+              username: user.username,
+              display_name: user.display_name,
+              avatar_url: user.avatar_url,
+              banner_url: user.banner_url,
+              about_me: user.about_me,
+              permissions: categoryUser.permissions,
+            };
+          })
+        );
       } catch (error) {
-        throw new UserInputError("Cannot create category permissions for user!");
+        throw new UserInputError(
+          "Cannot create category permissions for user!"
+        );
       }
-
     },
-    updateCategoryUserPermission: async (_, { user_id, category_id, permissions }) => {
+    updateCategoryUserPermission: async (
+      _,
+      { user_id, category_id, permissions }
+    ) => {
       try {
         const category = await Category.findById(category_id);
         if (!category) {
@@ -204,14 +229,15 @@ const categoryUserPermissionAPI: IResolvers = {
         }
         const server_id = category.server_id;
 
-        const category_user_permission = await CategoryUserPermission.findOneAndUpdate(
-          {
-            '_id.user_id': user_id,
-            '_id.category_id': category_id
-          },
-          {permissions},
-          {new: true}
-        );
+        const category_user_permission =
+          await CategoryUserPermission.findOneAndUpdate(
+            {
+              "_id.user_id": user_id,
+              "_id.category_id": category_id,
+            },
+            { permissions },
+            { new: true }
+          );
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryUserUpdated,
@@ -243,15 +269,18 @@ const categoryUserPermissionAPI: IResolvers = {
           permissions: category_user_permission.permissions,
         };
       } catch (error) {
-        throw new UserInputError("Cannot update category permissions for user!");
+        throw new UserInputError(
+          "Cannot update category permissions for user!"
+        );
       }
     },
     deleteCategoryUserPermission: async (_, { user_id, category_id }) => {
       try {
-        const category_user_permission = await CategoryUserPermission.findOneAndDelete({
-          '_id.user_id': user_id,
-          '_id.category_id': category_id
-        });
+        const category_user_permission =
+          await CategoryUserPermission.findOneAndDelete({
+            "_id.user_id": user_id,
+            "_id.category_id": category_id,
+          });
 
         const category = await Category.findById(category_id);
 
@@ -264,35 +293,39 @@ const categoryUserPermissionAPI: IResolvers = {
         });
 
         const categoryUsers = await CategoryUserPermission.find({
-          '_id.category_id': category_id
+          "_id.category_id": category_id,
         });
 
-        return await Promise.all(categoryUsers.map(async (categoryUser) => {
-          const user_id = categoryUser._id.user_id;
-          let user = await UserProfileModel.findOne({
-            user_id: user_id,
-            server_id: category.server_id,
-          });
-
-          if (!user) {
-            user = await UserProfileModel.findOne({
+        return await Promise.all(
+          categoryUsers.map(async (categoryUser) => {
+            const user_id = categoryUser._id.user_id;
+            let user = await UserProfileModel.findOne({
               user_id: user_id,
-              server_id: null,
+              server_id: category.server_id,
             });
-          }
 
-          return {
-            id: user_id,
-            username: user.username,
-            display_name: user.display_name,
-            avatar_url: user.avatar_url,
-            banner_url: user.banner_url,
-            about_me: user.about_me,
-            permissions: categoryUser.permissions
-          };
-        }));
+            if (!user) {
+              user = await UserProfileModel.findOne({
+                user_id: user_id,
+                server_id: null,
+              });
+            }
+
+            return {
+              id: user_id,
+              username: user.username,
+              display_name: user.display_name,
+              avatar_url: user.avatar_url,
+              banner_url: user.banner_url,
+              about_me: user.about_me,
+              permissions: categoryUser.permissions,
+            };
+          })
+        );
       } catch (error) {
-        throw new UserInputError("Cannot delete category permissions for user!");
+        throw new UserInputError(
+          "Cannot delete category permissions for user!"
+        );
       }
     },
   },
