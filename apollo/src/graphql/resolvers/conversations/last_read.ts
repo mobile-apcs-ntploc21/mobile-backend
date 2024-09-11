@@ -146,3 +146,5 @@ const resolvers: IResolvers = {
     updateLastRead: async (_, { input }) => updateLastRead(input),
   },
 };
+
+export default resolvers;
