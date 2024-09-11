@@ -19,11 +19,19 @@ interface IMessageReaction {
   reactors: string[];
 }
 
+interface IProfile {
+  user_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+}
+
 interface IMessage {
   id: string;
 
   conversation_id: string;
   sender_id: string;
+  author?: IProfile;
 
   content: string;
   replied_message_id?: string;
@@ -38,6 +46,7 @@ interface IMessage {
 
   is_deleted?: boolean;
   is_pinned?: boolean;
+  is_modified?: boolean;
   createdAt?: Date;
 }
 
@@ -193,8 +202,22 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
     });
   }
 
-  // 5. Return the extra fields
+  // 5. Fetch the user profile of the senders
+  const senderIds = messages.map((msg) => msg.sender_id);
+  const senders = await UserProfileModel.find({ user_id: { $in: senderIds } });
+  const senderMap = new Map<string, IProfile>();
+  senders.forEach((sender) => {
+    senderMap.set(String(sender.user_id), {
+      user_id: String(sender.user_id),
+      username: sender.username,
+      display_name: sender.display_name,
+      avatar_url: sender.avatar_url,
+    });
+  });
+
+  // 6. Return the extra fields
   return messages.map((msg) => ({
+    author: senderMap.get(String(msg.sender_id)) || null,
     mention_users: mentionUsersMap.get(String(msg._id)) || [],
     mention_roles: mentionRolesMap.get(String(msg._id)) || [],
     mention_channels: mentionChannelsMap.get(String(msg._id)) || [],
@@ -249,6 +272,8 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
     id: String(message._id || message.id),
     conversation_id: String(message.conversation_id),
     sender_id: String(message.sender_id),
+    author: extra?.author || null,
+
     content: message.content,
     replied_message_id: message.replied_message_id,
     forwarded_message_id: message.forwarded_message_id,
@@ -262,6 +287,7 @@ const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
 
     is_deleted: message.is_deleted,
     is_pinned: message.is_pinned,
+    is_modified: message.is_modified,
     createdAt: message.createdAt,
   };
 };
@@ -559,6 +585,17 @@ const createMessageTransaction = async (
       { session, new: true }
     );
 
+    // Update the last message in the channel model
+    await channelModel.updateOne(
+      {
+        conversation_id: conversation_id,
+      },
+      {
+        last_message_id: message._id,
+      },
+      { session, new: true }
+    );
+
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
@@ -600,10 +637,10 @@ const updateMessageTransaction = async (
   session.startTransaction();
 
   try {
-    // Update the message
+    // Update the message content and is_modified flag
     const message = await messageModel.findByIdAndUpdate(
       message_id,
-      { content: content },
+      { content: content, is_modified: true },
       { session, new: true }
     );
 
