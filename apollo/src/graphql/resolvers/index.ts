@@ -24,6 +24,7 @@ import category_user_permission from "./servers/channels/category_user_permissio
 /// Conversation
 import messageResolver from "./conversations/message";
 import reactionResolver from "./conversations/reaction";
+import lastReadResolver from "./conversations/last_read";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -33,6 +34,10 @@ export const apiResolvers = mergeResolvers([
   userProfileApollo,
   userSettingsResolvers,
   userStatusResolvers_API,
+
+  messageResolver.API,
+  reactionResolver.API,
+  lastReadResolver,
 
   serverResolver.API,
   serverMemberResolver.API,
@@ -47,9 +52,6 @@ export const apiResolvers = mergeResolvers([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
-
-  messageResolver.API,
-  reactionResolver.API,
 ]);
 
 export const wsResolvers = mergeResolvers([

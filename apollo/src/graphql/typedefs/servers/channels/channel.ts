@@ -1,26 +1,30 @@
 import { gql } from "apollo-server-express";
+import Message from "../../conversations/message";
 
-const gqlTypes = gql`
-  type Channel {
-    id: ID
-    server_id: ID
-    conversation_id: ID
-    category_id: ID
+const gqlTypes = [
+  Message.type,
+  gql`
+    type Channel {
+      id: ID
+      server_id: ID
+      conversation_id: ID
+      category_id: ID
 
-    name: String
-    description: String
-    last_message_id: ID
-    position: Int
+      name: String
+      description: String
+      last_message_id: ID
+      position: Int
 
-    last_message: Message
-    has_new_message: Boolean
-    number_of_unread_mentions: Int
+      last_message: Message
+      has_new_message: Boolean
+      number_of_unread_mentions: Int
 
-    is_nsfw: Boolean
-    is_archived: Boolean
-    is_deleted: Boolean
-  }
-`;
+      is_nsfw: Boolean
+      is_archived: Boolean
+      is_deleted: Boolean
+    }
+  `,
+];
 
 const gqlAPI = gql`
   input createChannelInput {
@@ -46,7 +50,7 @@ const gqlAPI = gql`
 
   extend type Query {
     getChannel(channel_id: ID!): Channel
-    getChannels(server_id: ID!): [Channel]
+    getChannels(server_id: ID!, user_id: ID): [Channel]
   }
 
   extend type Mutation {
