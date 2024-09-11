@@ -12,6 +12,10 @@ const gqlTypes = gql`
     last_message_id: ID
     position: Int
 
+    last_message: Message
+    has_new_message: Boolean
+    number_of_unread_mentions: Int
+
     is_nsfw: Boolean
     is_archived: Boolean
     is_deleted: Boolean
