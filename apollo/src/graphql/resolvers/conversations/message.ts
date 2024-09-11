@@ -84,73 +84,32 @@ function getMatches(string: string, regex: RegExp, index: number) {
  */
 const fetchExtraFields = async (messages: any[]): Promise<any> => {
   const messageIds = messages.map((message) => message._id);
+  const senderIds = messages.map((msg) => msg.sender_id);
+  const repliedMessageIds = messages
+    .map((msg) => msg.replied_message_id)
+    .filter(Boolean);
 
-  // 1. Fetch the mentions of the messages
-  const mentions = await mentionModel
-    .find({ message_id: { $in: messageIds } })
-    .lean();
-  const mentionUsersMap = new Map<string, string[]>();
-  const mentionRolesMap = new Map<string, string[]>();
-  const mentionChannelsMap = new Map<string, string[]>();
-
-  mentions.forEach((mention) => {
-    if (mention.mention_user_id) {
-      if (!mentionUsersMap.has(String(mention.message_id)))
-        mentionUsersMap.set(String(mention.message_id), []);
-      mentionUsersMap
-        .get(String(mention.message_id))
-        .push(String(mention.mention_user_id));
-    }
-    if (mention.mention_role_id) {
-      if (!mentionRolesMap.has(String(mention.message_id)))
-        mentionRolesMap.set(String(mention.message_id), []);
-      mentionRolesMap
-        .get(String(mention.message_id))
-        .push(String(mention.mention_role_id));
-    }
-    if (mention.mention_channel_id) {
-      if (!mentionChannelsMap.has(String(mention.message_id)))
-        mentionChannelsMap.set(String(mention.message_id), []);
-      mentionChannelsMap
-        .get(String(mention.message_id))
-        .push(String(mention.mention_channel_id));
-    }
-  });
-
-  // 2. Update emojis for all messages
-  const emojis = messages.map((msg) => ({
-    messageId: msg._id,
-    emojis: getMatches(msg.content, emoji_regex, 2),
-  }));
-
-  // 3. Fetch the reactions of the messages
-  const reactionsMap = new Map<string, IMessageReaction[]>();
-  try {
-    const reactions = await ReactionModel.aggregate([
+  // 1. Perform all the fetch operations in parallel to minimize blocking
+  const [mentions, reactions, repliedMessages, senders] = await Promise.all([
+    mentionModel.find({ message_id: { $in: messageIds } }).lean(),
+    ReactionModel.aggregate([
       { $match: { message_id: { $in: messageIds } } },
       {
         $group: {
           _id: "$message_id",
           reactions: {
-            $push: {
-              emoji_id: "$emoji_id",
-              reactors: "$sender_id",
-            },
+            $push: { emoji_id: "$emoji_id", reactors: "$sender_id" },
           },
         },
       },
-      {
-        $unwind: "$reactions",
-      },
+      { $unwind: "$reactions" },
       {
         $group: {
           _id: {
             message_id: "$_id",
             emoji_id: "$reactions.emoji_id",
           },
-          reactors: {
-            $push: "$reactions.reactors",
-          },
+          reactors: { $push: "$reactions.reactors" },
         },
       },
       {
@@ -161,52 +120,63 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
           count: { $size: "$reactors" },
         },
       },
-    ]);
+    ]),
+    repliedMessageIds.length > 0
+      ? messageModel.find({ _id: { $in: repliedMessageIds } }).lean()
+      : Promise.resolve([]),
+    UserProfileModel.find({ user_id: { $in: senderIds } }).lean(),
+  ]);
 
-    reactions.forEach((reaction) => {
-      const reactionData = {
-        emoji_id: String(reaction.emoji_id),
-        count: reaction.count,
-        reactors: reaction.reactors.map((r) => String(r)),
-      };
-      const messageId = String(reaction._id);
+  // 2. Process mentions
+  const mentionUsersMap = new Map<string, string[]>();
+  const mentionRolesMap = new Map<string, string[]>();
+  const mentionChannelsMap = new Map<string, string[]>();
 
-      if (!reactionsMap.has(messageId)) {
-        reactionsMap.set(messageId, []);
-      }
-      reactionsMap.get(messageId).push(reactionData);
-    });
-  } catch (e) {
-    console.log(e);
-    // Handle error
-  }
+  mentions.forEach((mention) => {
+    const messageId = String(mention.message_id);
+    if (mention.mention_user_id) {
+      if (!mentionUsersMap.has(messageId)) mentionUsersMap.set(messageId, []);
+      mentionUsersMap.get(messageId).push(String(mention.mention_user_id));
+    }
+    if (mention.mention_role_id) {
+      if (!mentionRolesMap.has(messageId)) mentionRolesMap.set(messageId, []);
+      mentionRolesMap.get(messageId).push(String(mention.mention_role_id));
+    }
+    if (mention.mention_channel_id) {
+      if (!mentionChannelsMap.has(messageId))
+        mentionChannelsMap.set(messageId, []);
+      mentionChannelsMap
+        .get(messageId)
+        .push(String(mention.mention_channel_id));
+    }
+  });
 
-  // 4. Fetch the replied messages
+  // 3. Process reactions
+  const reactionsMap = new Map<string, IMessageReaction[]>();
+  reactions.forEach((reaction) => {
+    const messageId = String(reaction._id);
+    const reactionData = {
+      emoji_id: String(reaction.emoji_id),
+      count: reaction.count,
+      reactors: reaction.reactors.map(String),
+    };
+    if (!reactionsMap.has(messageId)) reactionsMap.set(messageId, []);
+    reactionsMap.get(messageId).push(reactionData);
+  });
+
+  // 4. Process replied messages
   const repliedMessagesMap = new Map<string, IMessage>();
-  const repliedMessageIds = messages
-    .map((msg) => msg.replied_message_id)
-    .filter(Boolean);
-  if (repliedMessageIds.length > 0) {
-    const repliedMessages = await messageModel
-      .find({ _id: { $in: repliedMessageIds } })
-      .lean();
-
-    repliedMessages.forEach((msg) => {
-      repliedMessagesMap.set(String(msg._id), {
-        id: String(msg._id),
-        conversation_id: String(msg.conversation_id),
-        sender_id: String(msg.sender_id),
-        content: msg.content,
-        is_deleted: msg.is_deleted,
-      });
+  repliedMessages.forEach((msg) => {
+    repliedMessagesMap.set(String(msg._id), {
+      id: String(msg._id),
+      conversation_id: String(msg.conversation_id),
+      sender_id: String(msg.sender_id),
+      content: msg.content,
+      is_deleted: msg.is_deleted,
     });
-  }
+  });
 
-  // 5. Fetch the user profile of the senders
-  const senderIds = messages.map((msg) => msg.sender_id);
-  const senders = await UserProfileModel.find({
-    user_id: { $in: senderIds },
-  }).lean();
+  // 5. Process senders
   const senderMap = new Map<string, IProfile>();
   senders.forEach((sender) => {
     senderMap.set(String(sender.user_id), {
@@ -217,7 +187,13 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
     });
   });
 
-  // 6. Return the extra fields
+  // 6. Process emojis for each message
+  const emojis = messages.map((msg) => ({
+    messageId: msg._id,
+    emojis: getMatches(msg.content, emoji_regex, 2),
+  }));
+
+  // 7. Return the extra fields for each message
   return messages.map((msg) => ({
     author: senderMap.get(String(msg.sender_id)) || null,
     mention_users: mentionUsersMap.get(String(msg._id)) || [],
@@ -225,7 +201,8 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
     mention_channels: mentionChannelsMap.get(String(msg._id)) || [],
     emojis: emojis.find((e) => e.messageId === msg._id)?.emojis || [],
     reactions: reactionsMap.get(String(msg._id)) || [],
-    replied_message: repliedMessagesMap.get(String(msg.replied_message_id)),
+    replied_message:
+      repliedMessagesMap.get(String(msg.replied_message_id)) || null,
   }));
 };
 
@@ -236,7 +213,10 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
  * @param {?*} [extra] - Extra fields. If not provided, it will be initialized and fetched
  * @returns {IMessage}
  */
-const castToIMessage = async (message: any, extra?: any): Promise<IMessage> => {
+export const castToIMessage = async (
+  message: any,
+  extra?: any
+): Promise<IMessage> => {
   if (!message) {
     throw new UserInputError("Message not found!");
   }
