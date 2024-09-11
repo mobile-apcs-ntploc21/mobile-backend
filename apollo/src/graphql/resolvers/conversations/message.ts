@@ -737,6 +737,29 @@ const deleteMessageTransaction = async (
       throw new UserInputError("Message not found!");
     }
 
+    // Delete all mentions associated with the message
+    await mentionModel.deleteMany({ message_id: message_id }, { session });
+
+    // Update the latest message in the channel model
+    const latestMessage = await messageModel
+      .findOne({
+        conversation_id: message.conversation_id,
+        is_deleted: false,
+      })
+      .session(session)
+      .sort({ _id: -1 })
+      .lean();
+
+    await channelModel.updateOne(
+      {
+        conversation_id: message.conversation_id,
+      },
+      {
+        last_message_id: latestMessage?._id || null,
+      },
+      { session, new: true }
+    );
+
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();

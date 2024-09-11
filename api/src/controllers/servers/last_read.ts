@@ -23,9 +23,11 @@ export const readMessages = async (
 
   try {
     const requestBody = {
-      user_id: user_id,
-      conversation_id: channel.conversation_id,
-      message_id: message_id,
+      input: {
+        user_id: user_id,
+        conversation_id: channel.conversation_id,
+        message_id: message_id,
+      },
     };
 
     const response = await graphQLClient().request(

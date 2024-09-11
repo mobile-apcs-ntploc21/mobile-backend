@@ -3,9 +3,13 @@ import validator from "validator";
 import ModelNames from "./../modelNames";
 
 interface ILastRead {
-  _id: { conversation_id: Schema.Types.ObjectId; user_id: Schema.Types.ObjectId };
+  _id: {
+    conversation_id: Schema.Types.ObjectId;
+    user_id: Schema.Types.ObjectId;
+  };
   last_message_read_id: Schema.Types.ObjectId;
   last_modified: Date;
+  updatedAt: Date;
 }
 
 const lastReadSchema = new Schema<ILastRead>(

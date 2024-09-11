@@ -97,16 +97,33 @@ const getChannels = async (user_id, server_id) => {
 
   // Get the last message of each channel
   const conversationIds = channels.map((channel) => channel.conversation_id);
-  const messages = await MessageModel.find({
-    conversation_id: { $in: conversationIds },
-  })
-    .sort({ created_at: -1 })
-    .lean();
+  const messages = await MessageModel.aggregate([
+    {
+      $match: {
+        conversation_id: { $in: conversationIds },
+        is_deleted: false,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $group: {
+        _id: "$conversation_id",
+        message: { $first: "$$ROOT" },
+      },
+    },
+    {
+      $replaceRoot: {
+        newRoot: "$message",
+      },
+    },
+  ]);
 
   // Initialize the last read data
-  let lastReadMap = {};
   let lastReadMessageMap = {};
-
   if (user_id && user_id !== null) {
     // Fetch the last read information for the user on these channels
     const lastReads = await LastReadModel.find({
@@ -114,20 +131,9 @@ const getChannels = async (user_id, server_id) => {
       "_id.user_id": user_id,
     }).lean();
 
-    // Create a map of conversation_id to the last read message
-    lastReadMap = lastReads.reduce((acc, lr) => {
-      acc[lr._id.conversation_id.toString()] = lr.last_message_read_id;
-      return acc;
-    }, {});
-
-    // Fetch the last read messages from the database
-    const lastReadMessages = await MessageModel.find({
-      _id: { $in: Object.values(lastReadMap) },
-    }).lean();
-
-    // Create a map of conversation_id to the last read message timestamp
-    lastReadMessageMap = lastReadMessages.reduce((acc, lr) => {
-      acc[lr.conversation_id.toString()] = lr.createdAt;
+    // Create a map of conversation_id to date of last read
+    lastReadMessageMap = lastReads.reduce((acc, lr) => {
+      acc[lr._id.conversation_id.toString()] = lr.updatedAt;
       return acc;
     }, {});
   }
@@ -147,6 +153,7 @@ const getChannels = async (user_id, server_id) => {
       // Check if the user has new messages in the channel
       let has_new_message = false;
       if (user_id && lastMessage) {
+        console.log(lastMessage, lastReadMessage);
         has_new_message = lastMessage.createdAt > lastReadMessage;
       }
 
