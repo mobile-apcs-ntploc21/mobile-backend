@@ -397,8 +397,8 @@ export const serverChannelQueries = {
 
         name
         description
-        last_message_id
         position
+        last_message_id
 
         is_nsfw
         is_archived
@@ -408,8 +408,8 @@ export const serverChannelQueries = {
   `,
 
   GET_CHANNELS: gql`
-    query getChannels($server_id: ID!) {
-      getChannels(server_id: $server_id) {
+    query getChannels($server_id: ID!, $user_id: ID) {
+      getChannels(server_id: $server_id, user_id: $user_id) {
         id
         server_id
         conversation_id
@@ -417,8 +417,16 @@ export const serverChannelQueries = {
 
         name
         description
-        last_message_id
         position
+        last_message_id
+
+        last_message {
+          sender_id
+          content
+          is_deleted
+        }
+        has_new_message
+        number_of_unread_mentions
 
         is_nsfw
         is_archived

@@ -19,12 +19,13 @@ export const _getChannel = async (channel_id: string) => {
   }
 };
 
-const _getChannels = async (server_id: string) => {
+const _getChannels = async (server_id: string, user_id?: string) => {
   try {
     const response = await graphQLClient().request(
       serverChannelQueries.GET_CHANNELS,
       {
         server_id,
+        user_id,
       }
     );
 
@@ -75,13 +76,14 @@ export const getChannels = async (
   next: express.NextFunction
 ) => {
   const server_id = res.locals.server_id;
+  const user_id = res.locals.uid ?? null;
 
   if (!server_id) {
     return res.status(400).json({ message: "Server ID is required." });
   }
 
   try {
-    const channels = await _getChannels(server_id).catch(() => null);
+    const channels = await _getChannels(server_id, user_id).catch(() => null);
 
     return res.status(200).json({ channels });
   } catch (error) {

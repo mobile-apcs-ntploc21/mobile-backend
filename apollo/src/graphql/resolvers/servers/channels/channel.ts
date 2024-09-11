@@ -107,7 +107,7 @@ const getChannels = async (user_id, server_id) => {
   let lastReadMap = {};
   let lastReadMessageMap = {};
 
-  if (user_id) {
+  if (user_id && user_id !== null) {
     // Fetch the last read information for the user on these channels
     const lastReads = await LastReadModel.find({
       "_id.conversation_id": { $in: conversationIds },
@@ -138,10 +138,10 @@ const getChannels = async (user_id, server_id) => {
     return acc;
   }, {});
 
-  const finalizedChannels = Promise.all(
+  const finalizedChannels = await Promise.all(
     channels.map(async (channel) => {
-      const conversationId = channel.conversation_id.toString();
-      const lastMessage = lastMessages[conversationId];
+      const conversationId = (channel.conversation_id || "").toString();
+      const lastMessage = lastMessages[conversationId] || null;
       const lastReadMessage = lastReadMessageMap[conversationId] || 0;
 
       // Check if the user has new messages in the channel
@@ -164,13 +164,13 @@ const getChannels = async (user_id, server_id) => {
 
       return {
         ...channel,
+        id: channel._id,
         last_message: lastMessage,
         has_new_message,
         number_of_unread_mentions,
       };
     })
   );
-
   return finalizedChannels;
 };
 
