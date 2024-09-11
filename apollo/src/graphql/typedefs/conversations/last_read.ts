@@ -12,7 +12,7 @@ const gqlAPI = gql`
   input LastReadInput {
     user_id: ID!
     conversation_id: ID!
-    message_id: ID!
+    message_id: ID
   }
 
   extend type Query {

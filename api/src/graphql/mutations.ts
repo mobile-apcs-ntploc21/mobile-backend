@@ -957,4 +957,14 @@ export const messageMutations = {
       }
     }
   `,
+
+  READ_MESSAGE: gql`
+    mutation readMessage($input: LastReadInput!) {
+      updateLastRead(input: $input) {
+        user_id
+        conversation_id
+        last_message_read_id
+      }
+    }
+  `,
 };
