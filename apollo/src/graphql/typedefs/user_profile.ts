@@ -15,6 +15,14 @@ const gqlType = gql`
     status: ID
   }
 
+  type UserProfileLite {
+    id: ID
+    user_id: ID
+    display_name: String
+    username: String
+    avatar_url: String
+  }
+
   input UserProfileInput {
     user_id: ID!
     server_id: ID
