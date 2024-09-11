@@ -89,44 +89,45 @@ const updateLastRead = async (input) => {
 
   let message_id = input.message_id;
   if (!message_id) {
-    // Get the last message in the conversation
-    const lastMessage = await MessageModel.findOne({
+    // Get the latest message in the conversation
+    const lastestMessage = await MessageModel.findOne({
       conversation_id: input.conversation_id,
     })
-      .sort({ created_at: -1 })
+      .sort({ createdAt: -1 })
       .lean();
-    message_id = lastMessage._id;
+
+    message_id = String(lastestMessage._id);
   }
 
   try {
     const lastRead = await LastReadModel.findOne({
-      user_id: input.user_id,
-      conversation_id: input.conversation_id,
-    });
+      "_id.user_id": input.user_id,
+      "_id.conversation_id": input.conversation_id,
+    }).lean();
 
     // If last read is not found, create a new one
     let lastReadUpdated = null;
     if (!lastRead) {
-      lastReadUpdated = await LastReadModel.create(
+      [lastReadUpdated] = await LastReadModel.create(
         [
           {
-            user_id: input.user_id,
-            conversation_id: input.conversation_id,
-            last_message_read_id: input.message_id,
+            "_id.user_id": input.user_id,
+            "_id.conversation_id": input.conversation_id,
+            last_message_read_id: message_id,
           },
         ],
-        { session }
+        { session, new: true }
       );
     } else {
       lastReadUpdated = await LastReadModel.findOneAndUpdate(
         {
-          user_id: input.user_id,
-          conversation_id: input.conversation_id,
+          "_id.user_id": input.user_id,
+          "_id.conversation_id": input.conversation_id,
         },
         {
-          last_message_read_id: input.message_id,
+          last_message_read_id: message_id,
         },
-        { new: true, session }
+        { session, new: true }
       );
     }
 
