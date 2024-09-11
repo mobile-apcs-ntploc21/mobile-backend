@@ -6,11 +6,16 @@ interface IMessage {
   conversation_id: Schema.Types.ObjectId;
   sender_id: Schema.Types.ObjectId;
   content: string;
+
   replied_message_id: Schema.Types.ObjectId;
   forwarded_message_id: Schema.Types.ObjectId;
+
   is_deleted: boolean;
   is_pinned: boolean;
+  is_modified: boolean;
+
   last_modified: Date;
+  createdAt: Date;
 }
 
 const messageSchema = new Schema<IMessage>(
@@ -44,6 +49,10 @@ const messageSchema = new Schema<IMessage>(
       default: false,
     },
     is_pinned: {
+      type: Boolean,
+      default: false,
+    },
+    is_modified: {
       type: Boolean,
       default: false,
     },

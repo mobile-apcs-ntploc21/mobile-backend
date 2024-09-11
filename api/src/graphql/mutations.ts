@@ -888,6 +888,8 @@ export const messageMutations = {
           count
           reactors
         }
+
+        is_modified
       }
     }
   `,

@@ -25,6 +25,7 @@ const gqlType = gql`
 
     conversation_id: ID!
     sender_id: ID!
+    author: UserProfileLite
 
     content: String!
     replied_message_id: ID
@@ -39,6 +40,7 @@ const gqlType = gql`
 
     is_deleted: Boolean
     is_pinned: Boolean
+    is_modified: Boolean
 
     createdAt: DateTime
   }
