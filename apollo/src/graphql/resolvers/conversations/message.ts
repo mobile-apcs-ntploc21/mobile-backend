@@ -532,9 +532,8 @@ const createMessageTransaction = async (
     mention_roles,
     mention_channels,
     emojis,
-    replied_message_id,
-    forwarded_message_id,
   } = input;
+  let { replied_message_id, forwarded_message_id } = input;
 
   // Check if conversation ID exists
   const conversation = await conversationModel.findById(conversation_id);
@@ -547,6 +546,21 @@ const createMessageTransaction = async (
   session.startTransaction();
 
   try {
+    // Check whether the replied message exists in the conversation
+    if (replied_message_id) {
+      const repliedMessage = await messageModel
+        .findById(replied_message_id)
+        .lean();
+
+      if (
+        !repliedMessage ||
+        String(repliedMessage.conversation_id) !== conversation_id
+      ) {
+        // Reset the replied message ID since it's invalid
+        replied_message_id = null;
+      }
+    }
+
     // Create the message
     const [message] = await messageModel.create(
       [
