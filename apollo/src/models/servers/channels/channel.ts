@@ -12,6 +12,10 @@ interface IChannel {
   last_message_id: { type: Schema.Types.ObjectId };
   position: number;
 
+  // Notifications Related
+  has_new_message?: boolean;
+  number_of_unread_mentions?: number;
+
   // Settings
   is_nsfw: boolean;
   is_archived: boolean;
@@ -50,6 +54,14 @@ const channelSchema = new Schema<IChannel>(
     position: {
       type: Number,
       required: [true, "Channel position is required!"],
+    },
+    has_new_message: {
+      type: Boolean,
+      default: false,
+    },
+    number_of_unread_mentions: {
+      type: Number,
+      default: 0,
     },
     is_nsfw: {
       type: Boolean,

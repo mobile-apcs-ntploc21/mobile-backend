@@ -1,17 +1,19 @@
-import mongoose, { Error, MongooseError, Schema } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
-import { PubSub, withFilter } from "graphql-subscriptions";
-import { AuthenticationError, UserInputError } from "apollo-server";
+import { UserInputError } from "apollo-server";
+import mongoose from "mongoose";
 
-import ServerModel from "../../../../models/servers/server";
-import ChannelModel from "../../../../models/servers/channels/channel";
-import CategoryModel from "../../../../models/servers/channels/category";
-import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
-import ServerRoleModel from "@models/servers/server_role";
-import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
+import ConversationModel from "@/models/conversations/conversation";
+import CategoryModel from "@/models/servers/channels/category";
+import ChannelModel from "@/models/servers/channels/channel";
+import ServerModel from "@/models/servers/server";
+import MessageModel from "@/models/conversations/message";
+import MentionModel from "@/models/conversations/mention";
+import LastReadModel from "@/models/conversations/last_read";
 import ChannelRolePermission from "@models/servers/channels/channel_role_permission";
 import ChannelUserPermission from "@models/servers/channels/channel_user_permission";
-import ConversationModel from "@/models/conversations/conversation";
+import ServerRoleModel from "@models/servers/server_role";
+import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
+import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
@@ -87,6 +89,91 @@ const createChannelTransaction = async (server_id, input) => {
   }
 };
 
+const getChannels = async (user_id, server_id) => {
+  const channels = await ChannelModel.find({
+    server_id: server_id,
+    is_deleted: false,
+  }).lean();
+
+  // Get the last message of each channel
+  const conversationIds = channels.map((channel) => channel.conversation_id);
+  const messages = await MessageModel.find({
+    conversation_id: { $in: conversationIds },
+  })
+    .sort({ created_at: -1 })
+    .lean();
+
+  // Initialize the last read data
+  let lastReadMap = {};
+  let lastReadMessageMap = {};
+
+  if (user_id) {
+    // Fetch the last read information for the user on these channels
+    const lastReads = await LastReadModel.find({
+      "_id.conversation_id": { $in: conversationIds },
+      "_id.user_id": user_id,
+    }).lean();
+
+    // Create a map of conversation_id to the last read message
+    lastReadMap = lastReads.reduce((acc, lr) => {
+      acc[lr._id.conversation_id.toString()] = lr.last_message_read_id;
+      return acc;
+    }, {});
+
+    // Fetch the last read messages from the database
+    const lastReadMessages = await MessageModel.find({
+      _id: { $in: Object.values(lastReadMap) },
+    }).lean();
+
+    // Create a map of conversation_id to the last read message timestamp
+    lastReadMessageMap = lastReadMessages.reduce((acc, lr) => {
+      acc[lr.conversation_id.toString()] = lr.createdAt;
+      return acc;
+    }, {});
+  }
+
+  // Map the last message to the corresponding channel
+  const lastMessages = messages.reduce((acc, message) => {
+    acc[String(message.conversation_id)] = message;
+    return acc;
+  }, {});
+
+  const finalizedChannels = Promise.all(
+    channels.map(async (channel) => {
+      const conversationId = channel.conversation_id.toString();
+      const lastMessage = lastMessages[conversationId];
+      const lastReadMessage = lastReadMessageMap[conversationId] || 0;
+
+      // Check if the user has new messages in the channel
+      let has_new_message = false;
+      if (user_id && lastMessage) {
+        has_new_message = lastMessage.createdAt > lastReadMessage;
+      }
+
+      // Check for unreaded mention in the channel
+      let number_of_unread_mentions = 0;
+      if (user_id && lastMessage) {
+        const unreadMentions = await MentionModel.countDocuments({
+          conversation_id: lastMessage.conversation_id,
+          user_id: user_id,
+          createdAt: { $gt: lastReadMessage },
+        });
+
+        number_of_unread_mentions = unreadMentions;
+      }
+
+      return {
+        ...channel,
+        last_message: lastMessage,
+        has_new_message,
+        number_of_unread_mentions,
+      };
+    })
+  );
+
+  return finalizedChannels;
+};
+
 const moveChannelTransaction = async (
   server_id,
   channel_id,
@@ -135,16 +222,8 @@ const channelAPI: IResolvers = {
 
       return channel;
     },
-    getChannels: async (_, { server_id }) => {
-      const channels = await ChannelModel.find({ server_id });
-
-      // Filter out the deleted channels
-      const filteredChannels = channels.filter(
-        (channel) => !channel.is_deleted
-      );
-
-      return filteredChannels;
-    },
+    getChannels: async (_, { user_id, server_id }) =>
+      getChannels(user_id, server_id),
   },
   Mutation: {
     createChannel: async (_, { server_id, input }) => {
