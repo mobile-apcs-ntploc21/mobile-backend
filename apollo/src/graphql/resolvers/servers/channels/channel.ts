@@ -211,6 +211,43 @@ const moveChannelTransaction = async (
   }
 };
 
+const syncChannelTransaction = async () => {
+  // Begin the transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Get all the channels in the server
+    const channels = await ChannelModel.find({
+      is_deleted: false,
+    }).session(session);
+
+    // Create a conversation for each channel if not exists
+    const conversationPromises = channels.map(async (channel) => {
+      if (!channel.conversation_id) {
+        const [conversation] = await ConversationModel.create([{}], {
+          session,
+        });
+        channel.conversation_id = conversation.id;
+        return channel.save({ session });
+      }
+    });
+
+    await Promise.all(conversationPromises);
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return true;
+  } catch (error: any) {
+    // Rollback the transaction
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
 const channelAPI: IResolvers = {
   Query: {
     getChannel: async (_, { channel_id }) => {
@@ -419,6 +456,15 @@ const channelAPI: IResolvers = {
       });
 
       return updatedChannels;
+    },
+    syncChannel: async (_, {}) => {
+      try {
+        await syncChannelTransaction();
+
+        return true;
+      } catch (error) {
+        return false;
+      }
     },
   },
 };

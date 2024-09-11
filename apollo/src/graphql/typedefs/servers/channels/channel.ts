@@ -62,6 +62,9 @@ const gqlAPI = gql`
     # Move channel to a new category
     moveChannel(channel_id: ID!, category_id: ID, new_position: Int): Channel
     moveAllChannel(server_id: ID!, input: [moveChannelInput!]!): [Channel]
+
+    # Sync channel with conversation
+    syncChannel(server_id: ID): Boolean
   }
 `;
 
