@@ -204,7 +204,9 @@ const fetchExtraFields = async (messages: any[]): Promise<any> => {
 
   // 5. Fetch the user profile of the senders
   const senderIds = messages.map((msg) => msg.sender_id);
-  const senders = await UserProfileModel.find({ user_id: { $in: senderIds } });
+  const senders = await UserProfileModel.find({
+    user_id: { $in: senderIds },
+  }).lean();
   const senderMap = new Map<string, IProfile>();
   senders.forEach((sender) => {
     senderMap.set(String(sender.user_id), {
