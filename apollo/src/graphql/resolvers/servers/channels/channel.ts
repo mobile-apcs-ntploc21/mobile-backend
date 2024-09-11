@@ -12,6 +12,7 @@ import LastReadModel from "@/models/conversations/last_read";
 import ChannelRolePermission from "@models/servers/channels/channel_role_permission";
 import ChannelUserPermission from "@models/servers/channels/channel_user_permission";
 import ServerRoleModel from "@models/servers/server_role";
+import { castToIMessage } from "../../conversations/message";
 import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
 import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 
@@ -153,7 +154,6 @@ const getChannels = async (user_id, server_id) => {
       // Check if the user has new messages in the channel
       let has_new_message = false;
       if (user_id && lastMessage) {
-        console.log(lastMessage, lastReadMessage);
         has_new_message = lastMessage.createdAt > lastReadMessage;
       }
 
@@ -172,7 +172,7 @@ const getChannels = async (user_id, server_id) => {
       return {
         ...channel,
         id: channel._id,
-        last_message: lastMessage,
+        last_message: lastMessage ? await castToIMessage(lastMessage) : null,
         has_new_message,
         number_of_unread_mentions,
       };
