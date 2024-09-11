@@ -8,11 +8,15 @@ import {
 } from "../../../constants/permissions";
 
 import * as messageCtrl from "../../../controllers/servers/message";
+import { readMessages } from "../../../controllers/servers/last_read";
 
 const messageRouter = Router({ mergeParams: true });
 
 // Get list of messages in a channel
 messageRouter.get("/", messageCtrl.getMessages);
+
+// Read messages
+messageRouter.post("/read", readMessages);
 
 // Get pinned messages
 messageRouter.get("/pins", messageCtrl.getPinnedMessages);

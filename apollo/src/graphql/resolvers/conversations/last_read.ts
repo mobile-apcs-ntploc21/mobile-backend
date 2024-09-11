@@ -3,6 +3,7 @@ import { UserInputError } from "apollo-server";
 import mongoose, { ObjectId } from "mongoose";
 
 import LastReadModel from "@/models/conversations/last_read";
+import MessageModel from "@/models/conversations/message";
 
 // =======================
 
@@ -85,6 +86,17 @@ const updateLastRead = async (input) => {
   // Begin a transaction
   const session = await mongoose.startSession();
   session.startTransaction();
+
+  let message_id = input.message_id;
+  if (!message_id) {
+    // Get the last message in the conversation
+    const lastMessage = await MessageModel.findOne({
+      conversation_id: input.conversation_id,
+    })
+      .sort({ created_at: -1 })
+      .lean();
+    message_id = lastMessage._id;
+  }
 
   try {
     const lastRead = await LastReadModel.findOne({
