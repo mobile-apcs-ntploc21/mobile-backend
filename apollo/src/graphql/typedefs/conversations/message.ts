@@ -136,4 +136,4 @@ const gqlMutation = gql`
 
 const API = [gqlType, gqlQuery, gqlMutation];
 
-export default { API };
+export default { API, type: gqlType };

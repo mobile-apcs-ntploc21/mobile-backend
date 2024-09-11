@@ -30,6 +30,7 @@ import category_user_permission from "./servers/channels/category_user_permissio
 /// Conversation
 import message from "./conversations/message";
 import reaction from "./conversations/reaction";
+import last_read from "./conversations/last_read";
 
 const linkedSchema = gql`
   type Query {
@@ -53,6 +54,10 @@ export const apiTypeDefs = mergeTypeDefs([
   userSettingsSchema,
   userProfileApollo,
 
+  message.API,
+  reaction.API,
+  last_read.API,
+
   serverMemberSchema.API,
   serverSchema.API,
   serverEmoji.API,
@@ -66,9 +71,6 @@ export const apiTypeDefs = mergeTypeDefs([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
-
-  message.API,
-  reaction.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
