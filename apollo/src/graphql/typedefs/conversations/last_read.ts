@@ -24,3 +24,7 @@ const gqlAPI = gql`
     updateLastRead(input: LastReadInput!): LastRead
   }
 `;
+
+const API = [gqlTypes, gqlAPI];
+
+export default { API: API };
