@@ -421,16 +421,44 @@ export const serverChannelQueries = {
         last_message_id
 
         last_message {
+          id
+          conversation_id
           sender_id
+          author {
+            user_id
+            username
+            display_name
+            avatar_url
+          }
+
           content
-          is_deleted
+          replied_message_id
+          forwarded_message_id
+
+          mention_users
+          mention_roles
+          mention_channels
+          emojis
+          reactions {
+            emoji_id
+            count
+            reactors
+          }
+          replied_message {
+            id
+            sender_id
+            content
+            is_deleted
+          }
+
+          is_modified
+          createdAt
         }
         has_new_message
         number_of_unread_mentions
 
         is_nsfw
         is_archived
-        is_deleted
       }
     }
   `,
