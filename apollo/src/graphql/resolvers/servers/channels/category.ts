@@ -110,7 +110,7 @@ const deleteCategoryTransaction = async (category_id) => {
     await session.commitTransaction();
     session.endSession();
 
-    return true;
+    return category;
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -212,7 +212,10 @@ const resolvers: IResolvers = {
         // Publish the event
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryDeleted,
-          server_id: category_id,
+          server_id: result.server_id,
+          data: {
+            category_id: result._id,
+          },
         });
 
         return true;
