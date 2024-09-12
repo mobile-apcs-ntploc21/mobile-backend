@@ -12,7 +12,7 @@ import LastReadModel from "@/models/conversations/last_read";
 import ChannelRolePermission from "@models/servers/channels/channel_role_permission";
 import ChannelUserPermission from "@models/servers/channels/channel_user_permission";
 import ServerRoleModel from "@models/servers/server_role";
-import { castToIMessage } from "../../conversations/message";
+import { castToIMessage, fetchExtraFields } from "../../conversations/message";
 import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
 import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 
@@ -146,7 +146,7 @@ const getChannels = async (user_id, server_id) => {
   }, {});
 
   const finalizedChannels = await Promise.all(
-    channels.map(async (channel) => {
+    channels.map(async (channel, index) => {
       const conversationId = (channel.conversation_id || "").toString();
       const lastMessage = lastMessages[conversationId] || null;
       const lastReadMessage = lastReadMessageMap[conversationId] || 0;
@@ -169,10 +169,17 @@ const getChannels = async (user_id, server_id) => {
         number_of_unread_mentions = unreadMentions;
       }
 
+      let extraFields = undefined;
+      if (lastMessage) {
+        [extraFields] = await fetchExtraFields([lastMessage]);
+      }
+
       return {
         ...channel,
         id: channel._id,
-        last_message: lastMessage ? await castToIMessage(lastMessage) : null,
+        last_message: lastMessage
+          ? await castToIMessage(lastMessage, extraFields)
+          : null,
         has_new_message,
         number_of_unread_mentions,
       };

@@ -85,7 +85,7 @@ function getMatches(string: string, regex: RegExp, index: number) {
  * @param {any[]} messages - The list of messages
  * @returns {Promise<any>} - The extra fields
  */
-const fetchExtraFields = async (messages: any[]): Promise<any> => {
+export const fetchExtraFields = async (messages: any[]): Promise<any> => {
   const messageIds = messages.map((message) => message._id);
   const senderIds = messages.map((msg) => msg.sender_id);
   const repliedMessageIds = messages
@@ -289,7 +289,10 @@ const getMessage = async (id: string): Promise<IMessage> => {
   if (!message || message.is_deleted) {
     throw new UserInputError("Message not found or has been deleted!");
   }
-  return castToIMessage(message, fetchExtraFields([message])[0]);
+
+  const [extraFields] = await fetchExtraFields([message]);
+  const messageData = await castToIMessage(message, extraFields);
+  return messageData;
 };
 
 /**
@@ -647,33 +650,37 @@ const createMessageTransaction = async (
         },
       });
 
-      // Get the set of users from list of roles
-      const everyoneRoles = await ServerRoleModel.findOne({
-        name: "@everyone",
-        server_id: channel.server_id,
-      });
-      // Get all users from the mentioned roles except @everyone
-      const roles = await AssignedUserRoleModel.find({
-        "_id.server_role_id": {
-          $in: mention_roles.filter(
-            (role_id) => role_id !== String(everyoneRoles._id)
-          ),
-        },
-      });
-      const users = roles.map((role) => role._id.user_id);
-      const uniqueUsers = [...new Set(users)];
+      if (mention_roles.length > 0) {
+        // Get the set of users from list of roles
+        const everyoneRoles = await ServerRoleModel.findOne({
+          name: "@everyone",
+          server_id: channel.server_id,
+        });
+        // Get all users from the mentioned roles except @everyone
+        const roles = await AssignedUserRoleModel.find({
+          "_id.server_role_id": {
+            $in: mention_roles.filter(
+              (role_id) => role_id !== String(everyoneRoles._id)
+            ),
+          },
+        });
+        const users = roles.map((role) => role._id.user_id);
+        const uniqueUsers = [...new Set(users)];
 
-      // Publish mention event for roles
-      publishEvent(ServerEvents.messageMentionedRole, {
-        server_id: channel.server_id,
-        user_id: uniqueUsers,
-        forceUser: true,
-        type: ServerEvents.messageMentionedRole,
-        data: {
-          conversation_id,
-          message_id: message._id,
-        },
-      });
+        // Publish mention event for roles
+        if (uniqueUsers.length > 0) {
+          publishEvent(ServerEvents.messageMentionedRole, {
+            server_id: channel.server_id,
+            user_id: uniqueUsers,
+            forceUser: true,
+            type: ServerEvents.messageMentionedRole,
+            data: {
+              conversation_id,
+              message_id: message._id,
+            },
+          });
+        }
+      }
     }
 
     return messageData;
