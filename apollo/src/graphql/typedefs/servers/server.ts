@@ -87,7 +87,7 @@ const gqlWs = gql`
   }
 
   extend type Subscription {
-    serverUpdated(server_id: ID!): ServerUpdate
+    serverUpdated(server_id: ID!, user_id: ID): ServerUpdate
   }
 `;
 

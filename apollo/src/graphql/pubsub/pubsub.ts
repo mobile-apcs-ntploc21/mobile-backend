@@ -51,12 +51,16 @@ export enum ServerEvents {
   categoryUserAdded = "ADD_CATEGORY_PERMISSIONS_TO_USER",
   categoryUserDeleted = "REMOVE_CATEGORY_PERMISSIONS_FROM_USER",
   categoryUserUpdated = "UPDATE_CATEGORY_PERMISSIONS_FOR_USER",
-}
 
-export enum ChannelEvents {
-  messageAdded = "MESSAGE_ADDED",
+  messageAdded = "NEW_MESSAGE",
   messageDeleted = "MESSAGE_DELETED",
-  messageEdited = "MESSAGE_EDITED",
+  messageEdited = "MESSAGE_MODIFIED",
+  messagePinAdded = "NEW_MESSAGE_PINNED",
+  messagePinRemoved = "MESSAGE_UNPINNED",
+  messageReactionAdded = "REACTION_ADDED",
+  messageReactionRemoved = "REACTION_REMOVED",
+  messageMentionedUser = "USER_MENTIONED",
+  messageMentionedRole = "ROLE_MENTIONED",
 }
 
 /**
