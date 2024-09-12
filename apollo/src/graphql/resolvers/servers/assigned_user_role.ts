@@ -198,7 +198,9 @@ const assignedUserRoleAPI: IResolvers = {
         // Build the result by merging role data with user count
         const result = roles.map((role) => {
           const role_id = String(role._id.server_role_id);
-          const serverRole = server_roles.find((r) => r._id.equals(role_id));
+          const serverRole = server_roles.find(
+            (r) => String(r._id) === role_id
+          );
 
           return {
             id: serverRole._id,
