@@ -432,6 +432,47 @@ const serverWs: IResolvers = {
         )(rootValue, args, context);
       },
     },
+    serversUpdated: {
+      resolve: (payload, args, context) => ({
+        ...payload,
+        server_id: payload.server_id,
+        server_ids: args.server_ids,
+      }),
+      async subscribe(rootValue, args, context) {
+        return withFilter(
+          () => {
+            return getAsyncIterator(Object.values(ServerEvents));
+          },
+          async (payload, variables, context) => {
+            // Payload data (i.e., the data that the server sends)
+            const server_id = String(payload.server_id) || null;
+            const user_id = payload?.user_id || payload?.data.user_id || null;
+            const forceUser = payload.forceUser || false;
+
+            // Variables data (i.e., the data that the client sends)
+            const v_server_id = variables.server_ids || []; // server_ids is an array
+            const v_user_id = String(variables?.user_id) || null;
+            let isSameServer = false;
+
+            if (user_id && user_id !== "undefined") {
+              const member = await ServerMemberModel.find({
+                "_id.server_id": { $in: v_server_id },
+                "_id.user_id": user_id,
+              });
+
+              isSameServer = member ? true : false;
+            }
+
+            if (forceUser) {
+              let userIdsArray = Array.isArray(user_id) ? user_id : [user_id];
+              return userIdsArray.includes(v_user_id);
+            }
+
+            return v_server_id.includes(server_id) || isSameServer;
+          }
+        )(rootValue, args, context);
+      },
+    },
   },
 };
 
