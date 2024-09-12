@@ -88,6 +88,9 @@ const gqlWs = gql`
 
   extend type Subscription {
     serverUpdated(server_id: ID!, user_id: ID): ServerUpdate
+
+    # Subscription to subcribe to batch of servers
+    serversUpdated(server_ids: [ID!]!, user_id: ID): ServerUpdate
   }
 `;
 
