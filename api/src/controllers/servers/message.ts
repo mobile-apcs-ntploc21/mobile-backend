@@ -89,7 +89,7 @@ export const getMessages = async (
 ) => {
   const { channelId } = req.params;
   const { limit } = req.query;
-  const { before, after, around } = req.body;
+  const { before, after, around } = req.query;
 
   if (!channelId) {
     return res.status(400).json({ message: "Channel ID is required." });
