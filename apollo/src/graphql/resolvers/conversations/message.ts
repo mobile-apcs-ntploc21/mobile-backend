@@ -13,6 +13,7 @@ import MentionModel from "@/models/conversations/mention";
 import ReactionModel from "@/models/conversations/reaction";
 import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
+import ServerRoleModel from "@/models/servers/server_role";
 
 // ==========================
 interface IMessageReaction {
@@ -603,12 +604,8 @@ const createMessageTransaction = async (
     await session.commitTransaction();
     session.endSession();
 
-    const messageData = await castToIMessage(message, {
-      mention_users,
-      mention_roles,
-      mention_channels,
-      emojis,
-    });
+    const [extraFields] = await fetchExtraFields([message]);
+    const messageData = await castToIMessage(message, extraFields);
 
     // Check if the message is a reply then publish the event of mention to that user
     if (replied_message_id) {
@@ -651,8 +648,17 @@ const createMessageTransaction = async (
       });
 
       // Get the set of users from list of roles
+      const everyoneRoles = await ServerRoleModel.findOne({
+        name: "@everyone",
+        server_id: channel.server_id,
+      });
+      // Get all users from the mentioned roles except @everyone
       const roles = await AssignedUserRoleModel.find({
-        "_id.role_id": { $in: mention_roles },
+        "_id.server_role_id": {
+          $in: mention_roles.filter(
+            (role_id) => role_id !== String(everyoneRoles._id)
+          ),
+        },
       });
       const users = roles.map((role) => role._id.user_id);
       const uniqueUsers = [...new Set(users)];
@@ -743,12 +749,8 @@ const updateMessageTransaction = async (
     session.endSession();
 
     // Publish the message event (edited)
-    const messageData = await castToIMessage(message, {
-      mention_users,
-      mention_roles,
-      mention_channels,
-      emojis,
-    });
+    const [extraFields] = await fetchExtraFields([message]);
+    const messageData = await castToIMessage(message, extraFields);
 
     const channel = await channelModel.findOne({
       conversation_id: message.conversation_id,
