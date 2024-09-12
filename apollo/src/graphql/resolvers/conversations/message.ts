@@ -198,6 +198,7 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
 
   // 7. Return the extra fields for each message
   return messages.map((msg) => ({
+    id: String(msg._id),
     author: senderMap.get(String(msg.sender_id)) || null,
     mention_users: mentionUsersMap.get(String(msg._id)) || [],
     mention_roles: mentionRolesMap.get(String(msg._id)) || [],
