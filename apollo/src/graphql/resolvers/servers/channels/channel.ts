@@ -145,10 +145,18 @@ const getChannels = async (user_id, server_id) => {
     return acc;
   }, {});
 
+  // Fetch the extra fields for the last message
+  const extraFields = await fetchExtraFields(messages);
+  const extraFieldsMap = extraFields.reduce((acc, ef) => {
+    acc[ef.id] = ef;
+    return acc;
+  });
+
   const finalizedChannels = await Promise.all(
     channels.map(async (channel, index) => {
       const conversationId = (channel.conversation_id || "").toString();
       const lastMessage = lastMessages[conversationId] || null;
+      const extraField = extraFieldsMap[String(lastMessage?._id)] || null;
       const lastReadMessage = lastReadMessageMap[conversationId] || 0;
 
       // Check if the user has new messages in the channel
@@ -169,16 +177,11 @@ const getChannels = async (user_id, server_id) => {
         number_of_unread_mentions = unreadMentions;
       }
 
-      let extraFields = undefined;
-      if (lastMessage) {
-        [extraFields] = await fetchExtraFields([lastMessage]);
-      }
-
       return {
         ...channel,
         id: channel._id,
         last_message: lastMessage
-          ? await castToIMessage(lastMessage, extraFields)
+          ? await castToIMessage(lastMessage, extraField)
           : null,
         has_new_message,
         number_of_unread_mentions,
@@ -318,6 +321,9 @@ const channelAPI: IResolvers = {
       publishEvent(ServerEvents.serverUpdated, {
         type: ServerEvents.channelDeleted,
         server_id: channel.server_id,
+        data: {
+          channel_id: channel_id,
+        },
       });
 
       return true;
@@ -336,6 +342,9 @@ const channelAPI: IResolvers = {
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelDeleted,
           server_id: channel.server_id,
+          data: {
+            channel_id: channel_id,
+          },
         });
 
         return true;
