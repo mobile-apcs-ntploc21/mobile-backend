@@ -11,6 +11,8 @@ import mentionModel from "@/models/conversations/mention";
 import attachmentModel from "@models/conversations/attachment";
 import MentionModel from "@/models/conversations/mention";
 import ReactionModel from "@/models/conversations/reaction";
+import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
+import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 
 // ==========================
 interface IMessageReaction {
@@ -521,6 +523,11 @@ const createMessageTransaction = async (
     throw new UserInputError("Conversation/Chat not found!");
   }
 
+  // Get the server ID
+  const channel = await channelModel.findOne({
+    conversation_id: conversation_id,
+  });
+
   // Start a session
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -596,12 +603,74 @@ const createMessageTransaction = async (
     await session.commitTransaction();
     session.endSession();
 
-    return castToIMessage(message, {
+    const messageData = await castToIMessage(message, {
       mention_users,
       mention_roles,
       mention_channels,
       emojis,
     });
+
+    // Check if the message is a reply then publish the event of mention to that user
+    if (replied_message_id) {
+      const repliedMessage = messageData.replied_message;
+      if (repliedMessage) {
+        publishEvent(ServerEvents.messageMentionedUser, {
+          server_id: channel.server_id,
+          user_id: repliedMessage.sender_id,
+          forceUser: true,
+          type: ServerEvents.messageMentionedUser,
+          data: {
+            conversation_id,
+            message_id: message._id,
+          },
+        });
+      }
+    }
+
+    // If the current message from a server
+    if (channel) {
+      publishEvent(ServerEvents.messageAdded, {
+        server_id: channel.server_id,
+        type: ServerEvents.messageAdded,
+        data: {
+          conversation_id,
+          message: messageData,
+        },
+      });
+
+      // Publish mention event for users
+      publishEvent(ServerEvents.messageMentionedUser, {
+        server_id: channel.server_id,
+        user_id: mention_users,
+        forceUser: true,
+        type: ServerEvents.messageMentionedUser,
+        data: {
+          conversation_id,
+          message_id: message._id,
+        },
+      });
+
+      // Get the set of users from list of roles
+      const roles = await AssignedUserRoleModel.find({
+        "_id.role_id": { $in: mention_roles },
+      });
+      const users = roles.map((role) => role._id.user_id);
+      const uniqueUsers = [...new Set(users)];
+
+      // Publish mention event for roles
+      publishEvent(ServerEvents.messageMentionedRole, {
+        server_id: channel.server_id,
+        user_id: uniqueUsers,
+        forceUser: true,
+        type: ServerEvents.messageMentionedRole,
+        data: {
+          conversation_id,
+          message_id: message._id,
+        },
+      });
+    }
+
+    return messageData;
   } catch (error) {
     // Abort the transaction
     await session.abortTransaction();
@@ -672,12 +741,31 @@ const updateMessageTransaction = async (
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
-    return castToIMessage(message, {
+
+    // Publish the message event (edited)
+    const messageData = await castToIMessage(message, {
       mention_users,
       mention_roles,
       mention_channels,
       emojis,
     });
+
+    const channel = await channelModel.findOne({
+      conversation_id: message.conversation_id,
+    });
+
+    if (channel) {
+      publishEvent(ServerEvents.messageEdited, {
+        server_id: channel.server_id,
+        type: ServerEvents.messageEdited,
+        data: {
+          conversation_id: message.conversation_id,
+          message: messageData,
+        },
+      });
+    }
+
+    return messageData;
   } catch (error) {
     // Abort the transaction
     await session.abortTransaction();
@@ -743,7 +831,23 @@ const deleteMessageTransaction = async (
     // Commit the transaction
     await session.commitTransaction();
     session.endSession();
-    return true;
+
+    // Publish the message event (deleted)
+    const channel = await channelModel.findOne({
+      conversation_id: message.conversation_id,
+    });
+
+    if (channel) {
+      publishEvent(ServerEvents.messageDeleted, {
+        server_id: channel.server_id,
+        type: ServerEvents.messageDeleted,
+        data: {
+          conversation_id: message.conversation_id,
+          message_id: message_id,
+          replied_message_id: message.replied_message_id,
+        },
+      });
+    }
   } catch (e) {
     // Abort the transaction
     await session.abortTransaction();
@@ -775,6 +879,23 @@ const pinMessage = async (message_id: string): Promise<IMessage[]> => {
     throw new UserInputError("Message not found!");
   }
 
+  // Publish the message event (pinned)
+  const channel = await channelModel.findOne({
+    conversation_id: message.conversation_id,
+  });
+
+  if (channel) {
+    publishEvent(ServerEvents.messagePinAdded, {
+      server_id: channel.server_id,
+      type: ServerEvents.messagePinAdded,
+      data: {
+        conversation_id: message.conversation_id,
+        message: message,
+      },
+    });
+  }
+
+  // Get all pinned messages
   const pinnedMessages = await messageModel.find({
     conversation_id: message.conversation_id,
     is_pinned: true,
@@ -807,6 +928,21 @@ const unpinMessage = async (message_id: string): Promise<IMessage[]> => {
     throw new UserInputError("Message not found in the server/pinned list!");
   }
 
+  // Publish the message event (unpinned)
+  const channel = await channelModel.findOne({
+    conversation_id: message.conversation_id,
+  });
+
+  publishEvent(ServerEvents.messagePinRemoved, {
+    server_id: channel.server_id,
+    type: ServerEvents.messagePinRemoved,
+    data: {
+      conversation_id: message.conversation_id,
+      message_id: message._id,
+    },
+  });
+
+  // Get all pinned messages
   const pinnedMessages = await messageModel.find({
     conversation_id: message.conversation_id,
     is_pinned: true,

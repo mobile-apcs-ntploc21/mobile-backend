@@ -2,15 +2,12 @@ import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
 import mongoose from "mongoose";
 
-import serverModel from "@models/servers/server";
-import channelModel from "@models/servers/channels/channel";
-import messageModel from "@models/conversations/message";
 import reactionModel from "@/models/conversations/reaction";
-import conversationModel from "@models/conversations/conversation";
-import mentionModel from "@/models/conversations/mention";
-import attachmentModel from "@models/conversations/attachment";
-import userModel from "@models/user";
 import ServerEmoji from "@/models/servers/serverEmoji";
+import messageModel from "@models/conversations/message";
+import userModel from "@models/user";
+import channelModel from "@models/servers/channels/channel";
+import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 
 // ===========================
 
@@ -29,9 +26,11 @@ const getReactions = async (message_id: string) => {
   }
 
   // Get all reactions
-  const reactions = await reactionModel.find({
-    message_id: message_id,
-  });
+  const reactions = await reactionModel
+    .find({
+      message_id: message_id,
+    })
+    .lean();
 
   return reactions;
 };
@@ -48,25 +47,35 @@ const reactMessage = async (
   message_id: string,
   input: { sender_id: string; emoji: string }
 ) => {
+  let channel = null;
+
   // Start a session
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     // Check if message exists
-    const message = await messageModel.findById(message_id).session(session);
+    const message = await messageModel
+      .findById(message_id)
+      .session(session)
+      .lean();
     if (!message) {
       throw new UserInputError("Message not found!");
     }
 
     // Check if user exists
-    const user = await userModel.findById(input.sender_id).session(session);
+    const user = await userModel
+      .findById(input.sender_id)
+      .session(session)
+      .lean();
     if (!user) {
       throw new UserInputError("User not found!");
     }
 
     // Check if emoji exists
-    const emoji = await ServerEmoji.findById(input.emoji).session(session);
+    const emoji = await ServerEmoji.findById(input.emoji)
+      .session(session)
+      .lean();
     if (!emoji) {
       throw new UserInputError("Emoji not found!");
     }
@@ -96,6 +105,12 @@ const reactMessage = async (
     // Commit the session
     await session.commitTransaction();
     session.endSession();
+
+    channel = await channelModel
+      .findOne({
+        conversation_id: message.conversation_id,
+      })
+      .lean();
   } catch (e) {
     await session.abortTransaction();
     session.endSession();
@@ -103,9 +118,26 @@ const reactMessage = async (
   }
 
   // Return a list of reactions
-  const reactions = await reactionModel.find({
-    message_id: message_id,
-  });
+  const reactions = await reactionModel
+    .find({
+      message_id: message_id,
+    })
+    .lean();
+
+  // Publish reaction event
+  // Publish the event only if the message is in a server
+  if (channel) {
+    publishEvent(ServerEvents.messageReactionAdded, {
+      server_id: channel.server_id,
+      type: ServerEvents.messageReactionAdded,
+      data: {
+        message_id: message_id,
+        conversation_id: channel.conversation_id,
+        reactions: reactions,
+      },
+    });
+  }
+
   return reactions;
 };
 
@@ -113,6 +145,8 @@ const unreactMessage = async (
   message_id: string,
   input: { sender_id: string; emoji: string }
 ) => {
+  let channel = null;
+
   // Start a session
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -143,6 +177,13 @@ const unreactMessage = async (
     // Commit the session
     await session.commitTransaction();
     session.endSession();
+
+    // Get the channel from the message
+    channel = await channelModel
+      .findOne({
+        conversation_id: message.conversation_id,
+      })
+      .lean();
   } catch (e) {
     await session.abortTransaction();
     session.endSession();
@@ -150,9 +191,23 @@ const unreactMessage = async (
   }
 
   // Return a list of reactions
-  const reactions = await reactionModel.find({
-    message_id: message_id,
+  const reactions = await reactionModel
+    .find({
+      message_id: message_id,
+    })
+    .lean();
+
+  // Publish reaction event (unreact)
+  publishEvent(ServerEvents.messageReactionRemoved, {
+    server_id: channel.server_id,
+    type: ServerEvents.messageReactionRemoved,
+    data: {
+      message_id: message_id,
+      conversation_id: channel.conversation_id,
+      reactions: reactions,
+    },
   });
+
   return reactions;
 };
 

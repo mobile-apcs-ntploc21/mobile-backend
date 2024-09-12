@@ -398,26 +398,36 @@ const serverWs: IResolvers = {
         server_id: args.server_id,
       }),
       async subscribe(rootValue, args, context) {
-        const members = await ServerMemberModel.find({
-          "_id.server_id": args.server_id,
-        });
-
         return withFilter(
           () => {
             return getAsyncIterator(Object.values(ServerEvents));
           },
-          (payload, variables, context) => {
+          async (payload, variables, context) => {
+            // Payload data (i.e., the data that the server sends)
             const server_id = String(payload.server_id) || null;
-            const variables_id = variables.server_id || null;
+            const user_id = payload.user_id || payload?.data.user_id || null;
+            const forceUser = payload.forceUser || false;
 
-            const isSameServer = payload?.data?.user_id
-              ? members.some(
-                  (member) =>
-                    String(payload.data.user_id) === String(member._id.user_id)
-                )
-              : false;
+            // Variables data (i.e., the data that the client sends)
+            const v_server_id = String(variables?.server_id) || null;
+            const v_user_id = String(variables?.user_id) || null;
+            let isSameServer = false;
 
-            return server_id === variables_id || isSameServer;
+            if (user_id && user_id !== "undefined") {
+              const member = await ServerMemberModel.find({
+                "_id.server_id": v_server_id,
+                "_id.user_id": user_id,
+              });
+
+              isSameServer = member ? true : false;
+            }
+
+            if (forceUser) {
+              let userIdsArray = Array.isArray(user_id) ? user_id : [user_id];
+              return userIdsArray.includes(v_user_id);
+            }
+
+            return server_id === v_server_id || isSameServer;
           }
         )(rootValue, args, context);
       },
