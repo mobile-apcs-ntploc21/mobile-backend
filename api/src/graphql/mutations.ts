@@ -847,6 +847,12 @@ export const messageMutations = {
         id
         conversation_id
         sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
 
         content
         replied_message_id
@@ -874,6 +880,12 @@ export const messageMutations = {
         id
         conversation_id
         sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
 
         content
         replied_message_id
@@ -904,6 +916,12 @@ export const messageMutations = {
         id
         conversation_id
         sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
 
         content
         replied_message_id
@@ -924,6 +942,12 @@ export const messageMutations = {
         id
         conversation_id
         sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
 
         content
         replied_message_id
