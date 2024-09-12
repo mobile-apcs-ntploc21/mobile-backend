@@ -652,19 +652,12 @@ const createMessageTransaction = async (
       });
 
       if (mention_roles.length > 0) {
-        // Get the set of users from list of roles
-        const everyoneRoles = await ServerRoleModel.findOne({
-          name: "@everyone",
-          server_id: channel.server_id,
-        });
-        // Get all users from the mentioned roles except @everyone
+        // Get all users from the mentioned roles
         const roles = await AssignedUserRoleModel.find({
           "_id.server_role_id": {
-            $in: mention_roles.filter(
-              (role_id) => role_id !== String(everyoneRoles._id)
-            ),
+            $in: mention_roles,
           },
-        });
+        }).lean();
         const users = roles.map((role) => role._id.user_id);
         const uniqueUsers = [...new Set(users)];
 
