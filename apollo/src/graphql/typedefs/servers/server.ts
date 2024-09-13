@@ -81,7 +81,7 @@ const gqlWs = gql`
   scalar JSON
 
   type ServerUpdate {
-    server_id: ID!
+    server_id: ID
     type: String!
     data: JSON
   }
