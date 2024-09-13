@@ -395,7 +395,7 @@ const serverWs: IResolvers = {
     serverUpdated: {
       resolve: (payload, args, context) => ({
         ...payload,
-        server_id: args.server_id,
+        server_id: args?.server_id || null,
       }),
       async subscribe(rootValue, args, context) {
         return withFilter(
@@ -404,9 +404,9 @@ const serverWs: IResolvers = {
           },
           async (payload, variables, context) => {
             // Payload data (i.e., the data that the server sends)
-            const server_id = String(payload.server_id) || null;
-            const user_id = payload.user_id || payload?.data.user_id || null;
-            const forceUser = payload.forceUser || false;
+            const server_id = String(payload?.server_id) || null;
+            const user_id = payload?.user_id || payload?.data.user_id || null;
+            const forceUser = payload?.forceUser || false;
 
             // Variables data (i.e., the data that the client sends)
             const v_server_id = String(variables?.server_id) || null;
@@ -435,8 +435,8 @@ const serverWs: IResolvers = {
     serversUpdated: {
       resolve: (payload, args, context) => ({
         ...payload,
-        server_id: payload.server_id,
-        server_ids: args.server_ids,
+        server_id: payload?.server_id || null,
+        server_ids: args?.server_ids || [],
       }),
       async subscribe(rootValue, args, context) {
         return withFilter(
@@ -445,9 +445,9 @@ const serverWs: IResolvers = {
           },
           async (payload, variables, context) => {
             // Payload data (i.e., the data that the server sends)
-            const server_id = String(payload.server_id) || null;
+            const server_id = String(payload?.server_id) || null;
             const user_id = payload?.user_id || payload?.data.user_id || null;
-            const forceUser = payload.forceUser || false;
+            const forceUser = payload?.forceUser || false;
 
             // Variables data (i.e., the data that the client sends)
             const v_server_id = variables.server_ids || []; // server_ids is an array
