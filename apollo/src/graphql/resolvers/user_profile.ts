@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import UserModel from "../../models/user";
 import UserProfileModel from "../../models/user_profile";
 import { publishEvent, ServerEvents } from "../pubsub/pubsub";
+import ServerMemberModel from "@/models/servers/server_member";
 
 const pubsub = new PubSub();
 
@@ -157,12 +158,18 @@ const userProfileApollo: IResolvers = {
       );
 
       // Publish event in servers
-      publishEvent(ServerEvents.userProfileChanged, {
-        server_id: null,
-        user_id: userProfile.user_id,
-        type: ServerEvents.userProfileChanged,
-        data: userProfile,
-      });
+      const serverMember = await ServerMemberModel.find({
+        "_id.user_id": user_id,
+      }).lean();
+
+      for (const server of serverMember) {
+        publishEvent(ServerEvents.userProfileChanged, {
+          server_id: String(server._id.server_id) || null,
+          user_id: userProfile.user_id,
+          type: ServerEvents.userProfileChanged,
+          data: userProfile,
+        });
+      }
 
       return userProfile;
     },

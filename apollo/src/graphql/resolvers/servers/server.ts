@@ -405,7 +405,10 @@ const serverWs: IResolvers = {
           async (payload, variables, context) => {
             // Payload data (i.e., the data that the server sends)
             const server_id = String(payload?.server_id) || null;
-            const user_id = payload?.user_id || payload?.data.user_id || null;
+            const user_id =
+              String(payload?.user_id) ||
+              String(payload?.data?.user_id) ||
+              null;
             const forceUser = payload?.forceUser || false;
 
             // Variables data (i.e., the data that the client sends)
@@ -414,12 +417,12 @@ const serverWs: IResolvers = {
             let isSameServer = false;
 
             if (user_id && user_id !== "undefined") {
-              const member = await ServerMemberModel.find({
+              const member = await ServerMemberModel.countDocuments({
                 "_id.server_id": v_server_id,
                 "_id.user_id": user_id,
               });
 
-              isSameServer = member ? true : false;
+              isSameServer = member > 0 ? true : false;
             }
 
             if (forceUser) {
@@ -446,7 +449,10 @@ const serverWs: IResolvers = {
           async (payload, variables, context) => {
             // Payload data (i.e., the data that the server sends)
             const server_id = String(payload?.server_id) || null;
-            const user_id = payload?.user_id || payload?.data.user_id || null;
+            const user_id =
+              String(payload?.user_id) ||
+              String(payload?.data?.user_id) ||
+              null;
             const forceUser = payload?.forceUser || false;
 
             // Variables data (i.e., the data that the client sends)
@@ -455,12 +461,12 @@ const serverWs: IResolvers = {
             let isSameServer = false;
 
             if (user_id && user_id !== "undefined") {
-              const member = await ServerMemberModel.find({
+              const member = await ServerMemberModel.countDocuments({
                 "_id.server_id": { $in: v_server_id },
                 "_id.user_id": user_id,
               });
 
-              isSameServer = member ? true : false;
+              isSameServer = member > 0 ? true : false;
             }
 
             if (forceUser) {
