@@ -414,23 +414,14 @@ const serverWs: IResolvers = {
             // Variables data (i.e., the data that the client sends)
             const v_server_id = String(variables?.server_id) || null;
             const v_user_id = String(variables?.user_id) || null;
-            let isSameServer = false;
 
-            if (user_id && user_id !== "undefined") {
-              const member = await ServerMemberModel.countDocuments({
-                "_id.server_id": v_server_id,
-                "_id.user_id": user_id,
-              });
-
-              isSameServer = member > 0 ? true : false;
-            }
-
+            // Check if the client user_id is in the list of server user_ids
             if (forceUser) {
-              let userIdsArray = Array.isArray(user_id) ? user_id : [user_id];
+              const userIdsArray = user_id.split(",");
               return userIdsArray.includes(v_user_id);
             }
 
-            return server_id === v_server_id || isSameServer;
+            return server_id === v_server_id;
           }
         )(rootValue, args, context);
       },
@@ -458,23 +449,14 @@ const serverWs: IResolvers = {
             // Variables data (i.e., the data that the client sends)
             const v_server_id = variables.server_ids || []; // server_ids is an array
             const v_user_id = String(variables?.user_id) || null;
-            let isSameServer = false;
 
-            if (user_id && user_id !== "undefined") {
-              const member = await ServerMemberModel.countDocuments({
-                "_id.server_id": { $in: v_server_id },
-                "_id.user_id": user_id,
-              });
-
-              isSameServer = member > 0 ? true : false;
-            }
-
+            // Check if the client user_id is in the list of server user_ids
             if (forceUser) {
-              let userIdsArray = Array.isArray(user_id) ? user_id : [user_id];
+              const userIdsArray = user_id.split(",");
               return userIdsArray.includes(v_user_id);
             }
 
-            return v_server_id.includes(server_id) || isSameServer;
+            return v_server_id.includes(server_id);
           }
         )(rootValue, args, context);
       },
