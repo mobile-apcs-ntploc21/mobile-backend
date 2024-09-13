@@ -78,6 +78,52 @@ function getMatches(string: string, regex: RegExp, index: number) {
 // ==========================
 
 /**
+ * This will filter the mentions so that only the roles and channels that the roles or channels only exist in the server
+ *
+ * @async
+ * @param {string} server_id - The server ID
+ * @param {string[]} mention_roles - List of role IDs
+ * @param {string[]} mention_channels - List of channel IDs
+ * @returns {Promise<any>} - The filtered roles and channels
+ */
+const filterMentions = async (
+  server_id: string,
+  mention_roles: string[],
+  mention_channels: string[]
+): Promise<any> => {
+  // Get all roles and channels in the server
+  const [roles, channels] = await Promise.all([
+    ServerRoleModel.find(
+      { server_id, _id: { $in: mention_roles } },
+      {
+        _id: 1,
+      }
+    ).lean(),
+    channelModel
+      .find(
+        { server_id, _id: { $in: mention_channels } },
+        {
+          _id: 1,
+        }
+      )
+      .lean(),
+  ]);
+
+  // Filter the mentions
+  const validRoles = roles.map((role) => String(role._id));
+  const validChannels = channels.map((channel) => String(channel._id));
+
+  const filteredRoles = mention_roles.filter((role) =>
+    validRoles.includes(role)
+  );
+  const filteredChannels = mention_channels.filter((channel) =>
+    validChannels.includes(channel)
+  );
+
+  return { filteredRoles, filteredChannels };
+};
+
+/**
  * This will fetch extra fields of all messages at once
  * And return them into mention_users, mention_roles, mention_channels, emojis, and reactions
  *
@@ -571,6 +617,16 @@ const createMessageTransaction = async (
       throw new UserInputError("Message not created. Try again later!");
     }
 
+    // Filter the mentions
+    const { filteredRoles, filteredChannels } = await filterMentions(
+      String(channel.server_id),
+      mention_roles,
+      mention_channels
+    );
+
+    console.log("filteredRoles", filteredRoles);
+    console.log("filteredChannels", filteredChannels);
+
     // Create the mentions
     await mentionModel.create(
       [
@@ -579,12 +635,12 @@ const createMessageTransaction = async (
           message_id: message._id,
           mention_user_id: user_id,
         })),
-        ...mention_roles.map((role_id) => ({
+        ...filteredRoles.map((role_id) => ({
           conversation_id,
           message_id: message._id,
           mention_role_id: role_id,
         })),
-        ...mention_channels.map((channel_id) => ({
+        ...filteredChannels.map((channel_id) => ({
           conversation_id,
           message_id: message._id,
           mention_channel_id: channel_id,
@@ -722,6 +778,19 @@ const updateMessageTransaction = async (
       throw new UserInputError("Message not found or cannot be update!");
     }
 
+    const channel = await channelModel
+      .findOne({
+        conversation_id: message.conversation_id,
+      })
+      .lean();
+
+    // Filter the mentions
+    const { filteredRoles, filteredChannels } = await filterMentions(
+      String(channel.server_id),
+      mention_roles,
+      mention_channels
+    );
+
     // Remove all mentions associated with the message
     await mentionModel.deleteMany({ message_id }, { session });
 
@@ -733,12 +802,12 @@ const updateMessageTransaction = async (
           message_id: String(message._id),
           mention_user_id: user_id,
         })),
-        ...mention_roles.map((role_id) => ({
+        ...filteredRoles.map((role_id) => ({
           conversation_id: String(message.conversation_id),
           message_id: String(message._id),
           mention_role_id: role_id,
         })),
-        ...mention_channels.map((channel_id) => ({
+        ...filteredChannels.map((channel_id) => ({
           conversation_id: String(message.conversation_id),
           message_id: String(message._id),
           mention_channel_id: channel_id,
@@ -754,10 +823,6 @@ const updateMessageTransaction = async (
     // Publish the message event (edited)
     const [extraFields] = await fetchExtraFields([message]);
     const messageData = await castToIMessage(message, extraFields);
-
-    const channel = await channelModel.findOne({
-      conversation_id: message.conversation_id,
-    });
 
     if (channel) {
       publishEvent(ServerEvents.messageEdited, {
