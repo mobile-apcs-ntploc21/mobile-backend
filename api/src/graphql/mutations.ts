@@ -862,6 +862,13 @@ export const messageMutations = {
         mention_channels
         emojis
 
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
         reactions {
           emoji_id
           count
@@ -895,6 +902,14 @@ export const messageMutations = {
         mention_roles
         mention_channels
         emojis
+
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
         reactions {
           emoji_id
           count
