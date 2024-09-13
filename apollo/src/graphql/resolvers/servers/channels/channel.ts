@@ -19,7 +19,10 @@ import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
 
-const createChannelTransaction = async (server_id, input) => {
+const createChannelTransaction = async (
+  server_id: any,
+  input: { name: any; category_id: any }
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const opts = { session, new: true };
@@ -90,7 +93,7 @@ const createChannelTransaction = async (server_id, input) => {
   }
 };
 
-const getChannels = async (user_id, server_id) => {
+const getChannels = async (user_id: null, server_id: any) => {
   const channels = await ChannelModel.find({
     server_id: server_id,
     is_deleted: false,
@@ -133,24 +136,27 @@ const getChannels = async (user_id, server_id) => {
     }).lean();
 
     // Create a map of conversation_id to date of last read
-    lastReadMessageMap = lastReads.reduce((acc, lr) => {
+    lastReadMessageMap = await lastReads.reduce((acc, lr) => {
       acc[lr._id.conversation_id.toString()] = lr.updatedAt;
       return acc;
     }, {});
   }
 
   // Map the last message to the corresponding channel
-  const lastMessages = messages.reduce((acc, message) => {
+  const lastMessages = await messages.reduce((acc, message) => {
     acc[String(message.conversation_id)] = message;
     return acc;
   }, {});
 
   // Fetch the extra fields for the last message
   const extraFields = await fetchExtraFields(messages);
-  const extraFieldsMap = extraFields.reduce((acc, ef) => {
-    acc[ef.id] = ef;
-    return acc;
-  });
+  const extraFieldsMap = await extraFields.reduce(
+    (acc: { [x: string]: any }, ef: { id: string }) => {
+      acc[ef.id] = ef;
+      return acc;
+    },
+    {}
+  );
 
   const finalizedChannels = await Promise.all(
     channels.map(async (channel, index) => {
@@ -158,6 +164,8 @@ const getChannels = async (user_id, server_id) => {
       const lastMessage = lastMessages[conversationId] || null;
       const extraField = extraFieldsMap[String(lastMessage?._id)] || null;
       const lastReadMessage = lastReadMessageMap[conversationId] || 0;
+
+      // console.log(String(lastMessage?._id), extraField);
 
       // Check if the user has new messages in the channel
       let has_new_message = false;
@@ -192,10 +200,10 @@ const getChannels = async (user_id, server_id) => {
 };
 
 const moveChannelTransaction = async (
-  server_id,
-  channel_id,
-  category_id,
-  new_position
+  server_id: string,
+  channel_id: any,
+  category_id: mongoose.Schema.Types.ObjectId,
+  new_position: number
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
