@@ -710,11 +710,13 @@ const updateMessageTransaction = async (
 
   try {
     // Update the message content and is_modified flag
-    const message = await messageModel.findByIdAndUpdate(
-      message_id,
-      { content: content, is_modified: true },
-      { session, new: true }
-    );
+    const message = await messageModel
+      .findByIdAndUpdate(
+        message_id,
+        { content: content, is_modified: true },
+        { session, new: true }
+      )
+      .lean();
 
     if (!message) {
       throw new UserInputError("Message not found or cannot be update!");
@@ -727,18 +729,18 @@ const updateMessageTransaction = async (
     await mentionModel.create(
       [
         ...mention_users.map((user_id) => ({
-          ...message.conversation_id,
-          message_id: message._id,
+          conversation_id: String(message.conversation_id),
+          message_id: String(message._id),
           mention_user_id: user_id,
         })),
         ...mention_roles.map((role_id) => ({
-          ...message.conversation_id,
-          message_id: message._id,
+          conversation_id: String(message.conversation_id),
+          message_id: String(message._id),
           mention_role_id: role_id,
         })),
         ...mention_channels.map((channel_id) => ({
-          ...message.conversation_id,
-          message_id: message._id,
+          conversation_id: String(message.conversation_id),
+          message_id: String(message._id),
           mention_channel_id: channel_id,
         })),
       ],
