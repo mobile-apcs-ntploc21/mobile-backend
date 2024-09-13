@@ -658,7 +658,7 @@ const createMessageTransaction = async (
             $in: mention_roles,
           },
         }).lean();
-        const users = roles.map((role) => role._id.user_id);
+        const users = roles.map((role) => String(role._id.user_id));
         const uniqueUsers = [...new Set(users)];
 
         // Publish mention event for roles
