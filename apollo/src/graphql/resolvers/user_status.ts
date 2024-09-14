@@ -1,15 +1,16 @@
-import { IResolvers } from '@graphql-tools/utils';
-import { withFilter } from 'graphql-subscriptions';
-import UserStatusModel from '../../models/user_status';
-import DateTime from '../scalars/DateTime';
-import UserModel from '../../models/user';
+import { IResolvers } from "@graphql-tools/utils";
+import { withFilter } from "graphql-subscriptions";
+import UserStatusModel from "../../models/user_status";
+import DateTime from "../scalars/DateTime";
+import UserModel from "../../models/user";
 import {
   getAsyncIterator,
   publishStatusChanged,
   UserStatusEvents,
-} from '../pubsub/user_status';
-import { wsLogger } from '../../utils';
-import { publishEvent, ServerEvents } from '../pubsub/pubsub';
+} from "../pubsub/user_status";
+import { wsLogger } from "../../utils";
+import { publishEvent, ServerEvents } from "../pubsub/pubsub";
+import ServerMemberModel from "@/models/servers/server_member";
 
 export const userStatusResolvers_API: IResolvers = {
   DateTime,
@@ -64,7 +65,7 @@ export const userStatusResolvers_API: IResolvers = {
           user_id: { $nin: userIds },
         });
 
-        return 'Sync completed';
+        return "Sync completed";
       } catch (error) {
         console.log(error);
       }
@@ -82,10 +83,18 @@ export const userStatusResolvers_API: IResolvers = {
         res.type = type;
         await res.save();
 
-        publishEvent(ServerEvents.userStatusChanged, {
-          type: ServerEvents.userStatusChanged,
-          data: res,
-        });
+        // Update the status of the user in all servers
+        const memberServer = await ServerMemberModel.find({
+          "_id.user_id": user_id,
+        }).lean();
+        for (const member of memberServer) {
+          publishEvent(ServerEvents.userStatusChanged, {
+            type: ServerEvents.userStatusChanged,
+            server_id: member._id.server_id,
+            data: res,
+          });
+        }
+
         publishStatusChanged(res);
         return res;
       } catch (error) {
@@ -100,10 +109,18 @@ export const userStatusResolvers_API: IResolvers = {
           { new: true }
         );
 
-        publishEvent(ServerEvents.userStatusChanged, {
-          type: ServerEvents.userStatusChanged,
-          data: res,
-        });
+        // Update the status of the user in all servers
+        const memberServer = await ServerMemberModel.find({
+          "_id.user_id": user_id,
+        }).lean();
+        for (const member of memberServer) {
+          publishEvent(ServerEvents.userStatusChanged, {
+            type: ServerEvents.userStatusChanged,
+            server_id: member._id.server_id,
+            data: res,
+          });
+        }
+
         publishStatusChanged(res);
         return res;
       } catch (error) {
@@ -119,7 +136,7 @@ export const userStatusResolvers_Ws: IResolvers = {
       subscribe: withFilter(
         () => getAsyncIterator([UserStatusEvents.statusChanged]),
         (payload, variables, context) => {
-          wsLogger('Subscription userStatusChanged is executing...');
+          wsLogger("Subscription userStatusChanged is executing...");
 
           const thisUserId = context?.thisUserId;
           const user_id = variables?.user_id;
@@ -128,14 +145,14 @@ export const userStatusResolvers_Ws: IResolvers = {
             `UserID: ${payload.userStatusChanged?.user_id} status changed`
           );
           console.log(`Subscription user_id: ${user_id}`);
-          console.log('Filtering...');
+          console.log("Filtering...");
 
           if (payload.userStatusChanged?.user_id.toString() !== user_id) {
-            console.log('User id does not match the subscription');
+            console.log("User id does not match the subscription");
             return false;
           }
 
-          console.log('Filter passed');
+          console.log("Filter passed");
           return true;
         }
       ),
