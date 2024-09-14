@@ -1,7 +1,7 @@
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server-core";
 import { ObjectId, Schema } from "mongoose";
-import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
+import { publishEvent, ServerEvents, UserEvents } from "../../pubsub/pubsub";
 
 import UserStatusModel from "@/models/user_status";
 import UserProfileModel from "@/models/user_profile";
@@ -95,7 +95,7 @@ const addServerMemberTransaction = async ({
       { session }
     );
 
-    // assign default role to new members
+    // Assign default role to new members
     const defaultRole = await ServerRoleModel.findOne({
       server_id,
       default: true,
@@ -329,6 +329,7 @@ const API: IResolvers = {
           server_id: res.server_id,
           data: res.user_id,
         });
+
         return res;
       } catch (error) {
         throw new UserInputError(error.message);
@@ -339,12 +340,23 @@ const API: IResolvers = {
         const res = (await addServerMemberTransaction(input)).map(
           ({ _id }) => _id
         );
-        if (res && res.length > 0)
+
+        if (res && res.length > 0) {
+          // Publish event for individual user subscription
+          publishEvent(UserEvents.serverAdded, {
+            type: UserEvents.serverAdded,
+            user_id: res.map((member) => String(member.user_id)),
+            data: res.map((member) => String(member.server_id)),
+          });
+
+          // Publish event for the servers subscription
           publishEvent(ServerEvents.serverUpdated, {
             type: ServerEvents.memberAdded,
             server_id: input.server_id,
             data: res.map((member) => member.user_id),
           });
+        }
+
         return res;
       } catch (error) {
         throw new UserInputError(error.message);
@@ -355,12 +367,21 @@ const API: IResolvers = {
         const res = (await removeServerMemberTransaction(input)).map(
           ({ _id }) => _id
         );
-        if (res && res.length > 0)
+        if (res && res.length > 0) {
+          // Publish event for individual user subscription
+          publishEvent(UserEvents.serverRemoved, {
+            type: UserEvents.serverRemoved,
+            user_id: res.map((member) => String(member.user_id)),
+            data: res.map((member) => String(member.server_id)),
+          });
+
           publishEvent(ServerEvents.serverUpdated, {
             type: ServerEvents.memberRemoved,
             server_id: input.server_id,
             data: res.map((member) => member.user_id),
           });
+        }
+
         return res;
       } catch (error) {
         throw new UserInputError(error.message);
