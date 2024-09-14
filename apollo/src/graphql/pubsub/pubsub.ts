@@ -3,6 +3,11 @@ import { PubSub } from "graphql-subscriptions";
 
 const pubsub = new PubSub();
 
+export enum UserEvents {
+  serverAdded = "SERVER_ADDED",
+  serverRemoved = "SERVER_REMOVED",
+}
+
 export enum ServerEvents {
   userProfileChanged = "USER_PROFILE_CHANGED",
   userStatusChanged = "USER_STATUS_CHANGED",
