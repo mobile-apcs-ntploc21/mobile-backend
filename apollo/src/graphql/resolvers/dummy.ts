@@ -8,7 +8,9 @@ const dummyResolver_Ws: IResolvers = {
   Subscription: {
     _: {
       resolve: (payload, args, context, info) => {
-        return payload;
+        return {
+          ...payload,
+        };
       },
       async subscribe(rootValue, args, context) {
         return withFilter(
