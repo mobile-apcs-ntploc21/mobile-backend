@@ -33,6 +33,13 @@ import reaction from "./conversations/reaction";
 import last_read from "./conversations/last_read";
 
 const linkedSchema = gql`
+  scalar JSON
+
+  type UserUpdate {
+    type: String!
+    data: JSON
+  }
+
   type Query {
     _: Boolean
   }
@@ -40,7 +47,7 @@ const linkedSchema = gql`
     _: Boolean
   }
   type Subscription {
-    _: Boolean
+    _(user_id: ID): UserUpdate
   }
 `;
 
