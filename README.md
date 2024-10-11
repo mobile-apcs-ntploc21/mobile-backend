@@ -11,7 +11,21 @@ Project Documentation (Report):
 
 ## Features
 
-To be updated
+1. Group Messaging
+    - Server Channel Conversations is the primary feature of our application, Orantio. A user can add, edit, or delete messages in a channel and reply to messages. Additionally, users can express their reactions using emojis, and upload images, videos, and other attachments with other users.
+2. Online Presence
+    - A user can know whenever other users are online. He/she can also share his/her status with other users by setting his/her custom status.
+3. Multiple Device Support
+    - The same account can be logged in to multiple accounts at the same time.
+4. Server Management
+    - The server owner can decide what other members in a server can do through the use of server roles & permissions. It is used when we want to categorize a set of users with predefined permissions (server role with admin permissions, or just basic permissions for a user to interact with components in the server freely).
+    - The server owner can also restrict a user from a server by kicking a user out of a server or banning that user.
+5. User Management
+    - Enable user registration, login, and authentication to ensure secure access to the application.
+    - A user can upload his/her avatar, edit his/her status, and befriend other users.
+6. Premium Subscription
+    - Integrate modern payment methods that allow users to buy premium subscriptions to have access to premium privileges.
+    - A free user and a paid user will have different user interfaces with different features and support.
 
 ## Releases
 
