@@ -30,14 +30,15 @@ export const getSettings = async (
     try {
       parsedSettings = JSON.parse(settings.settings);
     } catch (error) {
-      return res
-        .status(400)
-        .json({ message: "Settings is not in JSON format !" });
+      res.status(400).json({ message: "Settings is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({ ...parsedSettings });
+    res.status(200).json({ ...parsedSettings });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -48,7 +49,7 @@ export const createSettings = async (
 ) => {
   const currentUser = res.locals.uid as string;
   const { settings } = req.body as { settings: string };
-  let parsedSettings = null;
+  const parsedSettings = null;
 
   try {
     const response = await graphQLClient().request(
@@ -61,12 +62,14 @@ export const createSettings = async (
       }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Settings created successfully !",
       settings: parsedSettings,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -88,12 +91,14 @@ export const updateSettings = async (
       }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Settings updated successfully !",
       settings: req.body,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -112,9 +117,11 @@ export const deleteSettings = async (
       }
     );
 
-    return res.status(200).json({ message: "Settings deleted successfully !" });
+    res.status(200).json({ message: "Settings deleted successfully !" });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -135,11 +142,13 @@ export const resetSettings = async (
 
     const parsedSettings = JSON.parse(response.restoreUserSettings.settings);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Settings restored successfully !",
       settings: parsedSettings,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };

@@ -1,8 +1,11 @@
-import { model, Schema } from 'mongoose';
-import ModelNames from './../../modelNames';
+import { model, Schema } from "mongoose";
+import ModelNames from "./../../modelNames";
 
 interface IChannelRolePermission {
-  _id: { server_role_id: Schema.Types.ObjectId; channel_id: Schema.Types.ObjectId };
+  _id: {
+    server_role_id: Schema.Types.ObjectId;
+    channel_id: Schema.Types.ObjectId;
+  };
   permissions: string;
   last_modified: Date;
 }
@@ -13,17 +16,17 @@ const schema = new Schema<IChannelRolePermission>(
       server_role_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.ServerRole,
-        required: [true, 'Server Role ID is required!'],
+        required: [true, "Server Role ID is required!"],
       },
       channel_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.Channel,
-        required: [true, 'Channel ID is required!'],
+        required: [true, "Channel ID is required!"],
       },
     },
     permissions: {
       type: String,
-      default: '',
+      default: "",
     },
     last_modified: {
       type: Date,

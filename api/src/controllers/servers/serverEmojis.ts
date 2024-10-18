@@ -4,6 +4,7 @@ import { processImage } from "../../utils/storage";
 import graphQLClient from "../../utils/graphql";
 import { serverEmojiQueries } from "../../graphql/queries";
 import { serverEmojiMutations } from "../../graphql/mutations";
+import { log } from "@/utils/log";
 
 const _getServerEmojis = async (server_id: string) => {
   const response = await graphQLClient().request(
@@ -60,21 +61,23 @@ export const getServerEmoji = async (
   const { serverId, emojiId } = req.params;
 
   if (!serverId || !emojiId) {
-    return res
-      .status(400)
-      .json({ message: "Server ID and Emoji ID are required." });
+    res.status(400).json({ message: "Server ID and Emoji ID are required." });
+    return;
   }
 
   try {
     const emoji = await _getServerEmoji(serverId, emojiId).catch(() => null);
 
     if (!emoji) {
-      return res.status(404).json({ message: "Emoji not found." });
+      res.status(404).json({ message: "Emoji not found." });
+      return;
     }
 
-    return res.status(200).json({ ...emoji });
+    res.status(200).json({ ...emoji });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -86,15 +89,18 @@ export const getServerEmojis = async (
   const { serverId } = req.params;
 
   if (!serverId) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   try {
     const emojis = await _getServerEmojis(serverId).catch(() => []);
 
-    return res.status(200).json(emojis);
+    res.status(200).json(emojis);
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -108,24 +114,27 @@ export const createServerEmoji = async (
   const { name, image } = req.body;
 
   if (!serverId || !name || !image) {
-    return res
+    res
       .status(400)
       .json({ message: "Server ID, name, and image are required." });
+    return;
   }
 
   try {
     const totalEmojis = await _countServerEmojis(serverId);
 
-    console.log(totalEmojis);
+    log.debug(totalEmojis);
 
     if (totalEmojis >= 20) {
-      return res.status(400).json({ message: "Server emoji limit reached." });
+      res.status(400).json({ message: "Server emoji limit reached." });
+      return;
     }
 
     const image_url = await processImage(image, `emojis/${serverId}`);
 
     if (!image_url) {
-      return res.status(500).json({ message: "Failed to upload image." });
+      res.status(500).json({ message: "Failed to upload image." });
+      return;
     }
 
     const emoji = await graphQLClient().request(
@@ -140,15 +149,18 @@ export const createServerEmoji = async (
       }
     );
 
-    return res
+    res
       .status(201)
       .json({ message: "Emoji created.", ...emoji.createServerEmoji });
+    return;
   } catch (error) {
     if (handleMongooseError(error, 11000)) {
-      return res.status(400).json({ message: "Emoji name already exists." });
+      res.status(400).json({ message: "Emoji name already exists." });
+      return;
     }
 
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -161,16 +173,18 @@ export const updateServerEmoji = async (
   const { name } = req.body;
 
   if (!serverId || !emojiId || !name) {
-    return res
+    res
       .status(400)
       .json({ message: "Server ID, emoji ID, and name are required." });
+    return;
   }
 
   try {
     const emoji = await _getServerEmoji(serverId, emojiId).catch(() => null);
 
     if (!emoji) {
-      return res.status(404).json({ message: "Emoji not found." });
+      res.status(404).json({ message: "Emoji not found." });
+      return;
     }
 
     await graphQLClient().request(serverEmojiMutations.UPDATE_SERVER_EMOJI, {
@@ -178,13 +192,16 @@ export const updateServerEmoji = async (
       name,
     });
 
-    return res.status(200).json({ message: "Emoji updated." });
+    res.status(200).json({ message: "Emoji updated." });
+    return;
   } catch (error) {
     if (handleMongooseError(error, 11000)) {
-      return res.status(400).json({ message: "Emoji name already exists." });
+      res.status(400).json({ message: "Emoji name already exists." });
+      return;
     }
 
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -196,24 +213,26 @@ export const deleteServerEmoji = async (
   const { serverId, emojiId } = req.params;
 
   if (!serverId || !emojiId) {
-    return res
-      .status(400)
-      .json({ message: "Server ID and emoji ID are required." });
+    res.status(400).json({ message: "Server ID and emoji ID are required." });
+    return;
   }
 
   try {
     const emoji = await _getServerEmoji(serverId, emojiId).catch(() => null);
 
     if (!emoji) {
-      return res.status(404).json({ message: "Emoji not found." });
+      res.status(404).json({ message: "Emoji not found." });
+      return;
     }
 
     await graphQLClient().request(serverEmojiMutations.DELETE_SERVER_EMOJI, {
       emoji_id: emojiId,
     });
 
-    return res.status(200).json({ message: "Emoji deleted." });
+    res.status(200).json({ message: "Emoji deleted." });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };

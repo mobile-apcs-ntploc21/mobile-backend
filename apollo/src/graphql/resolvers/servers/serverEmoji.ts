@@ -1,10 +1,10 @@
-import mongoose, { Error, MongooseError } from 'mongoose';
-import { IResolvers } from '@graphql-tools/utils';
-import { ApolloError, UserInputError, ValidationError } from 'apollo-server';
+import mongoose, { Error } from "mongoose";
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError, ValidationError } from "apollo-server";
 
-import ServerEmojiModel from '../../../models/servers/serverEmoji';
-import ServerModel from '../../../models/servers/server';
-import { publishEvent, ServerEvents } from '../../pubsub/pubsub';
+import ServerEmojiModel from "../../../models/servers/serverEmoji";
+import ServerModel from "../../../models/servers/server";
+import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
 
 const SERVER_MAX_EMOJI = 20;
 
@@ -19,14 +19,16 @@ const createEmojiTransaction = async (input: any) => {
     // Find the server and and check if it exists
     const server = await ServerModel.findById(input.server_id).session(session);
     if (!server) {
-      throw new UserInputError('Server not found.');
+      throw new UserInputError("Server not found.");
     }
 
     // Check if the server has reached the emoji limit
+    // @ts-ignore
     if (server.totalEmojis >= SERVER_MAX_EMOJI) {
-      throw new ValidationError('Server emoji limit reached.');
+      throw new ValidationError("Server emoji limit reached.");
     }
 
+    // @ts-ignore
     // Increment emoji count
     server.totalEmojis += 1;
     await server.save({ session });
@@ -35,14 +37,14 @@ const createEmojiTransaction = async (input: any) => {
     session.endSession();
 
     return emoji[0];
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     throw error;
   }
 };
 
-const deleteEmojiTransaction = async (emoji_id) => {
+const deleteEmojiTransaction = async (emoji_id: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -58,6 +60,10 @@ const deleteEmojiTransaction = async (emoji_id) => {
       { session, new: true }
     );
 
+    if (!emoji) {
+      throw new UserInputError("Emoji not found.");
+    }
+
     // Decrement emoji count
     await ServerModel.findByIdAndUpdate(
       emoji.server_id,
@@ -71,7 +77,7 @@ const deleteEmojiTransaction = async (emoji_id) => {
     session.endSession();
 
     return emoji;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     throw new Error(error);
@@ -88,11 +94,11 @@ const serverEmojiAPI: IResolvers = {
         });
 
         if (!emoji) {
-          throw new UserInputError('Emoji not found.');
+          throw new UserInputError("Emoji not found.");
         }
 
         return emoji;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -109,7 +115,7 @@ const serverEmojiAPI: IResolvers = {
     countServerEmojis: async (_, { server_id }) => {
       const server = await ServerModel.findById(server_id);
       if (!server) {
-        throw new UserInputError('Server not found.');
+        throw new UserInputError("Server not found.");
       }
 
       return server.totalEmojis;
@@ -120,7 +126,7 @@ const serverEmojiAPI: IResolvers = {
       // Check server exists
       const server = await ServerModel.findById(input.server_id);
       if (!server) {
-        throw new UserInputError('Server not found.');
+        throw new UserInputError("Server not found.");
       }
 
       try {
@@ -135,7 +141,7 @@ const serverEmojiAPI: IResolvers = {
         });
 
         return emoji;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -148,7 +154,7 @@ const serverEmojiAPI: IResolvers = {
         );
 
         if (!emoji) {
-          throw new UserInputError('Emoji not found. Maybe it was deleted.');
+          throw new UserInputError("Emoji not found. Maybe it was deleted.");
         }
 
         publishEvent(ServerEvents.serverUpdated, {
@@ -160,7 +166,7 @@ const serverEmojiAPI: IResolvers = {
         });
 
         return emoji;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -178,7 +184,7 @@ const serverEmojiAPI: IResolvers = {
         });
 
         return emoji.is_deleted;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -187,13 +193,15 @@ const serverEmojiAPI: IResolvers = {
       try {
         const emoji = await ServerEmojiModel.findByIdAndDelete(emoji_id);
 
+        if (!emoji) throw new Error("Emoji not found.");
+
         // Decrement emoji count
         await ServerModel.findByIdAndUpdate(emoji.server_id, {
           $inc: { totalEmojis: -1 },
         });
 
         return true;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },

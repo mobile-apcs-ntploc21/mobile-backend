@@ -43,7 +43,10 @@ const gqlAPI = gql`
   type Mutation {
     createServerRole(server_id: ID!, input: CreateServerRoleInput!): ServerRole
     updateServerRole(role_id: ID!, input: UpdateServerRoleInput!): ServerRole
-    updateDefaultServerRole(server_id: ID!, input: UpdateServerRoleInput!): ServerRole
+    updateDefaultServerRole(
+      server_id: ID!
+      input: UpdateServerRoleInput!
+    ): ServerRole
     deleteServerRole(role_id: ID!): ServerRole
   }
 `;

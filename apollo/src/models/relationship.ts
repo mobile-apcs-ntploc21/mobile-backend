@@ -11,7 +11,10 @@ export enum RelationshipType {
 }
 
 interface IRelationship {
-  _id: { user_first_id: Schema.Types.ObjectId; user_second_id: Schema.Types.ObjectId };
+  _id: {
+    user_first_id: Schema.Types.ObjectId;
+    user_second_id: Schema.Types.ObjectId;
+  };
   type: RelationshipType;
   last_modified: Date;
 }

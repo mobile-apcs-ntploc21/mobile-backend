@@ -12,6 +12,7 @@ import {
   DELETE_RELATIONSHIP,
   UPDATE_RELATIONSHIP,
 } from "../graphql/mutations";
+import { log } from "@/utils/log";
 
 const getRelationshipType = async (
   user_first_id: string,
@@ -61,9 +62,10 @@ export const addFriend = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot add yourself as a friend.",
       });
+      return;
     }
 
     let user_first_id = current_user;
@@ -86,9 +88,10 @@ export const addFriend = async (
       });
 
     if (relationshipType) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot add this user as a friend.",
       });
+      return;
     }
 
     if (user_first_id == current_user) {
@@ -108,10 +111,11 @@ export const addFriend = async (
     res.status(200).json({
       message: "Friend request sent.",
     });
-  } catch (error) {
-    return res.status(500).json({
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -126,9 +130,10 @@ export const acceptFriend = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot accept yourself as a friend.",
       });
+      return;
     }
 
     let user_first_id = current_user;
@@ -148,9 +153,10 @@ export const acceptFriend = async (
       });
 
     if (!relationshipType) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot accept this user as a friend.",
       });
+      return;
     }
 
     if (
@@ -172,18 +178,21 @@ export const acceptFriend = async (
         type: "FRIEND",
       });
     } else {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot accept this user as a friend.",
       });
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Friend request accepted.",
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -198,9 +207,10 @@ export const cancelFriendRequest = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot cancel friend request to yourself.",
       });
+      return;
     }
 
     const relationshipType = await getRelationshipType(current_user, friend)
@@ -212,9 +222,10 @@ export const cancelFriendRequest = async (
       });
 
     if (!relationshipType) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot cancel friend request to this user.",
       });
+      return;
     }
 
     if (
@@ -223,18 +234,21 @@ export const cancelFriendRequest = async (
     ) {
       const response = await deleteRelationship(current_user, friend);
     } else {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot cancel friend request to this user.",
       });
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Friend request cancelled.",
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -249,9 +263,10 @@ export const cancelReceivedFriendRequest = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot cancel received friend request from yourself.",
       });
+      return;
     }
 
     const relationshipType = await getRelationshipType(current_user, friend)
@@ -263,9 +278,10 @@ export const cancelReceivedFriendRequest = async (
       });
 
     if (!relationshipType) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot cancel received friend request from this user.",
       });
+      return;
     }
 
     if (
@@ -274,18 +290,21 @@ export const cancelReceivedFriendRequest = async (
     ) {
       const response = await deleteRelationship(current_user, friend);
     } else {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot cancel received friend request from this user.",
       });
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Received friend request cancelled.",
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -300,9 +319,10 @@ export const removeFriend = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot remove yourself as a friend.",
       });
+      return;
     }
 
     const relationshipType = await getRelationshipType(current_user, friend)
@@ -314,26 +334,30 @@ export const removeFriend = async (
       });
 
     if (!relationshipType) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot remove this user as a friend.",
       });
+      return;
     }
 
     if (relationshipType == "FRIEND") {
       const response = await deleteRelationship(current_user, friend);
     } else {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot remove this user as a friend.",
       });
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Friend removed.",
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -349,9 +373,10 @@ export const blockUser = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot block yourself.",
       });
+      return;
     }
 
     let user_first_id = current_user;
@@ -378,9 +403,10 @@ export const blockUser = async (
         relationshipType == "BLOCK_FIRST_SECOND") ||
       (user_first_id == friend && relationshipType == "BLOCK_SECOND_FIRST")
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You have already blocked this user.",
       });
+      return;
     }
 
     if (
@@ -388,9 +414,10 @@ export const blockUser = async (
       (user_first_id == current_user &&
         relationshipType == "BLOCK_SECOND_FIRST")
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You have already been blocked by this user.",
       });
+      return;
     }
 
     if (!relationshipType) {
@@ -423,13 +450,15 @@ export const blockUser = async (
       }
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "User blocked.",
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -444,9 +473,10 @@ export const unblockUser = async (
     const friend = req.params.id;
 
     if (current_user == friend) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You cannot unblock yourself.",
       });
+      return;
     }
 
     let user_first_id = current_user;
@@ -469,9 +499,10 @@ export const unblockUser = async (
       });
 
     if (!relationshipType) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You have not blocked this user.",
       });
+      return;
     }
 
     if (
@@ -479,20 +510,23 @@ export const unblockUser = async (
         relationshipType != "BLOCK_FIRST_SECOND") ||
       (user_first_id == friend && relationshipType != "BLOCK_SECOND_FIRST")
     ) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "You have not blocked this user.",
       });
+      return;
     }
 
     const response = await deleteRelationship(user_first_id, user_second_id);
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "User unblocked.",
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -514,13 +548,15 @@ export const getAllFriends = async (
       }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       friends: response,
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -538,13 +574,15 @@ export const getReceivedFriendRequests = async (
         user_id: user_id,
       });
 
-    return res.status(200).json({
+    res.status(200).json({
       requests: response,
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -557,7 +595,7 @@ export const getSentFriendRequests = async (
   try {
     const user_id = res.locals.uid;
 
-    console.log(user_id);
+    log.debug(user_id);
 
     const { getSentFriendRequests: response } = await graphQLClient().request(
       GET_SENT_FRIEND_REQUESTS,
@@ -566,13 +604,15 @@ export const getSentFriendRequests = async (
       }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       requests: response,
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -592,13 +632,15 @@ export const getBlockedUsers = async (
       }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       blocked: response,
     });
-  } catch (error) {
-    return res.status(500).json({
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };
 
@@ -633,41 +675,52 @@ export const getRelationshipTypeApi = async (
       });
 
     if (!relationshipType) {
-      return res.status(200).json({ type: "NOT-FRIEND" });
+      res.status(200).json({ type: "NOT-FRIEND" });
+      return;
     }
 
     if (user_first_id == current_user) {
       if (relationshipType == "PENDING_FIRST_SECOND") {
-        return res.status(200).json({ type: "REQUEST-SENT" });
+        res.status(200).json({ type: "REQUEST-SENT" });
+        return;
       } else if (relationshipType == "PENDING_SECOND_FIRST") {
-        return res.status(200).json({ type: "REQUEST-RECEIVED" });
+        res.status(200).json({ type: "REQUEST-RECEIVED" });
+        return;
       } else if (relationshipType == "FRIEND") {
-        return res.status(200).json({ type: "FRIEND" });
+        res.status(200).json({ type: "FRIEND" });
+        return;
       } else if (
         relationshipType == "BLOCK_FIRST_SECOND" ||
         relationshipType == "BLOCK_SECOND_FIRST"
       ) {
-        return res.status(200).json({ type: "BLOCK" });
+        res.status(200).json({ type: "BLOCK" });
+        return;
       }
     } else {
       if (relationshipType == "PENDING_FIRST_SECOND") {
-        return res.status(200).json({ type: "REQUEST-RECEIVED" });
+        res.status(200).json({ type: "REQUEST-RECEIVED" });
+        return;
       } else if (relationshipType == "PENDING_SECOND_FIRST") {
-        return res.status(200).json({ type: "REQUEST-SENT" });
+        res.status(200).json({ type: "REQUEST-SENT" });
+        return;
       } else if (relationshipType == "FRIEND") {
-        return res.status(200).json({ type: "FRIEND" });
+        res.status(200).json({ type: "FRIEND" });
+        return;
       } else if (
         relationshipType == "BLOCK_SECOND_FIRST" ||
         relationshipType == "BLOCK_FIRST_SECOND"
       ) {
-        return res.status(200).json({ type: "BLOCK" });
+        res.status(200).json({ type: "BLOCK" });
+        return;
       }
     }
 
-    return res.status(200).json({ type: "UNDEFINED" });
-  } catch (error) {
-    return res.status(500).json({
+    res.status(200).json({ type: "UNDEFINED" });
+    return;
+  } catch (error: any) {
+    res.status(500).json({
       message: error.message,
     });
+    return;
   }
 };

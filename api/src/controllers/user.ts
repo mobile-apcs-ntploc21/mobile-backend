@@ -57,9 +57,10 @@ export const createUser = async (
     const { username, email, password, phone: phoneNumber, age } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Missing required fields",
       });
+      return;
     }
 
     const user = await getUserByEmail(email)
@@ -71,9 +72,10 @@ export const createUser = async (
       });
 
     if (user) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Email already exists",
       });
+      return;
     }
 
     const userByUsername = await getUserByUsername(username)
@@ -85,9 +87,10 @@ export const createUser = async (
       });
 
     if (userByUsername) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Username already exists",
       });
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -124,9 +127,11 @@ export const createUser = async (
       },
     });
 
-    return res.status(201).json({ ...response, jwtToken, refreshToken });
+    res.status(201).json({ ...response, jwtToken, refreshToken });
+    return;
   } catch (err) {
-    return next(err);
+    next(err);
+    return;
   }
 };
 
@@ -149,9 +154,10 @@ export const loginUser = async (
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Missing required fields",
       });
+      return;
     }
 
     const { loginUser: response } = await graphQLClient().request(LOGIN_USER, {
@@ -160,9 +166,10 @@ export const loginUser = async (
     });
 
     if (response == null) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Invalid email or password",
       });
+      return;
     }
 
     // Generate JWT and refresh token
@@ -183,9 +190,11 @@ export const loginUser = async (
       },
     });
 
-    return res.status(200).json({ ...response, jwtToken, refreshToken });
+    res.status(200).json({ ...response, jwtToken, refreshToken });
+    return;
   } catch (err) {
-    return next(err);
+    next(err);
+    return;
   }
 };
 
@@ -214,9 +223,10 @@ export const refresh = async (
     const user = await getUserByEmail(decodedToken.email);
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         message: "Invalid token",
       });
+      return;
     }
 
     // Generate new JWT and refresh token
@@ -238,13 +248,15 @@ export const refresh = async (
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       id: user.id,
       jwtToken: jwtToken,
       refreshToken: newRefreshToken,
     });
+    return;
   } catch (err) {
-    return next(err);
+    next(err);
+    return;
   }
 };
 
@@ -270,15 +282,18 @@ export const getMe = async (
     const user = await getUserByEmail(decoded.email);
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         status: "fail",
         message: "The user belonging to this token does no longer exist",
       });
+      return;
     }
 
-    return res.status(200).json(user);
+    res.status(200).json(user);
+    return;
   } catch (err) {
-    return next(err);
+    next(err);
+    return;
   }
 };
 
@@ -301,9 +316,10 @@ export const logoutUser = async (
     const user_id = res.locals.uid;
 
     if (!refreshToken) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Missing required fields",
       });
+      return;
     }
 
     await graphQLClient().request(LOGOUT_USER, {
@@ -311,10 +327,12 @@ export const logoutUser = async (
       refresh_token: refreshToken,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Logout success",
     });
+    return;
   } catch (err) {
-    return next(err);
+    next(err);
+    return;
   }
 };

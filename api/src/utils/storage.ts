@@ -1,14 +1,14 @@
 import { Upload } from "@aws-sdk/lib-storage";
 import {
-  S3Client,
-  ObjectCannedACL,
-  PutObjectCommandInput,
   DeleteObjectCommand,
+  PutObjectCommandInput,
+  S3Client,
 } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import streamifier from "streamifier";
 import config from "../config";
+import { log } from "@/utils/log";
 
 // AWS S3 Config
 export const s3 = new S3Client({
@@ -56,7 +56,7 @@ export const uploadToS3 = async (file: any, folder: string) => {
     // Convert to CDN link
     return `https://${config.CDN_URL}/${key}`;
   } catch (err: any) {
-    console.error(err.message);
+    log.error(err.message);
     throw new Error(err.message);
   }
 };
@@ -70,7 +70,7 @@ export const deleteFromS3 = async (key: string) => {
       })
     );
   } catch (err: any) {
-    console.error(err.message);
+    log.error(err.message);
     throw new Error(err.message);
   }
 };
@@ -85,6 +85,10 @@ const base64ToBuffer = (dataString: string) => {
   const matches = String(dataString).match(
     /^data:([A-Za-z-+\/]+);base64,(.+)$/
   );
+
+  if (!Array.isArray(matches))
+    throw new Error("Data string is not in the base64 uri format");
+
   if (matches.length !== 3) {
     return new Error("Invalid input string");
   }
@@ -156,14 +160,14 @@ export const compressImage = async (image: any) => {
     "image/webp",
     "image/bmp",
     "image/tiff",
-    "image/svg+xml"
+    "image/svg+xml",
   ];
-  
+
   // Check if the provided mimetype is in the list of supported types
   if (!supportedImageTypes.includes(mimetype)) {
     throw new Error("Invalid file type.");
   }
-	
+
   const stream = createReadStream();
   const buffer = await streamToBuffer(stream);
 

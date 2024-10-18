@@ -5,7 +5,7 @@ const gqlTypes = gql`
     _id: IDPair
     permissions: String
   }
-  
+
   type IDPair {
     user_id: ID
     channel_id: ID
@@ -16,13 +16,27 @@ const gqlAPI = gql`
   type Query {
     syncChannelUserPermission: [ChannelUserPermission]
     getChannelUsersPermissions(channel_id: ID!): [UserProfileWithPermissions]
-    getChannelUserPermission(user_id: ID!, channel_id: ID!): UserProfileWithPermissions
+    getChannelUserPermission(
+      user_id: ID!
+      channel_id: ID!
+    ): UserProfileWithPermissions
   }
 
   type Mutation {
-    createChannelUserPermission(user_id: ID!, channel_id: ID!, permissions: String): [UserProfileWithPermissions]
-    updateChannelUserPermission(user_id: ID!, channel_id: ID!, permissions: String): UserProfileWithPermissions
-    deleteChannelUserPermission(user_id: ID!, channel_id: ID!): [UserProfileWithPermissions]
+    createChannelUserPermission(
+      user_id: ID!
+      channel_id: ID!
+      permissions: String
+    ): [UserProfileWithPermissions]
+    updateChannelUserPermission(
+      user_id: ID!
+      channel_id: ID!
+      permissions: String
+    ): UserProfileWithPermissions
+    deleteChannelUserPermission(
+      user_id: ID!
+      channel_id: ID!
+    ): [UserProfileWithPermissions]
   }
 `;
 

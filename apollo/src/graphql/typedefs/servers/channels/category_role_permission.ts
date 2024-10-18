@@ -5,7 +5,7 @@ const gqlTypes = gql`
     _id: IDPair
     permissions: String
   }
-  
+
   type IDPair {
     server_role_id: ID
     category_id: ID
@@ -20,8 +20,16 @@ const gqlAPI = gql`
   }
 
   type Mutation {
-    createCategoryRolePermission(role_id: ID!, category_id: ID!, permissions: String): [ServerRole]
-    updateCategoryRolePermission(role_id: ID!, category_id: ID!, permissions: String): ServerRole
+    createCategoryRolePermission(
+      role_id: ID!
+      category_id: ID!
+      permissions: String
+    ): [ServerRole]
+    updateCategoryRolePermission(
+      role_id: ID!
+      category_id: ID!
+      permissions: String
+    ): ServerRole
     deleteCategoryRolePermission(role_id: ID!, category_id: ID!): [ServerRole]
   }
 `;

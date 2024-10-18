@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../../utils/graphql';
-import { serverMemberQueries, serverQueries } from '../../graphql/queries';
-import { serverMemberMutations } from '../../graphql/mutations';
+import { Request, Response, NextFunction } from "express";
+import graphQLClient from "../../utils/graphql";
+import { serverMemberQueries, serverQueries } from "../../graphql/queries";
+import { serverMemberMutations } from "../../graphql/mutations";
 
 export const getServerMembers = async (
   req: Request,
@@ -20,11 +20,14 @@ export const getServerMembers = async (
       }
     );
 
-    if (members.length === 0) return res.json([]);
+    if (members.length === 0) {
+      res.json([]);
+      return;
+    }
 
-    return res.status(200).json(members);
+    res.status(200).json(members);
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };
 
@@ -45,9 +48,9 @@ export const joinServer = async (
       }
     );
 
-    return res.json(response.joinServer);
+    res.json(response.joinServer);
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };
 
@@ -67,9 +70,9 @@ export const addMembers = async (
       }
     );
 
-    return res.json(response);
+    res.json(response);
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };
 
@@ -89,9 +92,9 @@ export const removeMembers = async (
       }
     );
 
-    return res.json(response);
+    res.json(response);
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };
 
@@ -111,8 +114,8 @@ export const removeSelf = async (
       }
     );
 
-    return res.json(response);
+    res.json(response);
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };

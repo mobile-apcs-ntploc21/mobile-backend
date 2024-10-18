@@ -1,12 +1,12 @@
 import bodyParser from "body-parser";
 import cors from "cors";
-import dotenv from "dotenv";
 import express, { NextFunction, Request, Response } from "express";
 import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
 import xss from "xss-clean";
+import "module-alias/register";
 
 import globalErrorHandler from "./controllers/error";
 import friendRouter from "./routes/friend";
@@ -19,8 +19,8 @@ import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
 import { authMiddleware } from "./utils/authMiddleware";
 import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
-
-dotenv.config({ path: "./config.env" });
+import config from "@/config";
+import { log } from "@/utils/log";
 
 const app = express();
 
@@ -69,7 +69,7 @@ app.use(
 app.use("/api/v1/servers", authMiddleware, serverBansRouter);
 
 // Handle when go to undefined route
-app.all("*", (req: Request, res: Response, next: NextFunction) => {
+app.all("*", (req: Request, res: Response, _next: NextFunction) => {
   res.status(404).json({
     status: "fail",
     message: `Cannot find ${req.originalUrl} on this server !`,
@@ -80,14 +80,14 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
 app.use(
   (
     err: any,
-    req: express.Request,
+    _req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    _next: express.NextFunction
   ) => {
-    console.error(err);
+    log.error(err);
     res.set("Content-Type", "application/json");
     res.statusCode = 400;
-    return res.json({
+    res.json({
       error: {
         message: err.message,
       },
@@ -98,6 +98,8 @@ app.use(
 // Handle global error
 app.use(globalErrorHandler);
 
-app.listen(4001, () => console.log("API is listening on port 4001..."));
+app.listen(config.PORT, () =>
+  log.info(`API is listening on port ${config.PORT}...`)
+);
 
 export default app;

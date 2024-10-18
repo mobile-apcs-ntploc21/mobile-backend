@@ -1,18 +1,18 @@
 import { Router } from "express";
 import {
-  addFriend,
   acceptFriend,
+  addFriend,
+  blockUser,
   cancelFriendRequest,
   cancelReceivedFriendRequest,
-  removeFriend,
-  blockUser,
-  unblockUser,
   getAllFriends,
-  getReceivedFriendRequests,
-  getSentFriendRequests,
   getBlockedUsers,
+  getReceivedFriendRequests,
   getRelationshipTypeApi,
-} from "../controllers/friend";
+  getSentFriendRequests,
+  removeFriend,
+  unblockUser,
+} from "@/controllers/friend";
 
 const friendRouter = Router();
 

@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
 import { serverChannelQueries } from "../graphql/queries";
+import { log } from "@/utils/log";
 
 export const checkChannelExistenceMiddleware = async (
   req: Request,
@@ -11,7 +12,8 @@ export const checkChannelExistenceMiddleware = async (
 
   // We already have the channel_id in res.locals, so we skip fetching it again
   if (res.locals?.channel_id === channelId) {
-    return next();
+    next();
+    return;
   }
 
   try {
@@ -23,7 +25,8 @@ export const checkChannelExistenceMiddleware = async (
     );
 
     if (!channel) {
-      return res.status(404).json({ message: "Channel not found" });
+      res.status(404).json({ message: "Channel not found" });
+      return;
     }
 
     res.locals.channel_id = channelId;

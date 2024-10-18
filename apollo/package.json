@@ -1,77 +1,43 @@
 {
   "name": "apollo",
   "version": "1.0.0",
-  "description": "",
   "main": "src/server.ts",
-  "nodemonConfig": {
-    "ignore": [
-      "src/**/*.test.ts",
-      "src/**/*.spec.ts",
-      "src/**/*.test.tsx",
-      "src/**/*.spec.tsx",
-      "src/**/*.test.js",
-      "src/**/*.spec.js",
-      "src/**/*.test.jsx",
-      "src/**/*.spec.jsx",
-      ".git",
-      "node_modules"
-    ],
-    "watch": [
-      "src"
-    ],
-    "exec": "node -r tsconfig-paths/register -r ts-node/register ./src/server.ts",
-    "ext": "ts, js"
+  "_moduleAliases": {
+    "@": "src",
+    "@models": "src/models",
+    "@resolvers": "src/graphql/resolvers"
   },
   "scripts": {
-    "compile": "tsc",
-    "build": "tsc",
-    "start": "nodemon src/server.ts",
-    "start:dev": "nodemon src/server.ts",
-    "start:prod": "nodemon src/server.ts NODE_ENV=production"
+    "lint": "eslint \"./**/*.ts\"",
+    "prettier": "prettier --check \"./**/*.{ts,json}\"",
+    "prettier-fix": "prettier --write \"./**/*.{ts,json}\"",
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@graphql-tools/merge": "^9.0.4",
     "@graphql-tools/schema": "^10.0.4",
     "@graphql-tools/utils": "^10.3.2",
-    "@types/graphql-resolvers": "^0.3.2",
-    "@types/mongoose": "^5.11.97",
-    "@types/validator": "^13.12.0",
     "apollo-server": "^3.13.0",
     "apollo-server-core": "^3.13.0",
     "apollo-server-express": "^3.13.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^7.3.1",
     "graphql": "^16.9.0",
     "graphql-resolvers": "^0.4.2",
     "graphql-scalars": "^1.23.0",
     "graphql-subscriptions": "^2.0.0",
     "graphql-tools": "^9.0.1",
     "graphql-ws": "^5.16.0",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.3",
-    "morgan": "^1.10.0",
-    "root": "file:..",
     "short-unique-id": "^5.2.0",
-    "ts-node": "^10.9.2",
     "validator": "^13.12.0",
-    "ws": "^8.18.0",
-    "xss-clean": "^0.1.4"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/graphql-resolvers": "^0.3.2",
+    "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.9",
-    "@types/node": "^20.14.8",
-    "@types/ws": "^8.5.11",
-    "nodemon": "^3.1.4",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.5.2"
+    "@types/validator": "^13.12.0",
+    "@types/ws": "^8.5.11"
   }
 }

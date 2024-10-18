@@ -1,10 +1,10 @@
 import express from "express";
-import streamifier from "streamifier";
 
 import { processImage } from "../../utils/storage";
 import graphQLClient from "../../utils/graphql";
 import { serverQueries } from "../../graphql/queries";
 import { serverMutations } from "../../graphql/mutations";
+import { log } from "@/utils/log";
 
 const getServerOverview = async (server_id: string) => {
   const response = await graphQLClient().request(
@@ -38,19 +38,23 @@ export const getServer = async (
   const server_id = req.params?.serverId as string;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   try {
     const server = await getServerOverview(server_id).catch(() => null);
 
     if (!server) {
-      return res.status(404).json({ message: "Server not found." });
+      res.status(404).json({ message: "Server not found." });
+      return;
     }
 
-    return res.status(200).json({ ...server });
+    res.status(200).json({ ...server });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -72,9 +76,11 @@ export const getUserServers = async (
       server.position = index;
     });
 
-    return res.status(200).json({ ...servers });
+    res.status(200).json({ ...servers });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -87,9 +93,8 @@ export const createServer = async (
   const user_id = res.locals.uid;
 
   if (!name) {
-    return res
-      .status(400)
-      .json({ message: "Name for the server is required." });
+    res.status(400).json({ message: "Name for the server is required." });
+    return;
   }
 
   try {
@@ -116,9 +121,11 @@ export const createServer = async (
       }
     );
 
-    return res.status(201).json({ ...response.createServer });
+    res.status(201).json({ ...response.createServer });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -132,13 +139,14 @@ export const updateServer = async (
   const { name, avatar, banner } = req.body;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   // TODO: Check user permissions
 
   try {
-    let input: { name?: string; avatar_url?: string; banner_url?: string } = {
+    const input: { name?: string; avatar_url?: string; banner_url?: string } = {
       ...(name && { name }),
       ...(avatar && { avatar_url: await processImage(avatar, "avatars") }),
       ...(banner && { banner_url: await processImage(banner, "banners") }),
@@ -152,9 +160,11 @@ export const updateServer = async (
       }
     );
 
-    return res.status(200).json({ ...response.updateServer });
+    res.status(200).json({ ...response.updateServer });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -167,18 +177,21 @@ export const deleteServer = async (
   const user_token = res.locals.token;
 
   if (!serverId) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   const server = await getServerOverview(serverId).catch(() => null);
   if (!server) {
-    return res.status(404).json({ message: "Server not found." });
+    res.status(404).json({ message: "Server not found." });
+    return;
   }
 
   if (server.owner !== res.locals.uid) {
-    return res
+    res
       .status(403)
       .json({ message: "You don't have permission to delete this server." });
+    return;
   }
 
   try {
@@ -189,9 +202,11 @@ export const deleteServer = async (
       }
     );
 
-    return res.status(200).json({ message: "Server deleted successfully" });
+    res.status(200).json({ message: "Server deleted successfully" });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -205,15 +220,15 @@ export const transferOwnership = async (
   const user_token = res.locals.token;
 
   if (!server_id || !user_id) {
-    return res
-      .status(400)
-      .json({ message: "Server ID and User ID are required." });
+    res.status(400).json({ message: "Server ID and User ID are required." });
+    return;
   }
 
   if (user_id === res.locals.uid) {
-    return res
+    res
       .status(400)
       .json({ message: "You can't transfer ownership to yourself." });
+    return;
   }
 
   try {
@@ -225,11 +240,11 @@ export const transferOwnership = async (
       }
     );
 
-    return res
-      .status(200)
-      .json({ message: "Ownership transferred successfully" });
+    res.status(200).json({ message: "Ownership transferred successfully" });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -242,7 +257,8 @@ export const getInviteCode = async (
   const user_token = res.locals.token;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   try {
@@ -253,9 +269,11 @@ export const getInviteCode = async (
       }
     );
 
-    return res.status(200).json({ ...response.getInviteCode });
+    res.status(200).json({ ...response.getInviteCode });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -270,7 +288,8 @@ export const createInviteCode = async (
   let url = null;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   // TODO: Generate a random URL
@@ -300,9 +319,11 @@ export const createInviteCode = async (
       }
     );
 
-    return res.status(201).json({ ...response.createInviteCode });
+    res.status(201).json({ ...response.createInviteCode });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -316,7 +337,8 @@ export const deleteInviteCode = async (
   const { url } = req.body;
 
   if (!server_id || !url) {
-    return res.status(400).json({ message: "Server ID and URL are required." });
+    res.status(400).json({ message: "Server ID and URL are required." });
+    return;
   }
 
   // TODO: Check user permissions
@@ -330,11 +352,11 @@ export const deleteInviteCode = async (
       }
     );
 
-    return res
-      .status(200)
-      .json({ message: "Invite code deleted successfully" });
+    res.status(200).json({ message: "Invite code deleted successfully" });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -348,11 +370,13 @@ export const moveServer = async (
   const user_id = res.locals.uid;
 
   if (!servers) {
-    return res.status(400).json({ message: "Servers are required." });
+    res.status(400).json({ message: "Servers are required." });
+    return;
   }
 
   if (!user_id) {
-    return res.status(400).json({ message: "User ID is required." });
+    res.status(400).json({ message: "User ID is required." });
+    return;
   }
 
   try {
@@ -365,12 +389,15 @@ export const moveServer = async (
     );
 
     if (!response) {
-      return res.status(400).json({ message: "Failed to move servers." });
+      res.status(400).json({ message: "Failed to move servers." });
+      return;
     }
 
-    return res.status(200).json({ message: "Servers moved successfully" });
+    res.status(200).json({ message: "Servers moved successfully" });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -379,15 +406,16 @@ export const setFavoriteServer = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  console.log("setFavoriteServer");
+  log.info("setFavoriteServer");
   const is_favorite = req.body?.is_favorite ?? undefined;
   const server_id = req.params?.serverId;
   const user_id = res.locals.uid;
 
   if (!server_id) {
-    return res
+    res
       .status(400)
       .json({ message: "Server ID and is_favorite are required." });
+    return;
   }
 
   try {
@@ -410,11 +438,14 @@ export const setFavoriteServer = async (
     );
 
     if (!response) {
-      return res.status(400).json({ message: "Failed to update favorite." });
+      res.status(400).json({ message: "Failed to update favorite." });
+      return;
     }
 
-    return res.status(200).json({ message: "Server favorite updated" });
+    res.status(200).json({ message: "Server favorite updated" });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };

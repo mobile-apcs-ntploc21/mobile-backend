@@ -11,7 +11,7 @@ import UserProfileModel from "@models/user_profile";
 const createChannelUserPermission = async (
   user_id: ObjectId,
   channel_id: ObjectId,
-  permissions: String
+  permissions: string
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -96,6 +96,7 @@ const channelUserPermissionAPI: IResolvers = {
                 user_id: user_id,
                 server_id: null,
               });
+              if (!user) throw new Error("User not found");
             }
 
             return {
@@ -143,6 +144,7 @@ const channelUserPermissionAPI: IResolvers = {
             user_id: user_id,
             server_id: null,
           });
+          if (!user) throw new Error("User not found");
         }
 
         return {
@@ -174,6 +176,7 @@ const channelUserPermissionAPI: IResolvers = {
         );
 
         const channel = await Channel.findById(channel_id);
+        if (!channel) throw new Error("Channel not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelUserAdded,
@@ -200,6 +203,7 @@ const channelUserPermissionAPI: IResolvers = {
                 user_id: user_id,
                 server_id: null,
               });
+              if (!user) throw new Error("User not found");
             }
 
             return {
@@ -237,6 +241,8 @@ const channelUserPermissionAPI: IResolvers = {
             { permissions },
             { new: true }
           );
+        if (!channel_user_permission)
+          throw new Error("Channel user permission not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelUserUpdated,
@@ -256,6 +262,7 @@ const channelUserPermissionAPI: IResolvers = {
             user_id: user_id,
             server_id: null,
           });
+          if (!user) throw new Error("User not found");
         }
 
         return {
@@ -278,8 +285,11 @@ const channelUserPermissionAPI: IResolvers = {
             "_id.user_id": user_id,
             "_id.channel_id": channel_id,
           });
+        if (!channel_user_permission)
+          throw new Error("Channel user permission not");
 
         const channel = await Channel.findById(channel_id);
+        if (!channel) throw new Error("Channel not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelUserDeleted,
@@ -306,6 +316,7 @@ const channelUserPermissionAPI: IResolvers = {
                 user_id: user_id,
                 server_id: null,
               });
+              if (!user) throw new Error("User not found");
             }
 
             return {

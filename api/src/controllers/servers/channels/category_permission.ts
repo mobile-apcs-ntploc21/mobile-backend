@@ -1,11 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../../../utils/graphql';
-import {serverRoleQueries, serverCategoryPermissionQueries} from '../../../graphql/queries';
+import { NextFunction, Request, Response } from "express";
+import graphQLClient from "@/utils/graphql";
 import {
-  serverCategoryPermissionMutations,
-} from '../../../graphql/mutations';
+  serverCategoryPermissionQueries,
+  serverRoleQueries,
+} from "@/graphql/queries";
+import { serverCategoryPermissionMutations } from "@/graphql/mutations";
 
-import { getUserCategoryPermissionsFunc } from '../../../utils/getUserCategoryPermissions';
+import { getUserCategoryPermissionsFunc } from "@/utils/getUserCategoryPermissions";
+import { log } from "@/utils/log";
 
 export const getRolesAssignedWithCategory = async (
   req: Request,
@@ -15,28 +17,30 @@ export const getRolesAssignedWithCategory = async (
   const serverId = res.locals.server_id;
   const categoryId = res.locals.category_id;
 
-  console.log(categoryId);
+  log.debug(categoryId);
 
   try {
-    const { getCategoryRolesPermissions: roles } = await graphQLClient().request(
-      serverCategoryPermissionQueries.GET_CATEGORY_ROLES_PERMISSION,
-      {
-        category_id: categoryId,
-      }
-    );
+    const { getCategoryRolesPermissions: roles } =
+      await graphQLClient().request(
+        serverCategoryPermissionQueries.GET_CATEGORY_ROLES_PERMISSION,
+        {
+          category_id: categoryId,
+        }
+      );
 
     if (!roles.length) {
-      return res.json({
+      res.json({
         server_id: serverId,
         category_id: categoryId,
         roles: [],
       });
+      return;
     }
 
-    return res.json({
+    res.json({
       server_id: serverId,
       category_id: categoryId,
-      roles: roles.map((role) => ({
+      roles: roles.map((role: any) => ({
         id: role.id,
         name: role.name,
         color: role.color,
@@ -48,7 +52,8 @@ export const getRolesAssignedWithCategory = async (
       })),
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -61,25 +66,27 @@ export const getUsersAssignedWithCategoryPermission = async (
   const categoryId = res.locals.category_id;
 
   try {
-    const { getCategoryUsersPermissions: users } = await graphQLClient().request(
-      serverCategoryPermissionQueries.GET_CATEGORY_USERS_PERMISSION,
-      {
-        category_id: categoryId,
-      }
-    );
+    const { getCategoryUsersPermissions: users } =
+      await graphQLClient().request(
+        serverCategoryPermissionQueries.GET_CATEGORY_USERS_PERMISSION,
+        {
+          category_id: categoryId,
+        }
+      );
 
     if (!users.length) {
-      return res.json({
+      res.json({
         server_id: serverId,
         category_id: categoryId,
         users: [],
       });
+      return;
     }
 
-    return res.json({
+    res.json({
       server_id: serverId,
       category_id: categoryId,
-      users: users.map((user) => ({
+      users: users.map((user: any) => ({
         id: user.id,
         username: user.username,
         display_name: user.display_name,
@@ -89,9 +96,10 @@ export const getUsersAssignedWithCategoryPermission = async (
       })),
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getRoleAssignedWithCategory = async (
   req: Request,
@@ -115,16 +123,19 @@ export const getRoleAssignedWithCategory = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Category role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -146,22 +157,25 @@ export const getUserAssignedWithCategoryPermission = async (
       }
     );
 
-    console.log(user);
+    log.debug(user);
 
     let parsedUserPermissions = null;
     try {
       parsedUserPermissions = JSON.parse(user.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "User permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedUserPermissions
+    res.status(200).json({
+      ...parsedUserPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -184,31 +198,39 @@ export const addRoleToCategoryPermission = async (
       }
     );
 
-    const { getCategoryRolePermission: category } = await graphQLClient().request(
-      serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
-      {
-        role_id: role.id,
-        category_id: categoryId,
-      }
-    );
+    const { getCategoryRolePermission: category } =
+      await graphQLClient().request(
+        serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
+        {
+          role_id: role.id,
+          category_id: categoryId,
+        }
+      );
 
     let parsedCategoryRolePermissions = null;
     try {
       parsedCategoryRolePermissions = JSON.parse(category.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Category role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedCategoryRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -219,14 +241,15 @@ export const addRoleToCategoryPermission = async (
       }
     }
 
-    const { createCategoryRolePermission: roles } = await graphQLClient().request(
-      serverCategoryPermissionMutations.CREATE_CATEGORY_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        category_id: categoryId,
-        permissions: JSON.stringify(parsedCategoryRolePermissions),
-      }
-    );
+    const { createCategoryRolePermission: roles } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.CREATE_CATEGORY_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          category_id: categoryId,
+          permissions: JSON.stringify(parsedCategoryRolePermissions),
+        }
+      );
 
     const filteredRoles = roles.map((role: any) => ({
       id: role.id,
@@ -240,15 +263,16 @@ export const addRoleToCategoryPermission = async (
       number_of_users: role.number_of_users,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       category_id: categoryId,
       roles: filteredRoles ? filteredRoles : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const addUserToCategoryPermission = async (
   req: Request,
@@ -269,31 +293,39 @@ export const addUserToCategoryPermission = async (
       }
     );
 
-    const { getCategoryRolePermission: category } = await graphQLClient().request(
-      serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
-      {
-        role_id: role.id,
-        category_id: categoryId,
-      }
-    );
+    const { getCategoryRolePermission: category } =
+      await graphQLClient().request(
+        serverCategoryPermissionQueries.GET_CATEGORY_ROLE_PERMISSION,
+        {
+          role_id: role.id,
+          category_id: categoryId,
+        }
+      );
 
     let parsedCategoryRolePermissions = null;
     try {
       parsedCategoryRolePermissions = JSON.parse(category.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Category role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedCategoryRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -304,14 +336,15 @@ export const addUserToCategoryPermission = async (
       }
     }
 
-    const { createCategoryUserPermission: users } = await graphQLClient().request(
-      serverCategoryPermissionMutations.CREATE_CATEGORY_USER_PERMISSION,
-      {
-        user_id: userId,
-        category_id: categoryId,
-        permissions: JSON.stringify(parsedCategoryRolePermissions),
-      }
-    );
+    const { createCategoryUserPermission: users } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.CREATE_CATEGORY_USER_PERMISSION,
+        {
+          user_id: userId,
+          category_id: categoryId,
+          permissions: JSON.stringify(parsedCategoryRolePermissions),
+        }
+      );
 
     const filteredUsers = users.map((user: any) => ({
       id: user.id,
@@ -322,15 +355,16 @@ export const addUserToCategoryPermission = async (
       about_me: user.about_me,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       category_id: categoryId,
       users: filteredUsers ? filteredUsers : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateRoleCategoryPermission = async (
   req: Request,
@@ -355,19 +389,26 @@ export const updateRoleCategoryPermission = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Category role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -375,7 +416,10 @@ export const updateRoleCategoryPermission = async (
     // Ensure all keys in req.body are equal to permissions
     for (const key in parsedRolePermissions) {
       if (!updatedFields.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+        res.status(400).json({
+          message: `Missing permission: ${key}. All permissions must be provided.`,
+        });
+        return;
       }
     }
 
@@ -385,30 +429,34 @@ export const updateRoleCategoryPermission = async (
       }
     }
 
-    const { updateCategoryRolePermission: roles } = await graphQLClient().request(
-      serverCategoryPermissionMutations.UPDATE_CATEGORY_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        category_id: categoryId,
-        permissions: JSON.stringify(parsedRolePermissions),
-      }
-    );
+    const { updateCategoryRolePermission: roles } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.UPDATE_CATEGORY_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          category_id: categoryId,
+          permissions: JSON.stringify(parsedRolePermissions),
+        }
+      );
 
     try {
       parsedRolePermissions = JSON.parse(roles.permissions);
     } catch (error) {
-      return res
-        .status(400)
-        .json({ message: "Updated category role permissions is not in JSON format !" });
+      res.status(400).json({
+        message: "Updated category role permissions is not in JSON format !",
+      });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updatePartialRoleCategoryPermission = async (
   req: Request,
@@ -433,19 +481,26 @@ export const updatePartialRoleCategoryPermission = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Category role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -456,30 +511,34 @@ export const updatePartialRoleCategoryPermission = async (
       }
     }
 
-    const { updateCategoryRolePermission: roles } = await graphQLClient().request(
-      serverCategoryPermissionMutations.UPDATE_CATEGORY_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        category_id: categoryId,
-        permissions: JSON.stringify(parsedRolePermissions),
-      }
-    );
+    const { updateCategoryRolePermission: roles } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.UPDATE_CATEGORY_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          category_id: categoryId,
+          permissions: JSON.stringify(parsedRolePermissions),
+        }
+      );
 
     try {
       parsedRolePermissions = JSON.parse(roles.permissions);
     } catch (error) {
-      return res
-        .status(400)
-        .json({ message: "Updated category role permissions is not in JSON format !" });
+      res.status(400).json({
+        message: "Updated category role permissions is not in JSON format !",
+      });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateUserCategoryPermission = async (
   req: Request,
@@ -504,19 +563,26 @@ export const updateUserCategoryPermission = async (
     try {
       parsedUserPermissions = JSON.parse(user.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "User permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedUserPermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -524,7 +590,10 @@ export const updateUserCategoryPermission = async (
     // Ensure all keys in req.body are equal to permissions
     for (const key in parsedUserPermissions) {
       if (!updatedFields.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+        res.status(400).json({
+          message: `Missing permission: ${key}. All permissions must be provided.`,
+        });
+        return;
       }
     }
 
@@ -534,30 +603,34 @@ export const updateUserCategoryPermission = async (
       }
     }
 
-    const { updateCategoryUserPermission: users } = await graphQLClient().request(
-      serverCategoryPermissionMutations.UPDATE_CATEGORY_USER_PERMISSION,
-      {
-        user_id: userId,
-        category_id: categoryId,
-        permissions: JSON.stringify(parsedUserPermissions),
-      }
-    );
+    const { updateCategoryUserPermission: users } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.UPDATE_CATEGORY_USER_PERMISSION,
+        {
+          user_id: userId,
+          category_id: categoryId,
+          permissions: JSON.stringify(parsedUserPermissions),
+        }
+      );
 
     try {
       parsedUserPermissions = JSON.parse(users.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Updated user permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedUserPermissions
+    res.status(200).json({
+      ...parsedUserPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updatePartialUserCategoryPermission = async (
   req: Request,
@@ -582,19 +655,26 @@ export const updatePartialUserCategoryPermission = async (
     try {
       parsedUserPermissions = JSON.parse(user.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "User permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedUserPermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -605,30 +685,34 @@ export const updatePartialUserCategoryPermission = async (
       }
     }
 
-    const { updateCategoryUserPermission: users } = await graphQLClient().request(
-      serverCategoryPermissionMutations.UPDATE_CATEGORY_USER_PERMISSION,
-      {
-        user_id: userId,
-        category_id: categoryId,
-        permissions: JSON.stringify(parsedUserPermissions),
-      }
-    );
+    const { updateCategoryUserPermission: users } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.UPDATE_CATEGORY_USER_PERMISSION,
+        {
+          user_id: userId,
+          category_id: categoryId,
+          permissions: JSON.stringify(parsedUserPermissions),
+        }
+      );
 
     try {
       parsedUserPermissions = JSON.parse(users.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Updated user permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedUserPermissions
+    res.status(200).json({
+      ...parsedUserPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const deleteRoleCategoryPermission = async (
   req: Request,
@@ -640,13 +724,14 @@ export const deleteRoleCategoryPermission = async (
   const roleId = req.params.roleId;
 
   try {
-    const { deleteCategoryRolePermission: roles } = await graphQLClient().request(
-      serverCategoryPermissionMutations.DELETE_CATEGORY_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        category_id: categoryId,
-      }
-    );
+    const { deleteCategoryRolePermission: roles } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.DELETE_CATEGORY_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          category_id: categoryId,
+        }
+      );
 
     const filteredRoles = roles.map((role: any) => ({
       id: role.id,
@@ -660,15 +745,16 @@ export const deleteRoleCategoryPermission = async (
       number_of_users: role.number_of_users,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       category_id: categoryId,
       roles: filteredRoles ? filteredRoles : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const deleteUserCategoryPermission = async (
   req: Request,
@@ -680,13 +766,14 @@ export const deleteUserCategoryPermission = async (
   const userId = req.params.userId;
 
   try {
-    const { deleteCategoryUserPermission: users } = await graphQLClient().request(
-      serverCategoryPermissionMutations.DELETE_CATEGORY_USER_PERMISSION,
-      {
-        user_id: userId,
-        category_id: categoryId,
-      }
-    );
+    const { deleteCategoryUserPermission: users } =
+      await graphQLClient().request(
+        serverCategoryPermissionMutations.DELETE_CATEGORY_USER_PERMISSION,
+        {
+          user_id: userId,
+          category_id: categoryId,
+        }
+      );
 
     const filteredUsers = users.map((user: any) => ({
       id: user.id,
@@ -697,15 +784,16 @@ export const deleteUserCategoryPermission = async (
       about_me: user.about_me,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       category_id: categoryId,
       users: filteredUsers ? filteredUsers : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 /*
 * - get all server roles assigned with the current user
@@ -730,18 +818,23 @@ export const getUserCategoryPermissions = async (
   const categoryId = res.locals.category_id;
   const serverId = res.locals.server_id;
 
-  console.log(userId, categoryId, serverId);
+  log.debug(userId, categoryId, serverId);
 
   try {
-    const userCategoryPermissions = await getUserCategoryPermissionsFunc(userId, categoryId, serverId);
+    const userCategoryPermissions = await getUserCategoryPermissionsFunc(
+      userId,
+      categoryId,
+      serverId
+    );
 
-    return res.json({
+    res.json({
       server_id: serverId,
       user_id: userId,
       category_id: categoryId,
       permissions: userCategoryPermissions,
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};

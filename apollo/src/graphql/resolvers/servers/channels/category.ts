@@ -1,11 +1,11 @@
-import mongoose, { Error, MongooseError } from "mongoose";
+import mongoose, { Error } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
-import { AuthenticationError, UserInputError } from "apollo-server";
+import { UserInputError } from "apollo-server";
 
-import ChannelModel from "../../../../models/servers/channels/channel";
-import CategoryModel from "../../../../models/servers/channels/category";
-import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
-import ServerRoleModel from "../../../../models/servers/server_role";
+import ChannelModel from "@/models/servers/channels/channel";
+import CategoryModel from "@/models/servers/channels/category";
+import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
+import ServerRoleModel from "@/models/servers/server_role";
 import CategoryRolePermission from "@models/servers/channels/category_role_permission";
 import { defaultCategoryRole } from "@resolvers/servers/channels/category_role_permission";
 import CategoryUserPermission from "@models/servers/channels/category_user_permission";
@@ -13,7 +13,7 @@ import CategoryUserPermission from "@models/servers/channels/category_user_permi
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the category
 const POSITION_GAP = 10; // This is the minimum gap between the position of the categories
 
-const createCategoryTransaction = async (server_id, input) => {
+const createCategoryTransaction = async (server_id: any, input: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const opts = { session, new: true };
@@ -42,6 +42,10 @@ const createCategoryTransaction = async (server_id, input) => {
       default: true,
     });
 
+    if (!default_server_role) {
+      throw new Error("Default server role not found");
+    }
+
     await CategoryRolePermission.create(
       [
         {
@@ -59,14 +63,14 @@ const createCategoryTransaction = async (server_id, input) => {
     session.endSession();
 
     return category[0];
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     throw new Error(error);
   }
 };
 
-const deleteCategoryTransaction = async (category_id) => {
+const deleteCategoryTransaction = async (category_id: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const opts = { session, new: true };
@@ -111,7 +115,7 @@ const deleteCategoryTransaction = async (category_id) => {
     session.endSession();
 
     return category;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     throw new Error(error);
@@ -119,9 +123,9 @@ const deleteCategoryTransaction = async (category_id) => {
 };
 
 const moveCategoryTransaction = async (
-  server_id,
-  category_id,
-  new_position
+  server_id: any,
+  category_id: any,
+  new_position: any
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -138,7 +142,7 @@ const moveCategoryTransaction = async (
     await category.save(opts);
     await session.commitTransaction();
     session.endSession();
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     throw new Error(error);
@@ -151,7 +155,7 @@ const resolvers: IResolvers = {
       try {
         const category = await CategoryModel.findById(category_id);
         return category;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -159,7 +163,7 @@ const resolvers: IResolvers = {
       try {
         const categories = await CategoryModel.find({ server_id });
         return categories;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -201,7 +205,7 @@ const resolvers: IResolvers = {
         });
 
         return category;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -219,7 +223,7 @@ const resolvers: IResolvers = {
         });
 
         return true;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },
@@ -288,7 +292,7 @@ const resolvers: IResolvers = {
         });
 
         return category;
-      } catch (error) {
+      } catch (error: any) {
         throw new Error(error);
       }
     },

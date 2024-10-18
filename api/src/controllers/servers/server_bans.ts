@@ -85,7 +85,7 @@ const checkPrequisites = async (
 
   const currentUserOwner = await isUserOwner(serverId, currentUserId);
   const userRoles = await getUserRoles(serverId, currentUserId);
-  const isAdmin = userRoles.find((role) => role.is_admin);
+  const isAdmin = userRoles.find((role: any) => role.is_admin);
 
   if (isAdmin && !currentUserOwner) {
     return "You don't have permission to ban or kick user";
@@ -104,25 +104,29 @@ export const getServerBan = async (
   const { serverId, userId } = req.params;
 
   if (!serverId || !userId) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Missing serverId or userId",
     });
+    return;
   }
 
   try {
     const serverBan = await _getServerBan(serverId, userId);
 
     if (!serverBan) {
-      return res.status(404).json({
+      res.status(404).json({
         message: "Ban not found",
       });
+      return;
     }
 
-    return res.status(200).json(serverBan);
+    res.status(200).json(serverBan);
+    return;
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Internal Server Error",
     });
+    return;
   }
 };
 
@@ -135,18 +139,21 @@ export const getServerBans = async (
   const { limit } = req.query;
 
   if (!serverId) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Missing serverId",
     });
+    return;
   }
 
   try {
     const serverBans = await _getServerBans(serverId, Number(limit) || 1000);
-    return res.status(200).json(serverBans);
+    res.status(200).json(serverBans);
+    return;
   } catch (error) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "Internal Server Error",
     });
+    return;
   }
 };
 
@@ -159,16 +166,18 @@ export const createServerBan = async (
   const currentUser = res.locals.uid;
 
   if (!serverId || !userId) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Missing serverId or userId in the params",
     });
+    return;
   }
 
   const check = await checkPrequisites(serverId, userId, currentUser);
   if (check) {
-    return res.status(403).json({
+    res.status(403).json({
       message: check,
     });
+    return;
   }
 
   try {
@@ -180,15 +189,18 @@ export const createServerBan = async (
       }
     );
 
-    return res.status(200).json(response.createServerBan);
-  } catch (error) {
+    res.status(200).json(response.createServerBan);
+    return;
+  } catch (error: any) {
     const errorMessage = String(error.response.errors[0].message) ?? null;
     if (!errorMessage) {
-      return next(error);
+      next(error);
+      return;
     }
-    return res.status(400).json({
+    res.status(400).json({
       message: errorMessage,
     });
+    return;
   }
 };
 
@@ -203,25 +215,28 @@ export const createServerBulkBan = async (
   const currentUser = res.locals.uid;
 
   if (!serverId || !userIds) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Missing serverId or userIds field",
     });
+    return;
   }
 
   // Check if userIds is an array
   if (!Array.isArray(userIds)) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "User IDs must be an array. I.e. userIds: ['id1', 'id2'].",
     });
+    return;
   }
 
   for (let i = 0; i < userIds.length; i++) {
     const check = await checkPrequisites(serverId, userIds[i], currentUser);
     if (check) {
-      return res.status(403).json({
+      res.status(403).json({
         failed: userIds[i],
         message: check,
       });
+      return;
     }
   }
 
@@ -234,9 +249,11 @@ export const createServerBulkBan = async (
       }
     );
 
-    return res.status(200).json(response.createServerBulkBan);
+    res.status(200).json(response.createServerBulkBan);
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -248,9 +265,10 @@ export const deleteServerBan = async (
   const { serverId, userId } = req.params;
 
   if (!serverId || !userId) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Missing serverId or userId in the params",
     });
+    return;
   }
 
   try {
@@ -263,14 +281,17 @@ export const deleteServerBan = async (
     );
 
     if (!response.deleteServerBan) {
-      return res.status(404).json({
+      res.status(404).json({
         message: "Banned user information not found",
       });
+      return;
     }
 
-    return res.status(204).send();
+    res.status(204).send();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -282,16 +303,18 @@ export const createServerKick = async (
   const { serverId, userId } = req.params;
 
   if (!serverId || !userId) {
-    return res.status(400).json({
+    res.status(400).json({
       message: "Missing serverId or userId in the params",
     });
+    return;
   }
 
   const check = await checkPrequisites(serverId, userId, res.locals.uid);
   if (check) {
-    return res.status(403).json({
+    res.status(403).json({
       message: check,
     });
+    return;
   }
 
   try {
@@ -303,14 +326,17 @@ export const createServerKick = async (
     )?.createServerKick;
 
     if (!response) {
-      return res.status(404).json({
+      res.status(404).json({
         message: "User not found or cannot be kick.",
       });
+      return;
     }
 
-    return res.status(204).send();
+    res.status(204).send();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 

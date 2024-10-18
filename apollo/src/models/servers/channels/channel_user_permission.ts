@@ -1,5 +1,5 @@
-import { model, Schema } from 'mongoose';
-import ModelNames from './../../modelNames';
+import { model, Schema } from "mongoose";
+import ModelNames from "./../../modelNames";
 
 interface IChannelUserPermission {
   _id: { user_id: Schema.Types.ObjectId; channel_id: Schema.Types.ObjectId };
@@ -13,17 +13,17 @@ const schema = new Schema<IChannelUserPermission>(
       user_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.User,
-        required: [true, 'User ID is required!'],
+        required: [true, "User ID is required!"],
       },
       channel_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.Channel,
-        required: [true, 'Channel ID is required!'],
+        required: [true, "Channel ID is required!"],
       },
     },
     permissions: {
       type: String,
-      default: '',
+      default: "",
     },
     last_modified: {
       type: Date,

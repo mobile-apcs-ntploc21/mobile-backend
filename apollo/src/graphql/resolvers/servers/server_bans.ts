@@ -18,7 +18,7 @@ import {
 // This will check these conditions:
 // - Is a user_id exists?
 // - User is not server owner
-const checkPrequisites = async (server_id, user_id) => {
+const checkPrequisites = async (server_id: any, user_id: any) => {
   const user = await UserModel.findById(user_id);
   if (!user) {
     return "User not found!";
@@ -45,7 +45,7 @@ const checkPrequisites = async (server_id, user_id) => {
   return null;
 };
 
-const CreateBanTransaction = async ({ server_id, user_id }) => {
+const CreateBanTransaction = async ({ server_id, user_id }: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -80,13 +80,15 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
     // Decrease server total members (if exists in server members)
     if (_) {
       const server = await ServerModel.findById(server_id).session(session);
+      if (!server) throw new Error("Server not found!");
+      // @ts-ignore
       server.totalMembers--;
       await server.save();
     }
 
     await session.commitTransaction();
     return createdBan;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     throw new UserInputError(`Failed to ban user: ${error.message}`);
   } finally {
@@ -94,7 +96,7 @@ const CreateBanTransaction = async ({ server_id, user_id }) => {
   }
 };
 
-const serverKickUser = async ({ server_id, user_id }) => {
+const serverKickUser = async ({ server_id, user_id }: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -122,13 +124,15 @@ const serverKickUser = async ({ server_id, user_id }) => {
     // Decrease server total members (if exists in server members)
     if (_) {
       const server = await ServerModel.findById(server_id).session(session);
+      if (!server) throw new Error("Server not found!");
+      // @ts-ignore
       server.totalMembers--;
       await server.save();
     }
 
     await session.commitTransaction();
     return true;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     throw new UserInputError(`Failed to kick user: ${error.message}`);
   }
@@ -151,7 +155,7 @@ const resolvers: IResolvers = {
           server_id: serverBan._id.server_id,
           user_id: serverBan._id.user_id,
         };
-      } catch (error) {
+      } catch (error: any) {
         throw error;
       }
     },
@@ -170,7 +174,7 @@ const resolvers: IResolvers = {
         const profiles = UserProfileModel.find({ user_id: { $in: user_ids } });
 
         return profiles;
-      } catch (error) {
+      } catch (error: any) {
         throw error;
       }
     },
@@ -191,14 +195,14 @@ const resolvers: IResolvers = {
           server_id: serverBan._id.server_id,
           user_id: serverBan._id.user_id,
         };
-      } catch (error) {
+      } catch (error: any) {
         throw error;
       }
     },
     createServerBulkBan: async (_, { server_id, user_ids }) => {
       try {
-        let success = [];
-        let failed = [];
+        const success = [];
+        const failed = [];
 
         for (const user_id of user_ids) {
           try {
@@ -210,7 +214,7 @@ const resolvers: IResolvers = {
               server_id: serverBan._id.server_id,
               user_id: serverBan._id.user_id,
             });
-          } catch (error) {
+          } catch (error: any) {
             failed.push({ user_id: user_id, error: error.message });
           }
         }
@@ -224,7 +228,7 @@ const resolvers: IResolvers = {
         });
 
         return success;
-      } catch (error) {
+      } catch (error: any) {
         throw error;
       }
     },
@@ -245,7 +249,7 @@ const resolvers: IResolvers = {
         });
 
         return true;
-      } catch (error) {
+      } catch (error: any) {
         throw error;
       }
     },
@@ -262,7 +266,7 @@ const resolvers: IResolvers = {
         });
 
         return success;
-      } catch (error) {
+      } catch (error: any) {
         throw error;
       }
     },

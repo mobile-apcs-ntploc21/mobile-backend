@@ -1,10 +1,10 @@
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
 import mongoose, { ObjectId } from "mongoose";
-import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
-import UserModel from "../../../../models/user";
-import Category from "../../../../models/servers/channels/category";
-import CategoryUserPermission from "../../../../models/servers/channels/category_user_permission";
+import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
+import UserModel from "@/models/user";
+import Category from "@/models/servers/channels/category";
+import CategoryUserPermission from "@/models/servers/channels/category_user_permission";
 import UserProfileModel from "@models/user_profile";
 import { defaultCategoryRole } from "./category_role_permission";
 
@@ -81,6 +81,7 @@ const categoryUserPermissionAPI: IResolvers = {
           "_id.category_id": category_id,
         });
 
+
         // Use Promise.all to fetch all users
         return await Promise.all(
           categoryUsers.map(async (categoryUser) => {
@@ -95,6 +96,7 @@ const categoryUserPermissionAPI: IResolvers = {
                 user_id: user_id,
                 server_id: null,
               });
+              if (!user) throw new Error("User not found");
             }
 
             return {
@@ -142,6 +144,7 @@ const categoryUserPermissionAPI: IResolvers = {
             user_id: user_id,
             server_id: null,
           });
+          if (!user) throw new Error("User not found");
         }
 
         return {
@@ -173,6 +176,7 @@ const categoryUserPermissionAPI: IResolvers = {
         );
 
         const category = await Category.findById(category_id);
+        if (!category) throw new Error("Category not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryUserAdded,
@@ -199,6 +203,7 @@ const categoryUserPermissionAPI: IResolvers = {
                 user_id: user_id,
                 server_id: null,
               });
+              if (!user) throw new Error("User not found");
             }
 
             return {
@@ -238,6 +243,8 @@ const categoryUserPermissionAPI: IResolvers = {
             { permissions },
             { new: true }
           );
+        if (!category_user_permission)
+          throw new Error("Category user permission not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryUserUpdated,
@@ -257,6 +264,7 @@ const categoryUserPermissionAPI: IResolvers = {
             user_id: user_id,
             server_id: null,
           });
+          if (!user) throw new Error("User not found");
         }
 
         return {
@@ -281,8 +289,11 @@ const categoryUserPermissionAPI: IResolvers = {
             "_id.user_id": user_id,
             "_id.category_id": category_id,
           });
+        if (!category_user_permission)
+          throw new Error("Category user permission not found");
 
         const category = await Category.findById(category_id);
+        if (!category) throw new Error("Category not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryUserDeleted,
@@ -309,6 +320,7 @@ const categoryUserPermissionAPI: IResolvers = {
                 user_id: user_id,
                 server_id: null,
               });
+              if (!user) throw new Error("User not found");
             }
 
             return {

@@ -153,8 +153,10 @@ export const getUserChannelPermissionsFunc = async (
     // Update the combinedPermissions
     for (const key in finalPermissions) {
       if (finalPermissions[key] === "ALLOWED") {
+        // @ts-ignore
         combinedPermissions[key] = "ALLOWED";
       } else if (!combinedPermissions[key]) {
+        // @ts-ignore
         combinedPermissions[key] = "DENIED";
       }
     }
@@ -174,6 +176,7 @@ export const getUserChannelPermissionsFunc = async (
   };
   for (const key in userFinalPermissions) {
     if (userFinalPermissions[key] !== "DEFAULT") {
+      // @ts-ignore
       combinedPermissions[key] = userFinalPermissions[key];
     }
   }
@@ -182,6 +185,7 @@ export const getUserChannelPermissionsFunc = async (
   const finalFilteredPermissions = {};
   for (const key in ChannelPermissions) {
     if (combinedPermissions.hasOwnProperty(key)) {
+      // @ts-ignore
       finalFilteredPermissions[key] =
         isServerOwner || isAdmin ? "ALLOWED" : combinedPermissions[key];
     }

@@ -1,28 +1,21 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
 import { serverQueries, serverRoleQueries } from "../graphql/queries";
+import { log } from "@/utils/log";
 import { createQuery } from "./getUserChannelPermissions";
-
-// ======================
 
 export const checkServerPermissionMiddleware = (
   requiredPermissions: string[]
 ) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (_req: Request, res: Response, next: NextFunction) => {
     const { uid, server_id } = res.locals;
 
-    if (!server_id)
-      return res
+    if (!server_id) {
+      res
         .status(400)
         .json({ status: "fail", message: "Server ID is required." });
-
-    const checkPermissionsQuery = createQuery(null, null);
-    const response = await graphQLClient().request(checkPermissionsQuery, {
-      server_id: server_id,
-      category_id: null,
-      channel_id: null,
-      user_id: uid,
-    });
+      return;
+    }
 
     try {
       const {
@@ -54,13 +47,13 @@ export const checkServerPermissionMiddleware = (
         try {
           role_permissions = JSON.parse(role.permissions);
         } catch (e) {
-          console.error("Invalid JSON in role.permissions:", role.permissions);
+          log.error("Invalid JSON in role.permissions:", role.permissions);
           return acc;
         }
 
         // Ensure role_permissions is an object
         if (typeof role_permissions !== "object" || role_permissions === null) {
-          console.error("role.permissions is not an object:", role_permissions);
+          log.error("role.permissions is not an object:", role_permissions);
           return acc;
         }
 
@@ -81,10 +74,11 @@ export const checkServerPermissionMiddleware = (
       );
 
       if (!hasAllPermissions) {
-        return res.status(403).json({
+        res.status(403).json({
           status: "fail",
           message: "You are not authorized to make this request",
         });
+        return;
       }
 
       res.locals.userServerPermissions = finalPermissions;

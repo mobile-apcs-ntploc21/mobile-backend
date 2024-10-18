@@ -10,8 +10,9 @@ import { defaultProfile } from "./user_profile";
 import UserSettingsModel from "../../models/userSettings";
 import UserProfileModel from "../../models/user_profile";
 import UserStatusModel from "../../models/user_status";
+import { log } from "@/utils/log";
 
-const createUserTransaction = async (input) => {
+const createUserTransaction = async (input: any) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -56,17 +57,17 @@ const createUserTransaction = async (input) => {
     return createdUser;
   } catch (error) {
     await session.abortTransaction();
-    console.error(error);
+    log.error(error);
     throw new UserInputError("Cannot create user !");
   } finally {
     session.endSession();
   }
 };
 
-const clearExpireTokens = async (user) => {
+const clearExpireTokens = async (user: any) => {
   const currentTime = Date.now();
   const tokens = user.refresh_tokens.filter(
-    (token) => currentTime - token.created_at <= 7 * 24 * 60 * 60 * 1000 // 7 days
+    (token: any) => currentTime - token.created_at <= 7 * 24 * 60 * 60 * 1000 // 7 days
   );
 
   user.refresh_tokens = tokens;

@@ -24,7 +24,10 @@ const gqlType = gql`
 
 const gqlApollo = gql`
   extend type Query {
-    getRelationshipType(user_first_id: ID!, user_second_id: ID!): RelationshipType
+    getRelationshipType(
+      user_first_id: ID!
+      user_second_id: ID!
+    ): RelationshipType
     getAllFriends(user_id: ID!): [UserProfile]
     getReceivedFriendRequests(user_id: ID!): [UserProfile]
     getSentFriendRequests(user_id: ID!): [UserProfile]
@@ -32,8 +35,16 @@ const gqlApollo = gql`
   }
 
   extend type Mutation {
-    createRelationship(user_first_id: ID!, user_second_id: ID!, type: RelationshipType!): Relationship
-    updateRelationship(user_first_id: ID!, user_second_id: ID!, type: RelationshipType!): Relationship
+    createRelationship(
+      user_first_id: ID!
+      user_second_id: ID!
+      type: RelationshipType!
+    ): Relationship
+    updateRelationship(
+      user_first_id: ID!
+      user_second_id: ID!
+      type: RelationshipType!
+    ): Relationship
     deleteRelationship(user_first_id: ID!, user_second_id: ID!): Relationship
   }
 `;

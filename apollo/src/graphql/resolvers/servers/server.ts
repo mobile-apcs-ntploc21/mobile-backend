@@ -20,7 +20,7 @@ import {
 } from "../../pubsub/pubsub";
 import { defaultServerRole } from "./server_role";
 
-const createServerTransaction = async (input) => {
+const createServerTransaction = async (input: any) => {
   // Create session
   const session = await ServerModel.startSession();
   session.startTransaction();
@@ -100,7 +100,7 @@ const createServerTransaction = async (input) => {
   }
 };
 
-const deleteServerTransaction = async (server_id) => {
+const deleteServerTransaction = async (server_id: any) => {
   // Create session
   const session = await ServerModel.startSession();
   session.startTransaction();
@@ -228,7 +228,7 @@ const serverAPI: IResolvers = {
         const server = await createServerTransaction(input);
 
         return server;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -241,6 +241,8 @@ const serverAPI: IResolvers = {
       const server = await ServerModel.findByIdAndUpdate(server_id, input, {
         new: true,
       });
+
+      if (!server) throw new Error("Server not found");
 
       await publishEvent(ServerEvents.serverUpdated, {
         type: ServerEvents.serverUpdated,

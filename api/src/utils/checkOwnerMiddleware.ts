@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import { serverQueries } from '../graphql/queries';
+import { NextFunction, Request, Response } from "express";
+import graphQLClient from "../utils/graphql";
+import { serverQueries } from "../graphql/queries";
+import { log } from "@/utils/log";
 
 export const checkOwnerMiddleware = async (
   req: Request,
@@ -10,10 +11,10 @@ export const checkOwnerMiddleware = async (
   const { uid } = res.locals;
   const { serverId } = req.params;
 
-  if (!serverId)
-    return res
-      .status(400)
-      .json({ status: 'fail', message: 'Server ID is required.' });
+  if (!serverId) {
+    res.status(400).json({ status: "fail", message: "Server ID is required." });
+    return;
+  }
 
   try {
     const {
@@ -22,13 +23,15 @@ export const checkOwnerMiddleware = async (
       server_id: serverId,
     });
 
-    console.log(owner, uid);
+    log.debug(owner, uid);
 
-    if (owner !== uid)
-      return res.status(403).json({
-        status: 'fail',
-        message: 'You are not the owner of this server',
+    if (owner !== uid) {
+      res.status(403).json({
+        status: "fail",
+        message: "You are not the owner of this server",
       });
+      return;
+    }
 
     next();
   } catch (error) {

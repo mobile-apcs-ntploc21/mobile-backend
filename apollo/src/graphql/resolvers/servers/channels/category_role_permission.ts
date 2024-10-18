@@ -1,18 +1,17 @@
-import {IResolvers} from "@graphql-tools/utils";
-import {UserInputError} from "apollo-server";
-import CategoryRolePermission from "../../../../models/servers/channels/category_role_permission"
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError } from "apollo-server";
+import CategoryRolePermission from "@/models/servers/channels/category_role_permission";
 import {
   GeneralCategoryPermissions,
-  MembershipPermissions,
   PermissionStates,
   TextChannelPermissions,
-  VoiceChannelPermissions
-} from "../../../../constants/permissions";
-import mongoose, {ObjectId} from "mongoose";
-import {publishEvent, ServerEvents} from "../../../pubsub/pubsub";
-import ServerRoleModel from "../../../../models/servers/server_role";
-import Category from "../../../../models/servers/channels/category";
-import AssignedUserRoleModel from "../../../../models/servers/assigned_user_role";
+  VoiceChannelPermissions,
+} from "@/constants/permissions";
+import mongoose, { ObjectId } from "mongoose";
+import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
+import ServerRoleModel from "@/models/servers/server_role";
+import Category from "@/models/servers/channels/category";
+import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 
 export const defaultCategoryRole = JSON.stringify({
   // General Channel Permissions
@@ -35,7 +34,11 @@ export const defaultCategoryRole = JSON.stringify({
   [VoiceChannelPermissions.VOICE_DEAFEN_MEMBER]: PermissionStates.DEFAULT,
 });
 
-const createCategoryRole = async (role_id: ObjectId, category_id: ObjectId,  permissions: String ) => {
+const createCategoryRole = async (
+  role_id: ObjectId,
+  category_id: ObjectId,
+  permissions: string
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -52,11 +55,15 @@ const createCategoryRole = async (role_id: ObjectId, category_id: ObjectId,  per
     }
 
     // check if server role is already assigned with the category
-    if (await CategoryRolePermission.exists({
-      '_id.server_role_id': role_id,
-      '_id.category_id': category_id
-    })) {
-      throw new UserInputError("Server role is already assigned to category permissions!");
+    if (
+      await CategoryRolePermission.exists({
+        "_id.server_role_id": role_id,
+        "_id.category_id": category_id,
+      })
+    ) {
+      throw new UserInputError(
+        "Server role is already assigned to category permissions!"
+      );
     }
 
     const category_role = await CategoryRolePermission.create({
@@ -71,7 +78,7 @@ const createCategoryRole = async (role_id: ObjectId, category_id: ObjectId,  per
     await session.endSession();
 
     return category_role;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
 
@@ -88,45 +95,53 @@ const categoryRoleAPI: IResolvers = {
 
         const categories = await Category.find({});
 
-        await Promise.all(categories.map(async (category) => {
-          const category_id = category._id;
-          const server_id = category.server_id;
-          let defaultServerRole = await ServerRoleModel.findOne({
-            server_id,
-            default: true,
-          });
-
-          if (!defaultServerRole) {
-            // create default server role if not found
-            await ServerRoleModel.create({
-              server_id: server_id,
-              name: '@everyone',
-              color: '#000000',
-              allow_anyone_mention: true,
-              position: 0,
-              permissions: defaultServerRole,
-              is_admin: false,
-              default: true
+        await Promise.all(
+          categories.map(async (category) => {
+            const category_id = category._id;
+            const server_id = category.server_id;
+            let defaultServerRole = await ServerRoleModel.findOne({
+              server_id,
+              default: true,
             });
-            defaultServerRole = await ServerRoleModel.findOne({ server_id: server_id, default: true });
-          }
 
-          const categoryRole = await CategoryRolePermission.findOne({
-            '_id.server_role_id': defaultServerRole._id,
-            '_id.category_id': category_id
-          });
+            if (!defaultServerRole) {
+              // create default server role if not found
+              await ServerRoleModel.create({
+                server_id: server_id,
+                name: "@everyone",
+                color: "#000000",
+                allow_anyone_mention: true,
+                position: 0,
+                permissions: defaultServerRole,
+                is_admin: false,
+                default: true,
+              });
+              defaultServerRole = await ServerRoleModel.findOne({
+                server_id: server_id,
+                default: true,
+              });
 
-          if (!categoryRole) {
-            const category_role = await CategoryRolePermission.create({
-              _id: {
-                server_role_id: defaultServerRole._id,
-                category_id,
-              },
-              permissions: defaultCategoryRole,
+              if (!defaultServerRole) {
+                throw new Error("Cannot create default");
+              }
+            }
+
+            const categoryRole = await CategoryRolePermission.findOne({
+              "_id.server_role_id": defaultServerRole._id,
+              "_id.category_id": category_id,
             });
-          }
 
-        }));
+            if (!categoryRole) {
+              const category_role = await CategoryRolePermission.create({
+                _id: {
+                  server_role_id: defaultServerRole._id,
+                  category_id,
+                },
+                permissions: defaultCategoryRole,
+              });
+            }
+          })
+        );
 
         return await CategoryRolePermission.find({});
       } catch (err) {
@@ -136,27 +151,33 @@ const categoryRoleAPI: IResolvers = {
     getCategoryRolesPermissions: async (_, { category_id }) => {
       try {
         const categoryRoles = await CategoryRolePermission.find({
-          '_id.category_id': category_id,
+          "_id.category_id": category_id,
         });
 
-        return await Promise.all(categoryRoles.map(async (role) => {
-          const role_id = role._id.server_role_id;
-          const serverRole = await ServerRoleModel.findById(role_id);
-          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        return await Promise.all(
+          categoryRoles.map(async (role) => {
+            const role_id = role._id.server_role_id;
+            const serverRole = await ServerRoleModel.findById(role_id);
+            const users = await AssignedUserRoleModel.find({
+              "_id.server_role_id": role_id,
+            });
 
-          return {
-            id: serverRole._id,
-            server_id: serverRole.server_id,
-            name: serverRole.name,
-            color: serverRole.color,
-            position: serverRole.position,
-            is_admin: serverRole.is_admin,
-            allow_anyone_mention: serverRole.allow_anyone_mention,
-            last_modified: serverRole.last_modified,
-            number_of_users: users.length,
-            permissions: role.permissions,
-          };
-        }));
+            if (!serverRole) throw new Error("Server role not found");
+
+            return {
+              id: serverRole._id,
+              server_id: serverRole.server_id,
+              name: serverRole.name,
+              color: serverRole.color,
+              position: serverRole.position,
+              is_admin: serverRole.is_admin,
+              allow_anyone_mention: serverRole.allow_anyone_mention,
+              last_modified: serverRole.last_modified,
+              number_of_users: users.length,
+              permissions: role.permissions,
+            };
+          })
+        );
       } catch (err) {
         throw new UserInputError("Cannot get category permissions for roles!");
       }
@@ -170,10 +191,13 @@ const categoryRoleAPI: IResolvers = {
         }
 
         const category_role = await CategoryRolePermission.findOne({
-          '_id.server_role_id': role_id,
-          '_id.category_id': category_id,
+          "_id.server_role_id": role_id,
+          "_id.category_id": category_id,
         });
-        const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        if (!category_role) throw new Error("Category role not found");
+        const users = await AssignedUserRoleModel.find({
+          "_id.server_role_id": role_id,
+        });
 
         return {
           id: serverRole._id,
@@ -188,16 +212,26 @@ const categoryRoleAPI: IResolvers = {
           number_of_users: users.length,
         };
       } catch (err) {
-        throw new UserInputError("Cannot get category permissions associated with this role!");
+        throw new UserInputError(
+          "Cannot get category permissions associated with this role!"
+        );
       }
     },
   },
   Mutation: {
-    createCategoryRolePermission: async (_, { role_id, category_id, permissions }) => {
+    createCategoryRolePermission: async (
+      _,
+      { role_id, category_id, permissions }
+    ) => {
       try {
-        const category_role = await createCategoryRole(role_id, category_id, permissions);
+        const category_role = await createCategoryRole(
+          role_id,
+          category_id,
+          permissions
+        );
 
         const server_role = await ServerRoleModel.findById(role_id);
+        if (!server_role) throw new Error("Server role not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryRoleAdded,
@@ -208,44 +242,55 @@ const categoryRoleAPI: IResolvers = {
         });
 
         const roles = await CategoryRolePermission.find({
-          '_id.category_id': category_id
+          "_id.category_id": category_id,
         });
 
-        return await Promise.all(roles.map(async (role) => {
-          const role_id = role._id.server_role_id;
-          const serverRole = await ServerRoleModel.findById(role_id);
-          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        return await Promise.all(
+          roles.map(async (role) => {
+            const role_id = role._id.server_role_id;
+            const serverRole = await ServerRoleModel.findById(role_id);
+            const users = await AssignedUserRoleModel.find({
+              "_id.server_role_id": role_id,
+            });
 
-          return {
-            id: serverRole._id,
-            server_id: serverRole.server_id,
-            name: serverRole.name,
-            color: serverRole.color,
-            allow_anyone_mention: serverRole.allow_anyone_mention,
-            position: serverRole.position,
-            permissions: serverRole.permissions,
-            is_admin: serverRole.is_admin,
-            default: serverRole.default,
-            last_modified: serverRole.last_modified,
-            number_of_users: users.length,
-          };
-        }));
-      } catch (error) {
+            if (!serverRole) throw new Error("Server role not found");
+
+            return {
+              id: serverRole._id,
+              server_id: serverRole.server_id,
+              name: serverRole.name,
+              color: serverRole.color,
+              allow_anyone_mention: serverRole.allow_anyone_mention,
+              position: serverRole.position,
+              permissions: serverRole.permissions,
+              is_admin: serverRole.is_admin,
+              default: serverRole.default,
+              last_modified: serverRole.last_modified,
+              number_of_users: users.length,
+            };
+          })
+        );
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
-    updateCategoryRolePermission: async (_, { role_id, category_id, permissions }) => {
+    updateCategoryRolePermission: async (
+      _,
+      { role_id, category_id, permissions }
+    ) => {
       try {
         const category_role = await CategoryRolePermission.findOneAndUpdate(
           {
-            '_id.server_role_id': role_id,
-            '_id.category_id': category_id
+            "_id.server_role_id": role_id,
+            "_id.category_id": category_id,
           },
           { permissions },
           { new: true }
         );
+        if (!category_role) throw new Error("Category role not found");
 
         const server_role = await ServerRoleModel.findById(role_id);
+        if (!server_role) throw new Error("Server role not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryRoleUpdated,
@@ -255,7 +300,9 @@ const categoryRoleAPI: IResolvers = {
           },
         });
 
-        const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        const users = await AssignedUserRoleModel.find({
+          "_id.server_role_id": role_id,
+        });
 
         return {
           id: server_role._id,
@@ -270,24 +317,29 @@ const categoryRoleAPI: IResolvers = {
           last_modified: server_role.last_modified,
           number_of_users: users.length,
         };
-      } catch (error) {
-        throw new UserInputError("Cannot update category permissions for role!");
+      } catch (error: any) {
+        throw new UserInputError(
+          "Cannot update category permissions for role!"
+        );
       }
     },
     deleteCategoryRolePermission: async (_, { role_id, category_id }) => {
       try {
         // check if the current role is a default role, if yes, throw an error
         const serverRole = await ServerRoleModel.findById(role_id);
+        if (!serverRole) throw new Error("Server role not found!");
         if (serverRole.default) {
           throw new UserInputError("Cannot delete default server role!");
         }
 
         const category_role = await CategoryRolePermission.findOneAndDelete({
-          '_id.server_role_id': role_id,
-          '_id.category_id': category_id
+          "_id.server_role_id": role_id,
+          "_id.category_id": category_id,
         });
+        if (!category_role) throw new Error("Category role not found");
 
         const server_role = await ServerRoleModel.findById(role_id);
+        if (!server_role) throw new Error("Server role not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.categoryRoleDeleted,
@@ -298,30 +350,38 @@ const categoryRoleAPI: IResolvers = {
         });
 
         const roles = await CategoryRolePermission.find({
-          '_id.category_id': category_id
+          "_id.category_id": category_id,
         });
 
-        return await Promise.all(roles.map(async (role) => {
-          const role_id = role._id.server_role_id;
-          const serverRole = await ServerRoleModel.findById(role_id);
-          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        return await Promise.all(
+          roles.map(async (role) => {
+            const role_id = role._id.server_role_id;
+            const serverRole = await ServerRoleModel.findById(role_id);
+            const users = await AssignedUserRoleModel.find({
+              "_id.server_role_id": role_id,
+            });
 
-          return {
-            id: serverRole._id,
-            server_id: serverRole.server_id,
-            name: serverRole.name,
-            color: serverRole.color,
-            allow_anyone_mention: serverRole.allow_anyone_mention,
-            position: serverRole.position,
-            permissions: serverRole.permissions,
-            is_admin: serverRole.is_admin,
-            default: serverRole.default,
-            last_modified: serverRole.last_modified,
-            number_of_users: users.length,
-          };
-        }));
-      } catch (error) {
-        throw new UserInputError("Cannot delete category permissions for role!");
+            if (!serverRole) throw new Error("Server role not found");
+
+            return {
+              id: serverRole._id,
+              server_id: serverRole.server_id,
+              name: serverRole.name,
+              color: serverRole.color,
+              allow_anyone_mention: serverRole.allow_anyone_mention,
+              position: serverRole.position,
+              permissions: serverRole.permissions,
+              is_admin: serverRole.is_admin,
+              default: serverRole.default,
+              last_modified: serverRole.last_modified,
+              number_of_users: users.length,
+            };
+          })
+        );
+      } catch (error: any) {
+        throw new UserInputError(
+          "Cannot delete category permissions for role!"
+        );
       }
     },
   },

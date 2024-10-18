@@ -1,3 +1,5 @@
+import { log } from "@/utils/log";
+
 interface IOptions {
   HOST: string;
   PORT: string | number;
@@ -26,7 +28,7 @@ const config: IOptions = {
   IS_DEV: process.env.NODE_ENV ? process.env.NODE_ENV === "development" : true,
 };
 
-console.log(process.env.NODE_ENV);
+log.debug(process.env.NODE_ENV);
 
 config.GRAPHQL_ENDPOINT = `http://${config.HOST}:${config.PORT}${config.GRAPHQL_ROUTE}`;
 config.WEBSOCKET_ENDPOINT = `ws://${config.HOST}:${config.PORT}${config.WEBSOCKET_ROUTE}`;

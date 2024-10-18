@@ -7,6 +7,7 @@ import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
 import { ApolloServer } from "apollo-server-express";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
+import "module-alias/register";
 
 import http from "http";
 import { config } from "./config";
@@ -14,6 +15,7 @@ import startWsServer from "./wss";
 import { apiTypeDefs, wsTypeDefs } from "./graphql/typedefs";
 import { apiResolvers, wsResolvers } from "./graphql/resolvers";
 import { getUserIdByToken } from "./utils/auth";
+import { log } from "@/utils/log";
 
 const startApp = async () => {
   const app = express();
@@ -51,7 +53,7 @@ const startApp = async () => {
         const user_id = await getUserIdByToken(token.split(" ")[1]);
         return { req, res, user_id };
       } catch (error) {
-        console.log(error);
+        log.debug(error);
         return { req, res, user_id: null };
       }
     },

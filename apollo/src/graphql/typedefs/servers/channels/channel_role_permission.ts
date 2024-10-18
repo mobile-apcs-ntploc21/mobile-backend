@@ -5,7 +5,7 @@ const gqlTypes = gql`
     _id: IDPair
     permissions: String
   }
-  
+
   type IDPair {
     server_role_id: ID
     channel_id: ID
@@ -20,8 +20,16 @@ const gqlAPI = gql`
   }
 
   type Mutation {
-    createChannelRolePermission(role_id: ID!, channel_id: ID!, permissions: String): [ServerRole]
-    updateChannelRolePermission(role_id: ID!, channel_id: ID!, permissions: String): ServerRole
+    createChannelRolePermission(
+      role_id: ID!
+      channel_id: ID!
+      permissions: String
+    ): [ServerRole]
+    updateChannelRolePermission(
+      role_id: ID!
+      channel_id: ID!
+      permissions: String
+    ): ServerRole
     deleteChannelRolePermission(role_id: ID!, channel_id: ID!): [ServerRole]
   }
 `;
