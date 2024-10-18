@@ -2,48 +2,33 @@
   "name": "api",
   "version": "1.0.0",
   "main": "src/app.ts",
-  "scripts": {
-    "compile": "tsc",
-    "build": "tsc",
-    "start": "nodemon src/app.ts",
-    "start:dev": "nodemon src/app.ts",
-    "start:prod": "nodemon src/app.ts NODE_ENV=production"
+  "_moduleAliases": {
+    "@": "src"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "scripts": {
+    "lint": "eslint \"./**/*.ts\"",
+    "prettier": "prettier --check \"./**/*.{ts,json}\"",
+    "prettier-fix": "prettier --write \"./**/*.{ts,json}\"",
+    "start": "ts-node src/app.ts",
+    "dev": "nodemon src/app.ts"
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.616.0",
     "@aws-sdk/lib-storage": "^3.616.0",
-    "@types/cors": "^2.8.17",
-    "@types/helmet": "^4.0.0",
-    "@types/morgan": "^1.9.9",
-    "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-mongo-sanitize": "^2.2.0",
-    "express-rate-limit": "^7.3.1",
     "graphql-request": "^4.2.0",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
-    "root": "file:..",
     "sharp": "^0.33.4",
     "streamifier": "^0.1.1",
-    "uuid": "^10.0.0",
-    "xss-clean": "^0.1.4"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/express": "^4.17.21",
+    "@types/body-parser": "^1.19.5",
+    "@types/cors": "^2.8.17",
+    "@types/helmet": "^4.0.0",
     "@types/jsonwebtoken": "^9.0.6",
-    "@types/node": "^20.14.8",
+    "@types/morgan": "^1.9.9",
     "@types/node-fetch": "^2.6.11",
-    "nodemon": "^3.1.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
+    "@types/streamifier": "^0.1.2",
+    "@types/uuid": "^10.0.0"
   }
 }

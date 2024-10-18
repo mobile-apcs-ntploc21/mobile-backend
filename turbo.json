@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "outputs": []
+    },
+    "start": {
+      "dependsOn": ["lint"]
+    },
+    "prettier": {
+      "cache": false,
+      "persistent": false
+    },
+    "prettier-fix": {
+      "cache": false,
+      "persistent": false
+    }
+  }
+}

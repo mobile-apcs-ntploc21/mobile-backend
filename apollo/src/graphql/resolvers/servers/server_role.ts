@@ -1,16 +1,16 @@
-import {IResolvers} from "@graphql-tools/utils";
-import {UserInputError} from "apollo-server";
-import ServerRoleModel from "../../../models/servers/server_role";
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError } from "apollo-server";
+import ServerRoleModel from "@/models/servers/server_role";
 import {
   GeneralServerPermissions,
   MembershipPermissions,
   PermissionStates,
   TextChannelPermissions,
-  VoiceChannelPermissions
-} from "../../../constants/permissions";
-import ServerModel from "../../../models/servers/server";
-import mongoose, {ObjectId} from "mongoose";
-import {publishEvent, ServerEvents} from "./../../pubsub/pubsub";
+  VoiceChannelPermissions,
+} from "@/constants/permissions";
+import ServerModel from "@/models/servers/server";
+import mongoose, { ObjectId } from "mongoose";
+import { publishEvent, ServerEvents } from "./../../pubsub/pubsub";
 import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import ServerMemberModel from "@/models/servers/server_member";
 
@@ -46,12 +46,23 @@ export const defaultServerRole = JSON.stringify({
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
 
-const createServerRole = async (server_id: ObjectId, input: { name: String; color: String; allow_anyone_mention: String; permissions: String; is_admin: String; default_: String }) => {
+const createServerRole = async (
+  server_id: ObjectId,
+  input: {
+    name: string;
+    color: string;
+    allow_anyone_mention: string;
+    permissions: string;
+    is_admin: string;
+    default_: string;
+  }
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   const opts = { session, new: true };
 
-  let { name, color, allow_anyone_mention, permissions, is_admin, default_ } = input;
+  let { name, color, allow_anyone_mention, permissions, is_admin, default_ } =
+    input;
   let position = 0;
   if (!permissions) {
     permissions = defaultServerRole;
@@ -76,7 +87,7 @@ const createServerRole = async (server_id: ObjectId, input: { name: String; colo
           position,
           permissions,
           is_admin,
-          default: default_
+          default: default_,
         },
       ],
       opts
@@ -102,31 +113,37 @@ const serverRoleAPI: IResolvers = {
         // first, find all servers and their default server roles
         const servers = await ServerModel.find();
         for (const server of servers) {
-          let defaultServerRole = await ServerRoleModel.findOne({ server_id: server._id, default: true });
+          let defaultServerRole = await ServerRoleModel.findOne({
+            server_id: server._id,
+            default: true,
+          });
           if (!defaultServerRole) {
             // create default server role if not found
             await ServerRoleModel.create({
               server_id: server._id,
-              name: '@everyone',
-              color: '#000000',
+              name: "@everyone",
+              color: "#000000",
               allow_anyone_mention: true,
               position: 0,
               permissions: defaultServerRole,
               is_admin: false,
-              default: true
+              default: true,
             });
-            defaultServerRole = await ServerRoleModel.findOne({ server_id: server._id, default: true });
+            defaultServerRole = await ServerRoleModel.findOne({
+              server_id: server._id,
+              default: true,
+            });
           }
 
           // find all members of the server
           const members = await ServerMemberModel.find({
-            '_id.server_id': server._id
+            "_id.server_id": server._id,
           });
           for (const member of members) {
             // check if the member is assigned with the default server role
             const assignedRole = await AssignedUserRoleModel.findOne({
-              '_id.user_id': member._id.user_id,
-              '_id.server_role_id': defaultServerRole._id
+              "_id.user_id": member._id.user_id,
+              "_id.server_role_id": defaultServerRole?._id,
             });
             if (!assignedRole) {
               // assign the member with the default server role
@@ -134,9 +151,9 @@ const serverRoleAPI: IResolvers = {
                 {
                   _id: {
                     user_id: member._id.user_id,
-                    server_role_id: defaultServerRole._id
-                  }
-                }
+                    server_role_id: defaultServerRole?._id,
+                  },
+                },
               ]);
             }
           }
@@ -153,7 +170,9 @@ const serverRoleAPI: IResolvers = {
         // throw new UserInputError("Server role not found!");
         return null;
       }
-      const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+      const users = await AssignedUserRoleModel.find({
+        "_id.server_role_id": role_id,
+      });
 
       return {
         id: serverRole._id,
@@ -166,8 +185,8 @@ const serverRoleAPI: IResolvers = {
         is_admin: serverRole.is_admin,
         default: serverRole.default,
         last_modified: serverRole.last_modified,
-        number_of_users: users.length
-      }
+        number_of_users: users.length,
+      };
     },
     getServerRoles: async (_, { server_id }) => {
       // check if server_id is valid
@@ -178,23 +197,27 @@ const serverRoleAPI: IResolvers = {
 
       const serverRoles = await ServerRoleModel.find({ server_id });
 
-      return await Promise.all(serverRoles.map(async (serverRole) => {
-        const users = await AssignedUserRoleModel.find({'_id.server_role_id': serverRole._id});
+      return await Promise.all(
+        serverRoles.map(async (serverRole) => {
+          const users = await AssignedUserRoleModel.find({
+            "_id.server_role_id": serverRole._id,
+          });
 
-        return {
-          id: serverRole._id,
-          server_id: serverRole.server_id,
-          name: serverRole.name,
-          color: serverRole.color,
-          allow_anyone_mention: serverRole.allow_anyone_mention,
-          position: serverRole.position,
-          permissions: serverRole.permissions,
-          is_admin: serverRole.is_admin,
-          default: serverRole.default,
-          last_modified: serverRole.last_modified,
-          number_of_users: users.length,
-        };
-      }));
+          return {
+            id: serverRole._id,
+            server_id: serverRole.server_id,
+            name: serverRole.name,
+            color: serverRole.color,
+            allow_anyone_mention: serverRole.allow_anyone_mention,
+            position: serverRole.position,
+            permissions: serverRole.permissions,
+            is_admin: serverRole.is_admin,
+            default: serverRole.default,
+            last_modified: serverRole.last_modified,
+            number_of_users: users.length,
+          };
+        })
+      );
     },
     getDefaultServerRole: async (_, { server_id }) => {
       // check if server_id is valid
@@ -203,13 +226,18 @@ const serverRoleAPI: IResolvers = {
         return null;
       }
 
-      const serverRole = await ServerRoleModel.findOne({ server_id, default: true });
+      const serverRole = await ServerRoleModel.findOne({
+        server_id,
+        default: true,
+      });
       if (!serverRole) {
         throw new UserInputError("Default server role not found!");
         return null;
       }
 
-      const users = await AssignedUserRoleModel.find({'_id.server_role_id': serverRole._id});
+      const users = await AssignedUserRoleModel.find({
+        "_id.server_role_id": serverRole._id,
+      });
 
       return {
         id: serverRole._id,
@@ -222,15 +250,15 @@ const serverRoleAPI: IResolvers = {
         is_admin: serverRole.is_admin,
         default: serverRole.default,
         last_modified: serverRole.last_modified,
-        number_of_users: users.length
-      }
+        number_of_users: users.length,
+      };
     },
   },
   Mutation: {
     createServerRole: async (_, { server_id, input }) => {
       const server_role = await createServerRole(server_id, {
         ...input,
-        default_: false
+        default_: false,
       });
 
       publishEvent(ServerEvents.serverUpdated, {
@@ -252,14 +280,14 @@ const serverRoleAPI: IResolvers = {
         is_admin: server_role.is_admin,
         default: server_role.default,
         last_modified: server_role.last_modified,
-        number_of_users: 0
-      }
+        number_of_users: 0,
+      };
     },
     updateServerRole: async (_, { role_id, input }) => {
       const server_role = await ServerRoleModel.findOneAndUpdate(
         {
-          '_id': role_id,
-          'default': false
+          _id: role_id,
+          default: false,
         },
         { $set: input },
         { new: true }
@@ -269,7 +297,9 @@ const serverRoleAPI: IResolvers = {
         throw new UserInputError("Server role not found!");
       }
 
-      const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+      const users = await AssignedUserRoleModel.find({
+        "_id.server_role_id": role_id,
+      });
 
       publishEvent(ServerEvents.serverUpdated, {
         type: ServerEvents.roleUpdated,
@@ -290,14 +320,14 @@ const serverRoleAPI: IResolvers = {
         is_admin: server_role.is_admin,
         default: server_role.default,
         last_modified: server_role.last_modified,
-        number_of_users: users.length
-      }
+        number_of_users: users.length,
+      };
     },
     updateDefaultServerRole: async (_, { server_id, input }) => {
       const server_role = await ServerRoleModel.findOneAndUpdate(
         {
-          'server_id': server_id,
-          'default': true
+          server_id: server_id,
+          default: true,
         },
         { $set: input },
         { new: true }
@@ -307,7 +337,9 @@ const serverRoleAPI: IResolvers = {
         throw new UserInputError("Default server role not found!");
       }
 
-      const users = await AssignedUserRoleModel.find({'_id.server_role_id': server_role._id});
+      const users = await AssignedUserRoleModel.find({
+        "_id.server_role_id": server_role._id,
+      });
 
       publishEvent(ServerEvents.serverUpdated, {
         type: ServerEvents.roleUpdated,
@@ -328,15 +360,18 @@ const serverRoleAPI: IResolvers = {
         is_admin: server_role.is_admin,
         default: server_role.default,
         last_modified: server_role.last_modified,
-        number_of_users: users.length
-      }
+        number_of_users: users.length,
+      };
     },
     deleteServerRole: async (_, { role_id }) => {
       // note: when we delete server role, we also need to remove the role if it is assigned to any user
       // note: we also need to remove the role from all channels, if it is assigned to any channel
       // note: we also need to remove the role from all categories, if it is assigned to any category
 
-      const server_role = await ServerRoleModel.findOneAndDelete({ '_id': role_id, 'default': false });
+      const server_role = await ServerRoleModel.findOneAndDelete({
+        _id: role_id,
+        default: false,
+      });
       if (!server_role) {
         throw new UserInputError("Server role not found!");
       }
@@ -344,7 +379,9 @@ const serverRoleAPI: IResolvers = {
       let deletedUsers = 0;
       try {
         // delete the role from all users
-        const result = await AssignedUserRoleModel.deleteMany({ '_id.server_role_id': role_id });
+        const result = await AssignedUserRoleModel.deleteMany({
+          "_id.server_role_id": role_id,
+        });
         deletedUsers = result.deletedCount;
       } catch (err) {
         throw new UserInputError("Cannot delete server role from users!");
@@ -369,8 +406,8 @@ const serverRoleAPI: IResolvers = {
         is_admin: server_role.is_admin,
         default: server_role.default,
         last_modified: server_role.last_modified,
-        number_of_users: deletedUsers
-      }
+        number_of_users: deletedUsers,
+      };
     },
   },
 };

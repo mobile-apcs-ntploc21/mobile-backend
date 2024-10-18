@@ -2,6 +2,7 @@ import express from "express";
 import graphQLClient from "../utils/graphql";
 import { GET_USER_BY_ID } from "../graphql/queries";
 import jwt from "jsonwebtoken";
+import config from "../config";
 
 // Get user by ID
 const getUserById = async (id: string) => {
@@ -27,42 +28,40 @@ export const authMiddleware = async (
     ) {
       token = req.headers.authorization.split(" ")[1];
     } else {
-      return res.status(401).json({
+      res.status(401).json({
         status: "fail",
         message: "You are not authorized to access this route",
       });
+      return;
     }
 
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         status: "fail",
         message: "You are not authorized to access this route",
       });
+      return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as jwt.JwtPayload;
-
-    // Skip this if the request has already been authenticated
-    if (res.locals?.uid === decoded.id) {
-      return next();
-    }
-
+    const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
     const user = await getUserById(decoded.id);
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         status: "fail",
         message: "The user belonging to this token does no longer exist",
       });
+      return;
     }
 
     // Check if user changed password after the token was issued
     if (user.passwordChangedAt) {
       const changedTimestamp = user.passwordChangedAt / 1000;
-      if (decoded.iat < changedTimestamp) {
-        return res.status(401).json({
+      if (decoded.iat && decoded.iat < changedTimestamp) {
+        res.status(401).json({
           status: "fail",
           message: "User recently changed password, please login again",
         });
+        return;
       }
     }
 

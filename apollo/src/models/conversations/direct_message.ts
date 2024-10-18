@@ -3,7 +3,10 @@ import validator from "validator";
 import ModelNames from "./../modelNames";
 
 interface IDirectMessage {
-  _id: { user_first_id: Schema.Types.ObjectId; user_second_id: Schema.Types.ObjectId };
+  _id: {
+    user_first_id: Schema.Types.ObjectId;
+    user_second_id: Schema.Types.ObjectId;
+  };
   conversation_id: Schema.Types.ObjectId;
   last_modified: Date;
 }

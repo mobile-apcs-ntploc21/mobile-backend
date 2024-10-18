@@ -1,8 +1,8 @@
 import express from "express";
 
-import graphQLClient from "../../../utils/graphql";
-import { serverChannelQueries } from "../../../graphql/queries";
-import { channelMutations } from "../../../graphql/mutations";
+import graphQLClient from "@/utils/graphql";
+import { serverChannelQueries } from "@/graphql/queries";
+import { channelMutations } from "@/graphql/mutations";
 
 export const _getChannel = async (channel_id: string) => {
   try {
@@ -51,22 +51,27 @@ export const getChannel = async (
   const channel_id = req.params?.channelId;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
   if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
 
   try {
     const channel = await _getChannel(channel_id).catch(() => null);
 
     if (!channel) {
-      return res.status(404).json({ message: "Channel not found." });
+      res.status(404).json({ message: "Channel not found." });
+      return;
     }
 
-    return res.status(200).json({ ...channel });
+    res.status(200).json({ ...channel });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -79,15 +84,18 @@ export const getChannels = async (
   const user_id = res.locals.uid ?? null;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   try {
     const channels = await _getChannels(server_id, user_id).catch(() => null);
 
-    return res.status(200).json({ channels });
+    res.status(200).json({ channels });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -100,7 +108,8 @@ export const createChannel = async (
   const { name, category_id } = req.body;
 
   if (!server_id || !name) {
-    return res.status(400).json({ message: "Server ID and name is required." });
+    res.status(400).json({ message: "Server ID and name is required." });
+    return;
   }
 
   try {
@@ -115,9 +124,11 @@ export const createChannel = async (
       }
     );
 
-    return res.status(200).json({ ...channel.createChannel });
+    res.status(200).json({ ...channel.createChannel });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -131,16 +142,19 @@ export const updateChannel = async (
   const { name, description, is_nsfw, is_archived, is_deleted } = req.body;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
 
   const channel = await _getChannel(channel_id).catch(() => null);
   if (!channel || channel.server_id !== server_id) {
-    return res.status(404).json({ message: "Channel not found." });
+    res.status(404).json({ message: "Channel not found." });
+    return;
   }
 
   try {
@@ -158,9 +172,11 @@ export const updateChannel = async (
       }
     );
 
-    return res.status(200).json({ ...channel.updateChannel });
+    res.status(200).json({ ...channel.updateChannel });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -173,16 +189,19 @@ export const deleteChannel = async (
   const channel_id = req.params?.channelId;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
 
   const channel = await _getChannel(channel_id).catch(() => null);
   if (!channel || channel.server_id !== server_id) {
-    return res.status(404).json({ message: "Channel not found." });
+    res.status(404).json({ message: "Channel not found." });
+    return;
   }
 
   try {
@@ -190,9 +209,11 @@ export const deleteChannel = async (
       channel_id,
     });
 
-    return res.status(200).json({ message: "Channel deleted." });
+    res.status(200).json({ message: "Channel deleted." });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -204,7 +225,8 @@ export const hardDeleteChannel = async (
   const channel_id = req.params?.channelId;
 
   if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
 
   try {
@@ -212,9 +234,11 @@ export const hardDeleteChannel = async (
       channel_id,
     });
 
-    return res.status(200).json({ message: "Channel hard deleted." });
+    res.status(200).json({ message: "Channel hard deleted." });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -228,20 +252,24 @@ export const moveChannel = async (
   const { category_id, new_position } = req.body;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   if (!channel_id) {
-    return res.status(400).json({ message: "Channel ID is required." });
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
 
   if (new_position === undefined) {
-    return res.status(400).json({ message: "New position is required." });
+    res.status(400).json({ message: "New position is required." });
+    return;
   }
 
   const channel = await _getChannel(channel_id).catch(() => null);
   if (!channel || channel.server_id !== server_id) {
-    return res.status(404).json({ message: "Channel not found." });
+    res.status(404).json({ message: "Channel not found." });
+    return;
   }
 
   try {
@@ -254,9 +282,11 @@ export const moveChannel = async (
       }
     );
 
-    return res.status(200).json({ ...channel.moveChannel });
+    res.status(200).json({ ...channel.moveChannel });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -269,20 +299,23 @@ export const moveAllChannel = async (
   const { channels } = req.body;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   if (!channels) {
-    return res.status(400).json({
+    res.status(400).json({
       message:
         "An input of array of channels is required. Eg., channels: [channel_id, category_id, position]",
     });
+    return;
   }
 
   if (!Array.isArray(channels)) {
-    return res
+    res
       .status(400)
       .json({ message: "Input of array of channels must be an array." });
+    return;
   }
 
   try {
@@ -294,8 +327,10 @@ export const moveAllChannel = async (
       }
     );
 
-    return res.status(200).json({ ...response.moveAllChannel });
+    res.status(200).json({ ...response.moveAllChannel });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };

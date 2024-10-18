@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import { userStatusQueries } from '../graphql/queries';
-import { userStatusMutations } from '../graphql/mutations';
+import { Request, Response, NextFunction } from "express";
+import graphQLClient from "../utils/graphql";
+import { userStatusQueries } from "../graphql/queries";
+import { userStatusMutations } from "../graphql/mutations";
 
 export const getCurrentUserStatus = async (
   req: Request,

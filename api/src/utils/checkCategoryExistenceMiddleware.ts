@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
 import { serverCategoryQueries } from "../graphql/queries";
+import { log } from "@/utils/log";
 
 export const checkCategoryExistenceMiddleware = async (
   req: Request,
@@ -23,12 +24,13 @@ export const checkCategoryExistenceMiddleware = async (
     );
 
     if (!category) {
-      return res.status(404).json({ message: "Category not found" });
+      res.status(404).json({ message: "Category not found" });
+      return;
     }
 
     res.locals.category_id = categoryId;
     next();
   } catch (error) {
-    return next(error);
+    next(error);
   }
 };

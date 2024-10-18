@@ -1,12 +1,12 @@
-import { Schema, model } from 'mongoose';
-import ModelNames from './modelNames';
+import { Schema, model } from "mongoose";
+import ModelNames from "./modelNames";
 
 export enum CustomStatus {
-  ONLINE = 'ONLINE',
-  IDLE = 'IDLE',
-  DO_NOT_DISTURB = 'DO_NOT_DISTURB',
-  INVISIBLE = 'INVISIBLE',
-  OFFLINE = 'OFFLINE',
+  ONLINE = "ONLINE",
+  IDLE = "IDLE",
+  DO_NOT_DISTURB = "DO_NOT_DISTURB",
+  INVISIBLE = "INVISIBLE",
+  OFFLINE = "OFFLINE",
 }
 
 type UserStatus = {
@@ -21,34 +21,34 @@ type UserStatus = {
 const schema = new Schema<UserStatus>({
   user_id: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: [true, 'User ID is required!'],
+    ref: "User",
+    required: [true, "User ID is required!"],
   },
   type: {
     type: String,
     enum: Object.values(CustomStatus),
-    required: [true, 'Status type is required!'],
+    required: [true, "Status type is required!"],
     default: CustomStatus.ONLINE,
   },
   last_seen: {
     type: Date,
-    required: [true, 'Last seen is required!'],
+    required: [true, "Last seen is required!"],
     default: Date.now,
   },
   status_text: {
     type: String,
-    maxlength: [140, 'Status text must not exceed 140 characters!'],
-    default: '',
+    maxlength: [140, "Status text must not exceed 140 characters!"],
+    default: "",
   },
   is_online: {
     type: Boolean,
-    required: [true, 'Online status is required!'],
+    required: [true, "Online status is required!"],
     default: false,
   },
   count_access: {
     type: Number,
     default: 0,
-    min: [0, 'Number of access must be non-negative'],
+    min: [0, "Number of access must be non-negative"],
   },
 });
 

@@ -100,6 +100,9 @@ const addServerMemberTransaction = async ({
       server_id,
       default: true,
     });
+
+    if (!defaultRole) throw new Error("Default role not found!");
+
     await AssignedUserRoleModel.create(
       filteredUsers.map((user_id) => ({
         _id: {
@@ -112,7 +115,7 @@ const addServerMemberTransaction = async ({
 
     await session.commitTransaction();
     return res;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     throw error;
   } finally {
@@ -181,7 +184,7 @@ const removeServerMemberTransaction = async ({
 
     await session.commitTransaction();
     return documentsToDelete;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     throw error;
   } finally {
@@ -220,13 +223,14 @@ const joinServerTransaction = async (url: string, user_id: ObjectId) => {
       }
     );
 
+    // @ts-ignore
     server.totalMembers++;
     server.invite_code[inviteIndex].currentUses++;
     await server.save();
 
     await session.commitTransaction();
     return newdoc;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     throw error;
   } finally {
@@ -252,18 +256,17 @@ const API: IResolvers = {
 
         // Get the user profile of each member (contains default and server profile)
         const user_ids = members.map((member) => member._id.user_id);
-        const [allProfiles, allStatuses, serverRoles] = await Promise.all([
-          UserProfileModel.find({
-            user_id: { $in: user_ids },
-            server_id: { $in: [null, server_id] },
-          }),
-          UserStatusModel.find({
-            user_id: { $in: user_ids },
-          }),
-          ServerRoleModel.find({ server_id }),
-        ]);
+        const allProfiles = await UserProfileModel.find({
+          user_id: { $in: user_ids },
+          server_id: { $in: [null, server_id] },
+        });
+        const allStatuses = await UserStatusModel.find({
+          user_id: { $in: user_ids },
+        });
 
-        let profiles = [];
+        const serverRoles = await ServerRoleModel.find({ server_id });
+
+        const profiles = [];
         for (let i = 0; i < user_ids.length; i++) {
           let profile = allProfiles.find(
             (profile) =>
@@ -271,7 +274,7 @@ const API: IResolvers = {
               String(profile.server_id) === server_id
           );
 
-          let status = allStatuses.find(
+          const status = allStatuses.find(
             (status) => String(status.user_id) === String(user_ids[i])
           );
 
@@ -279,6 +282,8 @@ const API: IResolvers = {
             profile = allProfiles.find(
               (profile) => String(profile.user_id) === String(user_ids[i])
             );
+
+            if (!profile) throw new Error("Profile not found!");
           }
 
           const roles = await AssignedUserRoleModel.find({
@@ -300,7 +305,7 @@ const API: IResolvers = {
         }
 
         return profiles;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -312,7 +317,7 @@ const API: IResolvers = {
             "_id.user_id": user_id,
           })) !== null
         );
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -331,7 +336,7 @@ const API: IResolvers = {
         });
 
         return res;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -358,7 +363,7 @@ const API: IResolvers = {
         }
 
         return res;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -383,7 +388,7 @@ const API: IResolvers = {
         }
 
         return res;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },

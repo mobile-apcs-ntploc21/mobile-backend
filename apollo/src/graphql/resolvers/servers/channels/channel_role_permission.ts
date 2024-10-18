@@ -1,19 +1,17 @@
-import {IResolvers} from "@graphql-tools/utils";
-import {UserInputError} from "apollo-server";
-import ChannelRolePermission from "../../../../models/servers/channels/channel_role_permission"
+import { IResolvers } from "@graphql-tools/utils";
+import { UserInputError } from "apollo-server";
+import ChannelRolePermission from "@/models/servers/channels/channel_role_permission";
 import {
   GeneralChannelPermissions,
-  MembershipPermissions,
   PermissionStates,
   TextChannelPermissions,
-  VoiceChannelPermissions
-} from "../../../../constants/permissions";
-import mongoose, {ObjectId} from "mongoose";
-import {publishEvent, ServerEvents} from "../../../pubsub/pubsub";
-import ServerRoleModel from "../../../../models/servers/server_role";
-import Channel from "../../../../models/servers/channels/channel";
+  VoiceChannelPermissions,
+} from "@/constants/permissions";
+import mongoose, { ObjectId } from "mongoose";
+import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
+import ServerRoleModel from "@/models/servers/server_role";
+import Channel from "@/models/servers/channels/channel";
 import AssignedUserRoleModel from "@models/servers/assigned_user_role";
-
 
 export const defaultChannelRole = JSON.stringify({
   // General Channel Permissions
@@ -36,7 +34,11 @@ export const defaultChannelRole = JSON.stringify({
   [VoiceChannelPermissions.VOICE_DEAFEN_MEMBER]: PermissionStates.DEFAULT,
 });
 
-const createChannelRole = async (role_id: ObjectId, channel_id: ObjectId,  permissions: String ) => {
+const createChannelRole = async (
+  role_id: ObjectId,
+  channel_id: ObjectId,
+  permissions: string
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -53,11 +55,15 @@ const createChannelRole = async (role_id: ObjectId, channel_id: ObjectId,  permi
     }
 
     // check if server role is already assigned with the channel
-    if (await ChannelRolePermission.exists({
-      '_id.server_role_id': role_id,
-      '_id.channel_id': channel_id
-    })) {
-      throw new UserInputError("Server role is already assigned to channel permissions!");
+    if (
+      await ChannelRolePermission.exists({
+        "_id.server_role_id": role_id,
+        "_id.channel_id": channel_id,
+      })
+    ) {
+      throw new UserInputError(
+        "Server role is already assigned to channel permissions!"
+      );
     }
 
     const channel_role = await ChannelRolePermission.create({
@@ -72,7 +78,7 @@ const createChannelRole = async (role_id: ObjectId, channel_id: ObjectId,  permi
     await session.endSession();
 
     return channel_role;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
 
@@ -93,27 +99,33 @@ const channelRoleAPI: IResolvers = {
     getChannelRolesPermissions: async (_, { channel_id }) => {
       try {
         const channelRoles = await ChannelRolePermission.find({
-          '_id.channel_id': channel_id,
+          "_id.channel_id": channel_id,
         });
 
-        return await Promise.all(channelRoles.map(async (role) => {
-          const role_id = role._id.server_role_id;
-          const serverRole = await ServerRoleModel.findById(role_id);
-          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        return await Promise.all(
+          channelRoles.map(async (role) => {
+            const role_id = role._id.server_role_id;
+            const serverRole = await ServerRoleModel.findById(role_id);
+            const users = await AssignedUserRoleModel.find({
+              "_id.server_role_id": role_id,
+            });
 
-          return {
-            id: serverRole._id,
-            server_id: serverRole.server_id,
-            name: serverRole.name,
-            color: serverRole.color,
-            position: serverRole.position,
-            is_admin: serverRole.is_admin,
-            allow_anyone_mention: serverRole.allow_anyone_mention,
-            last_modified: serverRole.last_modified,
-            number_of_users: users.length,
-            permissions: role.permissions,
-          };
-        }));
+            if (!serverRole) throw new Error("Server role not found");
+
+            return {
+              id: serverRole._id,
+              server_id: serverRole.server_id,
+              name: serverRole.name,
+              color: serverRole.color,
+              position: serverRole.position,
+              is_admin: serverRole.is_admin,
+              allow_anyone_mention: serverRole.allow_anyone_mention,
+              last_modified: serverRole.last_modified,
+              number_of_users: users.length,
+              permissions: role.permissions,
+            };
+          })
+        );
       } catch (err) {
         throw new UserInputError("Cannot get channel permissions for roles!");
       }
@@ -127,10 +139,14 @@ const channelRoleAPI: IResolvers = {
         }
 
         const channel_role = await ChannelRolePermission.findOne({
-          '_id.server_role_id': role_id,
-          '_id.channel_id': channel_id,
+          "_id.server_role_id": role_id,
+          "_id.channel_id": channel_id,
         });
-        const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        const users = await AssignedUserRoleModel.find({
+          "_id.server_role_id": role_id,
+        });
+
+        if (!channel_role) throw new Error("Channel role not found");
 
         return {
           id: serverRole._id,
@@ -145,16 +161,27 @@ const channelRoleAPI: IResolvers = {
           number_of_users: users.length,
         };
       } catch (err) {
-        throw new UserInputError("Cannot get channel permissions associated with this role!");
+        throw new UserInputError(
+          "Cannot get channel permissions associated with this role!"
+        );
       }
     },
   },
   Mutation: {
-    createChannelRolePermission: async (_, { role_id, channel_id, permissions }) => {
+    createChannelRolePermission: async (
+      _,
+      { role_id, channel_id, permissions }
+    ) => {
       try {
-        const channel_role = await createChannelRole(role_id, channel_id, permissions);
+        const channel_role = await createChannelRole(
+          role_id,
+          channel_id,
+          permissions
+        );
 
         const server_role = await ServerRoleModel.findById(role_id);
+
+        if (!server_role) throw new Error("Server role not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelRoleAdded,
@@ -165,44 +192,55 @@ const channelRoleAPI: IResolvers = {
         });
 
         const roles = await ChannelRolePermission.find({
-          '_id.channel_id': channel_id
+          "_id.channel_id": channel_id,
         });
 
-        return await Promise.all(roles.map(async (role) => {
-          const role_id = role._id.server_role_id;
-          const serverRole = await ServerRoleModel.findById(role_id);
-          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        return await Promise.all(
+          roles.map(async (role) => {
+            const role_id = role._id.server_role_id;
+            const serverRole = await ServerRoleModel.findById(role_id);
+            const users = await AssignedUserRoleModel.find({
+              "_id.server_role_id": role_id,
+            });
 
-          return {
-            id: serverRole._id,
-            server_id: serverRole.server_id,
-            name: serverRole.name,
-            color: serverRole.color,
-            allow_anyone_mention: serverRole.allow_anyone_mention,
-            position: serverRole.position,
-            permissions: serverRole.permissions,
-            is_admin: serverRole.is_admin,
-            default: serverRole.default,
-            last_modified: serverRole.last_modified,
-            number_of_users: users.length,
-          };
-        }));
-      } catch (error) {
+            if (!serverRole) throw new Error("Server role not found");
+
+            return {
+              id: serverRole._id,
+              server_id: serverRole.server_id,
+              name: serverRole.name,
+              color: serverRole.color,
+              allow_anyone_mention: serverRole.allow_anyone_mention,
+              position: serverRole.position,
+              permissions: serverRole.permissions,
+              is_admin: serverRole.is_admin,
+              default: serverRole.default,
+              last_modified: serverRole.last_modified,
+              number_of_users: users.length,
+            };
+          })
+        );
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
-    updateChannelRolePermission: async (_, { role_id, channel_id, permissions }) => {
+    updateChannelRolePermission: async (
+      _,
+      { role_id, channel_id, permissions }
+    ) => {
       try {
         const channel_role = await ChannelRolePermission.findOneAndUpdate(
           {
-            '_id.server_role_id': role_id,
-            '_id.channel_id': channel_id
+            "_id.server_role_id": role_id,
+            "_id.channel_id": channel_id,
           },
           { permissions },
           { new: true }
         );
+        if (!channel_role) throw new Error("Channel role not found");
 
         const server_role = await ServerRoleModel.findById(role_id);
+        if (!server_role) throw new Error("Server role not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelRoleUpdated,
@@ -212,7 +250,9 @@ const channelRoleAPI: IResolvers = {
           },
         });
 
-        const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        const users = await AssignedUserRoleModel.find({
+          "_id.server_role_id": role_id,
+        });
 
         return {
           id: server_role._id,
@@ -227,7 +267,7 @@ const channelRoleAPI: IResolvers = {
           last_modified: server_role.last_modified,
           number_of_users: users.length,
         };
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError("Cannot update channel permissions for role!");
       }
     },
@@ -235,16 +275,19 @@ const channelRoleAPI: IResolvers = {
       try {
         // check if the current role is a default role, if yes, throw an error
         const serverRole = await ServerRoleModel.findById(role_id);
+        if (!serverRole) throw new Error("Server role not found");
         if (serverRole.default) {
           throw new UserInputError("Cannot delete default server role!");
         }
 
         const channel_role = await ChannelRolePermission.findOneAndDelete({
-          '_id.server_role_id': role_id,
-          '_id.channel_id': channel_id
+          "_id.server_role_id": role_id,
+          "_id.channel_id": channel_id,
         });
+        if (!channel_role) throw new Error("Channel role not found");
 
         const server_role = await ServerRoleModel.findById(role_id);
+        if (!server_role) throw new Error("Server role not found");
 
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelRoleDeleted,
@@ -255,31 +298,37 @@ const channelRoleAPI: IResolvers = {
         });
 
         const roles = await ChannelRolePermission.find({
-          '_id.channel_id': channel_id
+          "_id.channel_id": channel_id,
         });
 
-        return await Promise.all(roles.map(async (role) => {
-          const role_id = role._id.server_role_id;
-          const serverRole = await ServerRoleModel.findById(role_id);
-          const users = await AssignedUserRoleModel.find({'_id.server_role_id': role_id});
+        return await Promise.all(
+          roles.map(async (role) => {
+            const role_id = role._id.server_role_id;
+            const serverRole = await ServerRoleModel.findById(role_id);
+            const users = await AssignedUserRoleModel.find({
+              "_id.server_role_id": role_id,
+            });
 
-          return {
-            id: serverRole._id,
-            server_id: serverRole.server_id,
-            name: serverRole.name,
-            color: serverRole.color,
-            allow_anyone_mention: serverRole.allow_anyone_mention,
-            position: serverRole.position,
-            permissions: serverRole.permissions,
-            is_admin: serverRole.is_admin,
-            default: serverRole.default,
-            last_modified: serverRole.last_modified,
-            number_of_users: users.length,
-          };
-        }));
-      } catch (error) {
+            if (!serverRole) throw new Error("Server role not found");
+
+            return {
+              id: serverRole._id,
+              server_id: serverRole.server_id,
+              name: serverRole.name,
+              color: serverRole.color,
+              allow_anyone_mention: serverRole.allow_anyone_mention,
+              position: serverRole.position,
+              permissions: serverRole.permissions,
+              is_admin: serverRole.is_admin,
+              default: serverRole.default,
+              last_modified: serverRole.last_modified,
+              number_of_users: users.length,
+            };
+          })
+        );
+      } catch (error: any) {
         throw new UserInputError("Cannot delete channel permissions for role!");
-      }  
+      }
     },
   },
 };

@@ -37,19 +37,23 @@ export const getProfile = async (
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {
-    return res.status(400).json({ message: "User ID is required." });
+    res.status(400).json({ message: "User ID is required." });
+    return;
   }
 
   try {
     const profile = await getUserProfile(userId, serverId).catch(() => null);
 
     if (!profile) {
-      return res.status(404).json({ message: "Profile not found." });
+      res.status(404).json({ message: "Profile not found." });
+      return;
     }
 
-    return res.status(200).json({ ...profile });
+    res.status(200).json({ ...profile });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -61,7 +65,8 @@ export const getProfileByUsername = async (
   const username = req.params?.username as string;
 
   if (!username) {
-    return res.status(400).json({ message: "Username is required." });
+    res.status(400).json({ message: "Username is required." });
+    return;
   }
 
   try {
@@ -73,14 +78,17 @@ export const getProfileByUsername = async (
     );
 
     if (!response.getUserProfileByUsername) {
-      return res
+      res
         .status(404)
         .json({ message: "Profile with matching username not found." });
+      return;
     }
 
-    return res.status(200).json({ ...response.getUserProfileByUsername });
+    res.status(200).json({ ...response.getUserProfileByUsername });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -93,10 +101,11 @@ export const createProfile = async (
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {
-    return res.status(500).json({
+    res.status(500).json({
       message:
         "Server error: User ID is not assigned yet. Please contact the server owner.",
     });
+    return;
   }
 
   // Extract fields from req.body
@@ -115,9 +124,11 @@ export const createProfile = async (
       }
     );
 
-    return res.status(200).json({ ...response });
+    res.status(200).json({ ...response });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -130,10 +141,11 @@ export const updateProfile = async (
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {
-    return res.status(500).json({
+    res.status(500).json({
       message:
         "Server error: User ID is not assigned yet. Please contact the server owner.",
     });
+    return;
   }
 
   // Extract fields from req.body
@@ -144,18 +156,20 @@ export const updateProfile = async (
   if (avatar) {
     avatar_url = await processImage(avatar, "avatars");
     if (!avatar_url) {
-      return res
+      res
         .status(400)
         .json({ message: "Failed to upload avatar. Maybe check file type." });
+      return;
     }
   }
 
   if (banner) {
     banner_url = await processImage(banner, "banners");
     if (!banner_url) {
-      return res
+      res
         .status(400)
         .json({ message: "Failed to upload banner.  Maybe check file type." });
+      return;
     }
   }
 
@@ -184,9 +198,11 @@ export const updateProfile = async (
       }
     );
 
-    return res.status(200).json({ ...response });
+    res.status(200).json({ ...response });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -271,7 +287,8 @@ export const deleteProfile = async (
   const serverId = (req.params?.serverId as string) ?? null;
 
   if (!userId) {
-    return res.status(400).json({ message: "User ID is required." });
+    res.status(400).json({ message: "User ID is required." });
+    return;
   }
 
   try {
@@ -283,8 +300,10 @@ export const deleteProfile = async (
       }
     );
 
-    return res.status(200).json({ ...response });
+    res.status(200).json({ ...response });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };

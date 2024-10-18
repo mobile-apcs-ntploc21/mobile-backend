@@ -1,14 +1,15 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { getUserCategoryPermissionsFunc } from "../utils/getUserCategoryPermissions";
 
 export const checkCategoryPermissionMiddleware = (
   requiredPermissions: string[]
 ) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (_req: Request, res: Response, next: NextFunction) => {
     const { uid: user_id, server_id, category_id } = res.locals;
 
     if (!user_id || !server_id) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
 
     let currentUserPermissions = null;
@@ -23,11 +24,13 @@ export const checkCategoryPermissionMiddleware = (
     }
 
     const hasPermission = requiredPermissions.every((permission) => {
+      // @ts-ignore
       return currentUserPermissions[permission] === "ALLOWED";
     });
 
     if (!hasPermission) {
-      return res.status(403).json({ message: "Forbidden" });
+      res.status(403).json({ message: "Forbidden" });
+      return;
     }
 
     res.locals.userCategoryId = category_id;

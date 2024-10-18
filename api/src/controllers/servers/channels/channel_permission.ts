@@ -1,11 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../../../utils/graphql';
-import {serverRoleQueries, serverChannelPermissionQueries} from '../../../graphql/queries';
+import { NextFunction, Request, Response } from "express";
+import graphQLClient from "@/utils/graphql";
 import {
-  serverChannelPermissionMutations,
-} from '../../../graphql/mutations';
+  serverChannelPermissionQueries,
+  serverRoleQueries,
+} from "@/graphql/queries";
+import { serverChannelPermissionMutations } from "@/graphql/mutations";
 
-import { getUserChannelPermissionsFunc } from '../../../utils/getUserChannelPermissions';
+import { getUserChannelPermissionsFunc } from "@/utils/getUserChannelPermissions";
+import { log } from "@/utils/log";
 
 export const getRolesAssignedWithChannel = async (
   req: Request,
@@ -15,7 +17,7 @@ export const getRolesAssignedWithChannel = async (
   const serverId = res.locals.server_id;
   const channelId = res.locals.channel_id;
 
-  console.log(channelId);
+  log.debug(channelId);
 
   try {
     const { getChannelRolesPermissions: roles } = await graphQLClient().request(
@@ -26,17 +28,18 @@ export const getRolesAssignedWithChannel = async (
     );
 
     if (!roles.length) {
-      return res.json({
+      res.json({
         server_id: serverId,
         channel_id: channelId,
         roles: [],
       });
+      return;
     }
 
-    return res.json({
+    res.json({
       server_id: serverId,
       channel_id: channelId,
-      roles: roles.map((role) => ({
+      roles: roles.map((role: any) => ({
         id: role.id,
         name: role.name,
         color: role.color,
@@ -48,7 +51,8 @@ export const getRolesAssignedWithChannel = async (
       })),
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -69,17 +73,18 @@ export const getUsersAssignedWithChannelPermission = async (
     );
 
     if (!users.length) {
-      return res.json({
+      res.json({
         server_id: serverId,
         channel_id: channelId,
         users: [],
       });
+      return;
     }
 
-    return res.json({
+    res.json({
       server_id: serverId,
       channel_id: channelId,
-      users: users.map((user) => ({
+      users: users.map((user: any) => ({
         id: user.id,
         username: user.username,
         display_name: user.display_name,
@@ -89,9 +94,10 @@ export const getUsersAssignedWithChannelPermission = async (
       })),
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getRoleAssignedWithChannel = async (
   req: Request,
@@ -115,16 +121,19 @@ export const getRoleAssignedWithChannel = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Channel role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -146,22 +155,25 @@ export const getUserAssignedWithChannelPermission = async (
       }
     );
 
-    console.log(user);
+    log.debug(user);
 
     let parsedUserPermissions = null;
     try {
       parsedUserPermissions = JSON.parse(user.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "User permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedUserPermissions
+    res.status(200).json({
+      ...parsedUserPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -196,19 +208,26 @@ export const addRoleToChannelPermission = async (
     try {
       parsedChannelRolePermissions = JSON.parse(channel.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Channel role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedChannelRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -219,14 +238,15 @@ export const addRoleToChannelPermission = async (
       }
     }
 
-    const { createChannelRolePermission: roles } = await graphQLClient().request(
-      serverChannelPermissionMutations.CREATE_CHANNEL_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        channel_id: channelId,
-        permissions: JSON.stringify(parsedChannelRolePermissions),
-      }
-    );
+    const { createChannelRolePermission: roles } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.CREATE_CHANNEL_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          channel_id: channelId,
+          permissions: JSON.stringify(parsedChannelRolePermissions),
+        }
+      );
 
     const filteredRoles = roles.map((role: any) => ({
       id: role.id,
@@ -240,15 +260,16 @@ export const addRoleToChannelPermission = async (
       number_of_users: role.number_of_users,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       channel_id: channelId,
       roles: filteredRoles ? filteredRoles : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const addUserToChannelPermission = async (
   req: Request,
@@ -281,19 +302,26 @@ export const addUserToChannelPermission = async (
     try {
       parsedChannelRolePermissions = JSON.parse(channel.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Channel role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedChannelRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -304,14 +332,15 @@ export const addUserToChannelPermission = async (
       }
     }
 
-    const { createChannelUserPermission: users } = await graphQLClient().request(
-      serverChannelPermissionMutations.CREATE_CHANNEL_USER_PERMISSION,
-      {
-        user_id: userId,
-        channel_id: channelId,
-        permissions: JSON.stringify(parsedChannelRolePermissions),
-      }
-    );
+    const { createChannelUserPermission: users } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.CREATE_CHANNEL_USER_PERMISSION,
+        {
+          user_id: userId,
+          channel_id: channelId,
+          permissions: JSON.stringify(parsedChannelRolePermissions),
+        }
+      );
 
     const filteredUsers = users.map((user: any) => ({
       id: user.id,
@@ -322,15 +351,16 @@ export const addUserToChannelPermission = async (
       about_me: user.about_me,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       channel_id: channelId,
       users: filteredUsers ? filteredUsers : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateRoleChannelPermission = async (
   req: Request,
@@ -355,19 +385,26 @@ export const updateRoleChannelPermission = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Channel role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -375,7 +412,10 @@ export const updateRoleChannelPermission = async (
     // Ensure all keys in req.body are equal to permissions
     for (const key in parsedRolePermissions) {
       if (!updatedFields.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+        res.status(400).json({
+          message: `Missing permission: ${key}. All permissions must be provided.`,
+        });
+        return;
       }
     }
 
@@ -385,30 +425,34 @@ export const updateRoleChannelPermission = async (
       }
     }
 
-    const { updateChannelRolePermission: roles } = await graphQLClient().request(
-      serverChannelPermissionMutations.UPDATE_CHANNEL_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        channel_id: channelId,
-        permissions: JSON.stringify(parsedRolePermissions),
-      }
-    );
+    const { updateChannelRolePermission: roles } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.UPDATE_CHANNEL_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          channel_id: channelId,
+          permissions: JSON.stringify(parsedRolePermissions),
+        }
+      );
 
     try {
       parsedRolePermissions = JSON.parse(roles.permissions);
     } catch (error) {
-      return res
-        .status(400)
-        .json({ message: "Updated channel role permissions is not in JSON format !" });
+      res.status(400).json({
+        message: "Updated channel role permissions is not in JSON format !",
+      });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updatePartialRoleChannelPermission = async (
   req: Request,
@@ -433,19 +477,26 @@ export const updatePartialRoleChannelPermission = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Channel role permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedRolePermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -456,30 +507,34 @@ export const updatePartialRoleChannelPermission = async (
       }
     }
 
-    const { updateChannelRolePermission: roles } = await graphQLClient().request(
-      serverChannelPermissionMutations.UPDATE_CHANNEL_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        channel_id: channelId,
-        permissions: JSON.stringify(parsedRolePermissions),
-      }
-    );
+    const { updateChannelRolePermission: roles } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.UPDATE_CHANNEL_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          channel_id: channelId,
+          permissions: JSON.stringify(parsedRolePermissions),
+        }
+      );
 
     try {
       parsedRolePermissions = JSON.parse(roles.permissions);
     } catch (error) {
-      return res
-        .status(400)
-        .json({ message: "Updated channel role permissions is not in JSON format !" });
+      res.status(400).json({
+        message: "Updated channel role permissions is not in JSON format !",
+      });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateUserChannelPermission = async (
   req: Request,
@@ -504,19 +559,26 @@ export const updateUserChannelPermission = async (
     try {
       parsedUserPermissions = JSON.parse(user.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "User permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedUserPermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -524,7 +586,10 @@ export const updateUserChannelPermission = async (
     // Ensure all keys in req.body are equal to permissions
     for (const key in parsedUserPermissions) {
       if (!updatedFields.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+        res.status(400).json({
+          message: `Missing permission: ${key}. All permissions must be provided.`,
+        });
+        return;
       }
     }
 
@@ -534,30 +599,34 @@ export const updateUserChannelPermission = async (
       }
     }
 
-    const { updateChannelUserPermission: users } = await graphQLClient().request(
-      serverChannelPermissionMutations.UPDATE_CHANNEL_USER_PERMISSION,
-      {
-        user_id: userId,
-        channel_id: channelId,
-        permissions: JSON.stringify(parsedUserPermissions),
-      }
-    );
+    const { updateChannelUserPermission: users } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.UPDATE_CHANNEL_USER_PERMISSION,
+        {
+          user_id: userId,
+          channel_id: channelId,
+          permissions: JSON.stringify(parsedUserPermissions),
+        }
+      );
 
     try {
       parsedUserPermissions = JSON.parse(users.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Updated user permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedUserPermissions
+    res.status(200).json({
+      ...parsedUserPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updatePartialUserChannelPermission = async (
   req: Request,
@@ -582,19 +651,26 @@ export const updatePartialUserChannelPermission = async (
     try {
       parsedUserPermissions = JSON.parse(user.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "User permissions is not in JSON format !" });
+      return;
     }
 
     for (const key in updatedFields) {
       if (updatedFields.hasOwnProperty(key)) {
         const value = updatedFields[key];
         if (!parsedUserPermissions.hasOwnProperty(key)) {
-          return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+          res.status(400).json({
+            message: `Invalid permission: ${key}. Permission invalid.`,
+          });
+          return;
         }
         if (value !== "ALLOWED" && value !== "DENIED" && value !== "DEFAULT") {
-          return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".` });
+          res.status(400).json({
+            message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED" or "DEFAULT".`,
+          });
+          return;
         }
       }
     }
@@ -605,30 +681,34 @@ export const updatePartialUserChannelPermission = async (
       }
     }
 
-    const { updateChannelUserPermission: users } = await graphQLClient().request(
-      serverChannelPermissionMutations.UPDATE_CHANNEL_USER_PERMISSION,
-      {
-        user_id: userId,
-        channel_id: channelId,
-        permissions: JSON.stringify(parsedUserPermissions),
-      }
-    );
+    const { updateChannelUserPermission: users } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.UPDATE_CHANNEL_USER_PERMISSION,
+        {
+          user_id: userId,
+          channel_id: channelId,
+          permissions: JSON.stringify(parsedUserPermissions),
+        }
+      );
 
     try {
       parsedUserPermissions = JSON.parse(users.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Updated user permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedUserPermissions
+    res.status(200).json({
+      ...parsedUserPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const deleteRoleChannelPermission = async (
   req: Request,
@@ -640,13 +720,14 @@ export const deleteRoleChannelPermission = async (
   const roleId = req.params.roleId;
 
   try {
-    const { deleteChannelRolePermission: roles } = await graphQLClient().request(
-      serverChannelPermissionMutations.DELETE_CHANNEL_ROLE_PERMISSION,
-      {
-        role_id: roleId,
-        channel_id: channelId,
-      }
-    );
+    const { deleteChannelRolePermission: roles } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.DELETE_CHANNEL_ROLE_PERMISSION,
+        {
+          role_id: roleId,
+          channel_id: channelId,
+        }
+      );
 
     const filteredRoles = roles.map((role: any) => ({
       id: role.id,
@@ -660,15 +741,16 @@ export const deleteRoleChannelPermission = async (
       number_of_users: role.number_of_users,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       channel_id: channelId,
       roles: filteredRoles ? filteredRoles : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const deleteUserChannelPermission = async (
   req: Request,
@@ -680,13 +762,14 @@ export const deleteUserChannelPermission = async (
   const userId = req.params.userId;
 
   try {
-    const { deleteChannelUserPermission: users } = await graphQLClient().request(
-      serverChannelPermissionMutations.DELETE_CHANNEL_USER_PERMISSION,
-      {
-        user_id: userId,
-        channel_id: channelId,
-      }
-    );
+    const { deleteChannelUserPermission: users } =
+      await graphQLClient().request(
+        serverChannelPermissionMutations.DELETE_CHANNEL_USER_PERMISSION,
+        {
+          user_id: userId,
+          channel_id: channelId,
+        }
+      );
 
     const filteredUsers = users.map((user: any) => ({
       id: user.id,
@@ -697,15 +780,16 @@ export const deleteUserChannelPermission = async (
       about_me: user.about_me,
     }));
 
-    return res.json({
+    res.json({
       server_id: serverId,
       channel_id: channelId,
       users: filteredUsers ? filteredUsers : [],
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getUserChannelPermissions = async (
   req: Request,
@@ -716,18 +800,23 @@ export const getUserChannelPermissions = async (
   const channelId = res.locals.channel_id;
   const serverId = res.locals.server_id;
 
-  console.log(userId, channelId, serverId);
+  log.debug(userId, channelId, serverId);
 
   try {
-    const userChannelPermissions = await getUserChannelPermissionsFunc(userId, channelId, serverId);
+    const userChannelPermissions = await getUserChannelPermissionsFunc(
+      userId,
+      channelId,
+      serverId
+    );
 
-    return res.json({
+    res.json({
       server_id: serverId,
       user_id: userId,
       channel_id: channelId,
       permissions: userChannelPermissions,
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};

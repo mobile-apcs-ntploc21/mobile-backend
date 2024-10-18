@@ -1,8 +1,6 @@
 import { gql } from "apollo-server-express";
 
 const gqlType = gql`
-  scalar ObjectId
-
   type UserProfile {
     id: ID!
     user_id: ID!

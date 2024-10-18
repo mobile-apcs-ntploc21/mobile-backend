@@ -8,8 +8,8 @@ import {
   publishStatusChanged,
   UserStatusEvents,
 } from "../pubsub/user_status";
-import { wsLogger } from "../../utils";
 import { publishEvent, ServerEvents } from "../pubsub/pubsub";
+import { log } from "@/utils/log";
 import ServerMemberModel from "@/models/servers/server_member";
 
 export const userStatusResolvers_API: IResolvers = {
@@ -17,14 +17,15 @@ export const userStatusResolvers_API: IResolvers = {
   Query: {
     getUserStatus: async (_, { user_id }) => {
       try {
-        // console.log(user_id);
+        // log.debug(user_id);
         const res = await UserStatusModel.findOne({
           user_id,
         });
-        // console.log(res);
+        // log.debug(res);
         return res;
       } catch (error) {
-        console.log(error);
+        log.error(error);
+        return null;
       }
     },
     getMultipleUserStatus: async (_, { user_ids }) => {
@@ -34,7 +35,8 @@ export const userStatusResolvers_API: IResolvers = {
         });
         return res;
       } catch (error) {
-        console.log(error);
+        log.error(error);
+        return null;
       }
     },
   },
@@ -67,7 +69,8 @@ export const userStatusResolvers_API: IResolvers = {
 
         return "Sync completed";
       } catch (error) {
-        console.log(error);
+        log.error(error);
+        return null;
       }
     },
     updateStatusType: async (_, { user_id, type }) => {
@@ -77,6 +80,8 @@ export const userStatusResolvers_API: IResolvers = {
           { $set: { last_seen: new Date() } },
           { new: true }
         );
+
+        if (!res) throw new Error("Users status not found");
 
         if (res.type === type) return res;
 
@@ -98,7 +103,8 @@ export const userStatusResolvers_API: IResolvers = {
         publishStatusChanged(res);
         return res;
       } catch (error) {
-        console.log(error);
+        log.error(error);
+        return null;
       }
     },
     updateStatusText: async (_, { user_id, status_text }) => {
@@ -124,7 +130,8 @@ export const userStatusResolvers_API: IResolvers = {
         publishStatusChanged(res);
         return res;
       } catch (error) {
-        console.log(error);
+        log.error(error);
+        return null;
       }
     },
   },
@@ -136,23 +143,23 @@ export const userStatusResolvers_Ws: IResolvers = {
       subscribe: withFilter(
         () => getAsyncIterator([UserStatusEvents.statusChanged]),
         (payload, variables, context) => {
-          wsLogger("Subscription userStatusChanged is executing...");
+          log.error("Subscription userStatusChanged is executing...");
 
           const thisUserId = context?.thisUserId;
           const user_id = variables?.user_id;
 
-          console.log(
+          log.info(
             `UserID: ${payload.userStatusChanged?.user_id} status changed`
           );
-          console.log(`Subscription user_id: ${user_id}`);
-          console.log("Filtering...");
+          log.info(`Subscription user_id: ${user_id}`);
+          log.info("Filtering...");
 
           if (payload.userStatusChanged?.user_id.toString() !== user_id) {
-            console.log("User id does not match the subscription");
+            log.info("User id does not match the subscription");
             return false;
           }
 
-          console.log("Filter passed");
+          log.info("Filter passed");
           return true;
         }
       ),

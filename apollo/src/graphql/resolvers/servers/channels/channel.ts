@@ -1,6 +1,6 @@
+import mongoose, { Error } from "mongoose";
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
-import mongoose from "mongoose";
 
 import ConversationModel from "@/models/conversations/conversation";
 import CategoryModel from "@/models/servers/channels/category";
@@ -67,6 +67,10 @@ const createChannelTransaction = async (
       default: true,
     });
 
+    if (!default_server_role) {
+      throw new Error("Default server role not found");
+    }
+
     await ChannelRolePermission.create(
       [
         {
@@ -85,7 +89,7 @@ const createChannelTransaction = async (
     session.endSession();
 
     return channel[0];
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
 
@@ -229,7 +233,7 @@ const moveChannelTransaction = async (
     await channel.save({ session });
     await session.commitTransaction();
     session.endSession();
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
     throw error;
@@ -308,6 +312,8 @@ const channelAPI: IResolvers = {
         { new: true }
       );
 
+      if (!channel) throw new Error("Channel not found");
+
       publishEvent(ServerEvents.serverUpdated, {
         type: ServerEvents.channelUpdated,
         server_id: channel.server_id,
@@ -325,6 +331,8 @@ const channelAPI: IResolvers = {
         { is_deleted: true },
         { new: true }
       );
+
+      if (!channel) throw new Error("Channel not found");
 
       publishEvent(ServerEvents.serverUpdated, {
         type: ServerEvents.channelDeleted,
@@ -347,6 +355,8 @@ const channelAPI: IResolvers = {
           "_id.channel_id": channel_id,
         });
 
+        if (!channel) throw new Error("Channel not found");
+
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.channelDeleted,
           server_id: channel.server_id,
@@ -356,7 +366,7 @@ const channelAPI: IResolvers = {
         });
 
         return true;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError("Channel not found");
       }
     },

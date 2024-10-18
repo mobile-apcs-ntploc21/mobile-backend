@@ -1,18 +1,19 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../utils/graphql';
-import {serverQueries, serverRoleQueries} from '../graphql/queries';
+import { NextFunction, Request, Response } from "express";
+import graphQLClient from "../utils/graphql";
+import { serverQueries, serverRoleQueries } from "../graphql/queries";
+import { log } from "@/utils/log";
 
 export const checkServerAdminMiddleware = async (
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { uid, server_id } = res.locals;
 
-  if (!server_id)
-    return res
-      .status(400)
-      .json({ status: 'fail', message: 'Server ID is required.' });
+  if (!server_id) {
+    res.status(400).json({ status: "fail", message: "Server ID is required." });
+    return;
+  }
 
   try {
     const {
@@ -21,7 +22,7 @@ export const checkServerAdminMiddleware = async (
       server_id: server_id,
     });
 
-    console.log(owner, uid);
+    log.debug(owner, uid);
 
     if (owner !== uid) {
       const { getRolesAssignedWithUser: roles } = await graphQLClient().request(
@@ -35,11 +36,13 @@ export const checkServerAdminMiddleware = async (
       // check if there is any role with admin permission
       const isAdmin = roles.some((role: any) => role.is_admin);
 
-      if (!isAdmin)
-        return res.status(403).json({
-          status: 'fail',
-          message: 'You are not authorized to make this request',
+      if (!isAdmin) {
+        res.status(403).json({
+          status: "fail",
+          message: "You are not authorized to make this request",
         });
+        return;
+      }
     }
 
     next();

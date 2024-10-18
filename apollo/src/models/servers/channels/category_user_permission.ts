@@ -1,5 +1,5 @@
-import { model, Schema } from 'mongoose';
-import ModelNames from './../../modelNames';
+import { model, Schema } from "mongoose";
+import ModelNames from "./../../modelNames";
 
 interface ICategoryUserPermission {
   _id: { user_id: Schema.Types.ObjectId; category_id: Schema.Types.ObjectId };
@@ -13,17 +13,17 @@ const schema = new Schema<ICategoryUserPermission>(
       user_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.User,
-        required: [true, 'User ID is required!'],
+        required: [true, "User ID is required!"],
       },
       category_id: {
         type: Schema.Types.ObjectId,
         ref: ModelNames.Category,
-        required: [true, 'Category ID is required!'],
+        required: [true, "Category ID is required!"],
       },
     },
     permissions: {
       type: String,
-      default: '',
+      default: "",
     },
     last_modified: {
       type: Date,

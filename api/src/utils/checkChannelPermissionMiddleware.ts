@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { getUserChannelPermissionsFunc } from "../utils/getUserChannelPermissions";
 
 export const checkChannelPermissionMiddleware = (
@@ -8,7 +8,8 @@ export const checkChannelPermissionMiddleware = (
     const { uid: user_id, server_id, channel_id } = res.locals;
 
     if (!user_id || !server_id) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
 
     let currentUserPermissions = null;
@@ -24,11 +25,13 @@ export const checkChannelPermissionMiddleware = (
     }
 
     const hasPermission = requiredPermissions.every((permission) => {
+      // @ts-ignore
       return currentUserPermissions[permission] === "ALLOWED";
     });
 
     if (!hasPermission) {
-      return res.status(403).json({ message: "Forbidden" });
+      res.status(403).json({ message: "Forbidden" });
+      return;
     }
 
     res.locals.userChannelId = channel_id;

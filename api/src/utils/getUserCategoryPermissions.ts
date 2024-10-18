@@ -103,6 +103,7 @@ export const getUserCategoryPermissionsFunc = async (
   };
   for (const key in userFinalPermissions) {
     if (userFinalPermissions[key] !== "DEFAULT") {
+      // @ts-ignore
       combinedPermissions[key] = userFinalPermissions[key];
     }
   }
@@ -111,6 +112,7 @@ export const getUserCategoryPermissionsFunc = async (
   const finalFilteredPermissions = {};
   for (const key in CategoryPermissions) {
     if (combinedPermissions.hasOwnProperty(key)) {
+      // @ts-ignore
       finalFilteredPermissions[key] =
         isServerOwner || isAdmin ? "ALLOWED" : combinedPermissions[key];
     }

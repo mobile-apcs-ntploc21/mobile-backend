@@ -44,14 +44,17 @@ export const getCategories = async (
   const server_id = res.locals.server_id;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   try {
     const categories = await _getCategories(server_id).catch(() => null);
-    return res.status(200).json({ categories });
+    res.status(200).json({ categories });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -64,11 +67,13 @@ export const createCategory = async (
   const { name } = req.body;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   if (!name) {
-    return res.status(400).json({ message: "Name is required." });
+    res.status(400).json({ message: "Name is required." });
+    return;
   }
 
   try {
@@ -80,9 +85,11 @@ export const createCategory = async (
       }
     );
 
-    return res.status(200).json({ category: response.createCategory });
+    res.status(200).json({ category: response.createCategory });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -95,7 +102,8 @@ export const updateCategory = async (
   const { name } = req.body;
 
   if (!categoryId) {
-    return res.status(400).json({ message: "Category ID is required." });
+    res.status(400).json({ message: "Category ID is required." });
+    return;
   }
 
   try {
@@ -107,9 +115,11 @@ export const updateCategory = async (
       }
     );
 
-    return res.status(200).json({ category: response.updateCategory });
+    res.status(200).json({ category: response.updateCategory });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -121,7 +131,8 @@ export const deleteCategory = async (
   const { categoryId } = req.params;
 
   if (!categoryId) {
-    return res.status(400).json({ message: "Category ID is required." });
+    res.status(400).json({ message: "Category ID is required." });
+    return;
   }
 
   try {
@@ -129,9 +140,11 @@ export const deleteCategory = async (
       category_id: categoryId,
     });
 
-    return res.status(200).json({ message: "Category deleted." });
+    res.status(200).json({ message: "Category deleted." });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -144,11 +157,13 @@ export const moveCategory = async (
   const { new_position } = req.body;
 
   if (!categoryId) {
-    return res.status(400).json({ message: "Category ID is required." });
+    res.status(400).json({ message: "Category ID is required." });
+    return;
   }
 
   if (new_position === undefined) {
-    return res.status(400).json({ message: "New position is required." });
+    res.status(400).json({ message: "New position is required." });
+    return;
   }
 
   try {
@@ -160,9 +175,11 @@ export const moveCategory = async (
       }
     );
 
-    return res.status(200).json({ category: response.moveCategory });
+    res.status(200).json({ category: response.moveCategory });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -175,20 +192,23 @@ export const moveAllCategory = async (
   const { categories } = req.body;
 
   if (!server_id) {
-    return res.status(400).json({ message: "Server ID is required." });
+    res.status(400).json({ message: "Server ID is required." });
+    return;
   }
 
   if (!categories) {
-    return res.status(400).json({
+    res.status(400).json({
       message:
         "Input of array of categories is required. Eg., categories: [category_id, position].",
     });
+    return;
   }
 
   if (!Array.isArray(categories)) {
-    return res
+    res
       .status(400)
       .json({ message: "Input of array of categories must be an array." });
+    return;
   }
 
   try {
@@ -200,8 +220,10 @@ export const moveAllCategory = async (
       }
     );
 
-    return res.status(200).json({ categories: response.moveAllCategory });
+    res.status(200).json({ categories: response.moveAllCategory });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };

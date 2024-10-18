@@ -37,7 +37,6 @@ const ObjectId = new GraphQLScalarType({
 });
 
 const userProfileApollo: IResolvers = {
-  ObjectId,
   Query: {
     syncUserProfile: async () => {
       // Create a default profile for the user if it doesn't exist
@@ -190,7 +189,6 @@ const userProfileApollo: IResolvers = {
 };
 
 const userProfileWs: IResolvers = {
-  ObjectId,
   Subscription: {
     userProfileUpdated: {
       subscribe: async (_, { user_id, server_id }) => {

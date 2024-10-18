@@ -1,6 +1,6 @@
-import { gql } from 'apollo-server-express';
+import { gql } from "apollo-server-express";
 
-import DateTime from '../scalars/DateTime';
+import DateTime from "../scalars/DateTime";
 
 const gqlType = gql`
   scalar DateTime

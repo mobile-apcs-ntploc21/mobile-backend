@@ -1,13 +1,13 @@
-import AssignedUserRoleModel from "../../../models/servers/assigned_user_role";
+import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server-core";
 import { ObjectId } from "mongoose";
 import { publishEvent, ServerEvents } from "../../pubsub/pubsub";
-import ServerModel from "../../../models/servers/server";
-import UserModel from "../../../models/user";
-import ServerRoleModel from "../../../models/servers/server_role";
-import ServerMemberModel from "../../../models/servers/server_member";
-import UserProfileModel from "../../../models/user_profile";
+import ServerModel from "@/models/servers/server";
+import UserModel from "@/models/user";
+import ServerRoleModel from "@/models/servers/server_role";
+import ServerMemberModel from "@/models/servers/server_member";
+import UserProfileModel from "@/models/user_profile";
 
 type AssignedUserRole = {
   role_id: ObjectId;
@@ -66,7 +66,7 @@ const addUserToRoleTransaction = async ({
     await session.commitTransaction();
     await session.endSession();
     return assignedUserRole;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
     throw error;
@@ -85,7 +85,7 @@ const getServerRoleMembers = async (role_id: ObjectId) => {
     "_id.server_role_id": role_id,
   });
 
-  // console.log(serverRoleUsers);
+  // log.debug(serverRoleUsers);
 
   // Use Promise.all to fetch all users
   return await Promise.all(
@@ -101,16 +101,22 @@ const getServerRoleMembers = async (role_id: ObjectId) => {
           user_id: user_id,
           server_id: null,
         });
+
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        return {
+          id: user_id,
+          username: user.username,
+          display_name: user.display_name,
+          avatar_url: user.avatar_url,
+          banner_url: user.banner_url,
+          about_me: user.about_me,
+        };
       }
 
-      return {
-        id: user_id,
-        username: user.username,
-        display_name: user.display_name,
-        avatar_url: user.avatar_url,
-        banner_url: user.banner_url,
-        about_me: user.about_me,
-      };
+      return null;
     })
   );
 };
@@ -133,6 +139,7 @@ const removeUserFromRoleTransaction = async ({
 
     // if the role is the default role, do not allow the user to be removed
     const serverRole = await ServerRoleModel.findById(role_id);
+    if (!serverRole) throw new Error("Server role not found");
     if (serverRole.default) {
       throw new UserInputError("Cannot remove user from default role");
     }
@@ -152,7 +159,7 @@ const removeUserFromRoleTransaction = async ({
     await session.commitTransaction();
     await session.endSession();
     return assignedUserRole;
-  } catch (error) {
+  } catch (error: any) {
     await session.abortTransaction();
     await session.endSession();
     throw error;
@@ -225,7 +232,7 @@ const assignedUserRoleAPI: IResolvers = {
     getUsersAssignedWithRole: async (_, { role_id }) => {
       try {
         return await getServerRoleMembers(role_id);
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -237,7 +244,7 @@ const assignedUserRoleAPI: IResolvers = {
             "_id.user_id": user_id,
           })) !== null
         );
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -248,6 +255,7 @@ const assignedUserRoleAPI: IResolvers = {
         await addUserToRoleTransaction({ role_id, user_id });
 
         const serverRole = await ServerRoleModel.findById(role_id);
+        if (!serverRole) throw new Error("Server role not found");
 
         const updatedRoleMembers = await getServerRoleMembers(role_id);
 
@@ -258,7 +266,7 @@ const assignedUserRoleAPI: IResolvers = {
         });
 
         return updatedRoleMembers;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },
@@ -267,6 +275,7 @@ const assignedUserRoleAPI: IResolvers = {
         await removeUserFromRoleTransaction({ role_id, user_id });
         const serverRole = await ServerRoleModel.findById(role_id);
         const updatedRoleMembers = await getServerRoleMembers(role_id);
+        if (!serverRole) throw new Error("Server role not found");
 
         await publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.userRoleDeleted,
@@ -274,7 +283,7 @@ const assignedUserRoleAPI: IResolvers = {
           data: { role_id, user_id },
         });
         return updatedRoleMembers;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },

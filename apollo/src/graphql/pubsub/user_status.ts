@@ -1,9 +1,9 @@
-import { PubSub } from 'graphql-subscriptions';
+import { PubSub } from "graphql-subscriptions";
 
 const pubsub = new PubSub();
 
 export enum UserStatusEvents {
-  statusChanged = 'STATUS_CHANGED',
+  statusChanged = "STATUS_CHANGED",
 }
 
 export const getAsyncIterator = (events: UserStatusEvents[]) =>

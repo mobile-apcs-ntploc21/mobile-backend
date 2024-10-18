@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import graphQLClient from '../../utils/graphql';
-import { serverRoleQueries, serverQueries } from '../../graphql/queries';
-import {serverMemberMutations, serverRoleMutations} from '../../graphql/mutations';
+import { NextFunction, Request, Response } from "express";
+import graphQLClient from "../../utils/graphql";
+import { serverQueries, serverRoleQueries } from "../../graphql/queries";
+import { serverRoleMutations } from "../../graphql/mutations";
+import { log } from "@/utils/log";
 
 export const getServerRoles = async (
   req: Request,
@@ -19,16 +20,19 @@ export const getServerRoles = async (
     );
 
     if (!roles) {
-      return res.status(404).json({message: "Server not found"});
+      res.status(404).json({ message: "Server not found" });
+      return;
     }
 
-    if (roles.length === 0)
-      return res.json({
+    if (roles.length === 0) {
+      res.json({
         server_id: serverId,
-        roles: []
+        roles: [],
       });
+      return;
+    }
 
-    return res.json({
+    res.json({
       server_id: serverId,
       roles: roles.map((role: any) => {
         return {
@@ -42,10 +46,11 @@ export const getServerRoles = async (
           last_modified: role.last_modified,
           number_of_users: role.number_of_users,
         };
-      })
+      }),
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -65,7 +70,7 @@ export const getServerRole = async (
       }
     );
 
-    return res.json({
+    res.json({
       id: role.id,
       server_id: role.server_id,
       name: role.name,
@@ -78,7 +83,8 @@ export const getServerRole = async (
       number_of_users: role.number_of_users,
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -97,7 +103,7 @@ export const getDefaultServerRole = async (
       }
     );
 
-    return res.json({
+    res.json({
       id: defaultRole.id,
       server_id: defaultRole.server_id,
       name: defaultRole.name,
@@ -110,9 +116,10 @@ export const getDefaultServerRole = async (
       number_of_users: defaultRole.number_of_users,
     });
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const createServerRole = async (
   req: Request,
@@ -123,9 +130,8 @@ export const createServerRole = async (
   const { name, color, allow_anyone_mention, is_admin } = req.body;
 
   if (!name) {
-    return res
-      .status(400)
-      .json({ message: "Name for the server role is required." });
+    res.status(400).json({ message: "Name for the server role is required." });
+    return;
   }
 
   try {
@@ -137,12 +143,12 @@ export const createServerRole = async (
           name,
           color,
           allow_anyone_mention,
-          is_admin
+          is_admin,
         },
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       id: response.createServerRole.id,
       server_id: response.createServerRole.server_id,
       name: response.createServerRole.name,
@@ -154,10 +160,12 @@ export const createServerRole = async (
       last_modified: response.createServerRole.last_modified,
       number_of_users: response.createServerRole.number_of_users,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const deleteServerRole = async (
   req: Request,
@@ -174,7 +182,7 @@ export const deleteServerRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       id: response.deleteServerRole.id,
       server_id: response.deleteServerRole.server_id,
       name: response.deleteServerRole.name,
@@ -186,10 +194,12 @@ export const deleteServerRole = async (
       last_modified: response.deleteServerRole.last_modified,
       number_of_users: response.deleteServerRole.number_of_users,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateServerRole = async (
   req: Request,
@@ -209,17 +219,26 @@ export const updateServerRole = async (
     );
     // Check if the role exists
     if (!currentRole) {
-      return res.status(404).json({ message: "Server role not found" });
+      res.status(404).json({ message: "Server role not found" });
+      return;
     }
 
     // filter currentRole and keeps only these fields: name, color, allow_anyone_mention, permissions, is_admin
-    const { name: currentName, color: currentColor, allow_anyone_mention: currentAllowAnyoneMention, is_admin: currentIsAdmin } = currentRole;
+    const {
+      name: currentName,
+      color: currentColor,
+      allow_anyone_mention: currentAllowAnyoneMention,
+      is_admin: currentIsAdmin,
+    } = currentRole;
 
     // Create an updated role object
     const updatedRole = {
       name: name !== undefined ? name : currentName,
       color: color !== undefined ? color : currentColor,
-      allow_anyone_mention: allow_anyone_mention !== undefined ? allow_anyone_mention : currentAllowAnyoneMention,
+      allow_anyone_mention:
+        allow_anyone_mention !== undefined
+          ? allow_anyone_mention
+          : currentAllowAnyoneMention,
       is_admin: is_admin !== undefined ? is_admin : currentIsAdmin,
     };
 
@@ -232,7 +251,7 @@ export const updateServerRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       id: response.updateServerRole.id,
       server_id: response.updateServerRole.server_id,
       name: response.updateServerRole.name,
@@ -244,8 +263,10 @@ export const updateServerRole = async (
       last_modified: response.updateServerRole.last_modified,
       number_of_users: response.updateServerRole.number_of_users,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -267,16 +288,24 @@ export const updateDefaultServerRole = async (
     );
     // Check if the role exists
     if (!currentRole) {
-      return res.status(404).json({ message: "Default server role not found" });
+      res.status(404).json({ message: "Default server role not found" });
+      return;
     }
 
     // filter currentRole and keeps only these fields: name, color, allow_anyone_mention, permissions, is_admin
-    const { color: currentColor, allow_anyone_mention: currentAllowAnyoneMention, is_admin: currentIsAdmin } = currentRole;
+    const {
+      color: currentColor,
+      allow_anyone_mention: currentAllowAnyoneMention,
+      is_admin: currentIsAdmin,
+    } = currentRole;
 
     // Create an updated role object
     const updatedRole = {
       color: color !== undefined ? color : currentColor,
-      allow_anyone_mention: allow_anyone_mention !== undefined ? allow_anyone_mention : currentAllowAnyoneMention,
+      allow_anyone_mention:
+        allow_anyone_mention !== undefined
+          ? allow_anyone_mention
+          : currentAllowAnyoneMention,
       is_admin: is_admin !== undefined ? is_admin : currentIsAdmin,
     };
 
@@ -289,7 +318,7 @@ export const updateDefaultServerRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       id: response.updateDefaultServerRole.id,
       server_id: response.updateDefaultServerRole.server_id,
       name: response.updateDefaultServerRole.name,
@@ -297,14 +326,17 @@ export const updateDefaultServerRole = async (
       position: response.updateDefaultServerRole.position,
       is_admin: response.updateDefaultServerRole.is_admin,
       default: response.updateDefaultServerRole.default,
-      allow_anyone_mention: response.updateDefaultServerRole.allow_anyone_mention,
+      allow_anyone_mention:
+        response.updateDefaultServerRole.allow_anyone_mention,
       last_modified: response.updateDefaultServerRole.last_modified,
       number_of_users: response.updateDefaultServerRole.number_of_users,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getServerRolePermissions = async (
   req: Request,
@@ -326,17 +358,19 @@ export const getServerRolePermissions = async (
     try {
       parsedRolePermissions = JSON.parse(role.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Server role permissions is not in JSON format !" });
+      return;
     }
 
-
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 };
 
@@ -359,18 +393,21 @@ export const getDefaultServerRolePermissions = async (
     try {
       parsedRolePermissions = JSON.parse(defaultRole.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Server role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(200).json({
-      ...parsedRolePermissions
+    res.status(200).json({
+      ...parsedRolePermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateServerRolePermissions = async (
   req: Request,
@@ -390,20 +427,26 @@ export const updateServerRolePermissions = async (
     );
 
     if (!current_role) {
-      return res.status(404).json({message: "Server role not found"});
+      res.status(404).json({ message: "Server role not found" });
+      return;
     }
 
     current_role_permissions = JSON.parse(current_role.permissions);
-  } catch (error) {
+  } catch (error: any) {
     if (error.response && error.response.errors) {
       const castError = error.response.errors.find(
-        (err: any) => err.extensions && err.extensions.exception && err.extensions.exception.kind === "ObjectId"
+        (err: any) =>
+          err.extensions &&
+          err.extensions.exception &&
+          err.extensions.exception.kind === "ObjectId"
       );
       if (castError) {
-        return res.status(404).json({ message: "Server role not found" });
+        res.status(404).json({ message: "Server role not found" });
+        return;
       }
     }
-    return next(error);
+    next(error);
+    return;
   }
 
   // Validate updatedFields keys and values
@@ -411,10 +454,16 @@ export const updateServerRolePermissions = async (
     if (updatedFields.hasOwnProperty(key)) {
       const value = updatedFields[key];
       if (!current_role_permissions.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        res
+          .status(400)
+          .json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        return;
       }
       if (value !== "ALLOWED" && value !== "DENIED") {
-        return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".` });
+        res.status(400).json({
+          message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".`,
+        });
+        return;
       }
     }
   }
@@ -422,7 +471,10 @@ export const updateServerRolePermissions = async (
   // Ensure all keys in req.body are equal to permissions
   for (const key in current_role_permissions) {
     if (!updatedFields.hasOwnProperty(key)) {
-      return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+      res.status(400).json({
+        message: `Missing permission: ${key}. All permissions must be provided.`,
+      });
+      return;
     }
   }
 
@@ -447,16 +499,19 @@ export const updateServerRolePermissions = async (
     try {
       parsedRolePermissions = JSON.parse(response.updateServerRole.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Server role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(201).json({ ...parsedRolePermissions });
+    res.status(201).json({ ...parsedRolePermissions });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updatePartialServerRolePermissions = async (
   req: Request,
@@ -477,9 +532,10 @@ export const updatePartialServerRolePermissions = async (
   try {
     current_role_permissions = JSON.parse(current_role.permissions);
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: "Current server role permissions is not in JSON format !" });
+    res.status(400).json({
+      message: "Current server role permissions is not in JSON format !",
+    });
+    return;
   }
 
   // Validate updatedFields keys and values
@@ -487,10 +543,16 @@ export const updatePartialServerRolePermissions = async (
     if (updatedFields.hasOwnProperty(key)) {
       const value = updatedFields[key];
       if (!current_role_permissions.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        res
+          .status(400)
+          .json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        return;
       }
       if (value !== "ALLOWED" && value !== "DENIED") {
-        return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".` });
+        res.status(400).json({
+          message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".`,
+        });
+        return;
       }
     }
   }
@@ -516,16 +578,19 @@ export const updatePartialServerRolePermissions = async (
     try {
       parsedRolePermissions = JSON.parse(response.updateServerRole.permissions);
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Server role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(201).json({ ...parsedRolePermissions });
+    res.status(201).json({ ...parsedRolePermissions });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updateDefaultServerRolePermissions = async (
   req: Request,
@@ -546,9 +611,10 @@ export const updateDefaultServerRolePermissions = async (
   try {
     current_role_permissions = JSON.parse(defaultRole.permissions);
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: "Current server role permissions is not in JSON format !" });
+    res.status(400).json({
+      message: "Current server role permissions is not in JSON format !",
+    });
+    return;
   }
 
   // Validate updatedFields keys and values
@@ -556,10 +622,16 @@ export const updateDefaultServerRolePermissions = async (
     if (updatedFields.hasOwnProperty(key)) {
       const value = updatedFields[key];
       if (!current_role_permissions.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        res
+          .status(400)
+          .json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        return;
       }
       if (value !== "ALLOWED" && value !== "DENIED") {
-        return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".` });
+        res.status(400).json({
+          message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".`,
+        });
+        return;
       }
     }
   }
@@ -567,7 +639,10 @@ export const updateDefaultServerRolePermissions = async (
   // Ensure all keys in req.body are equal to permissions
   for (const key in current_role_permissions) {
     if (!updatedFields.hasOwnProperty(key)) {
-      return res.status(400).json({ message: `Missing permission: ${key}. All permissions must be provided.` });
+      res.status(400).json({
+        message: `Missing permission: ${key}. All permissions must be provided.`,
+      });
+      return;
     }
   }
 
@@ -590,18 +665,23 @@ export const updateDefaultServerRolePermissions = async (
 
     let parsedRolePermissions = null;
     try {
-      parsedRolePermissions = JSON.parse(response.updateDefaultServerRole.permissions);
+      parsedRolePermissions = JSON.parse(
+        response.updateDefaultServerRole.permissions
+      );
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Server role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(201).json({ ...parsedRolePermissions });
+    res.status(201).json({ ...parsedRolePermissions });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const updatePartialDefaultServerRolePermissions = async (
   req: Request,
@@ -622,9 +702,10 @@ export const updatePartialDefaultServerRolePermissions = async (
   try {
     current_role_permissions = JSON.parse(defaultRole.permissions);
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: "Current server role permissions is not in JSON format !" });
+    res.status(400).json({
+      message: "Current server role permissions is not in JSON format !",
+    });
+    return;
   }
 
   // Validate updatedFields keys and values
@@ -632,10 +713,16 @@ export const updatePartialDefaultServerRolePermissions = async (
     if (updatedFields.hasOwnProperty(key)) {
       const value = updatedFields[key];
       if (!current_role_permissions.hasOwnProperty(key)) {
-        return res.status(400).json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        res
+          .status(400)
+          .json({ message: `Invalid permission: ${key}. Permission invalid.` });
+        return;
       }
       if (value !== "ALLOWED" && value !== "DENIED") {
-        return res.status(400).json({ message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".` });
+        res.status(400).json({
+          message: `Invalid value for ${key}: ${value}. Must be "ALLOWED" or "DENIED".`,
+        });
+        return;
       }
     }
   }
@@ -659,18 +746,23 @@ export const updatePartialDefaultServerRolePermissions = async (
 
     let parsedRolePermissions = null;
     try {
-      parsedRolePermissions = JSON.parse(response.updateDefaultServerRole.permissions);
+      parsedRolePermissions = JSON.parse(
+        response.updateDefaultServerRole.permissions
+      );
     } catch (error) {
-      return res
+      res
         .status(400)
         .json({ message: "Server role permissions is not in JSON format !" });
+      return;
     }
 
-    return res.status(201).json({ ...parsedRolePermissions });
+    res.status(201).json({ ...parsedRolePermissions });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getServerRoleMembers = async (
   req: Request,
@@ -688,17 +780,19 @@ export const getServerRoleMembers = async (
       }
     );
 
-    console.log(members);
+    log.debug(members);
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       role_id: roleId,
-      members: members ? members : []
+      members: members ? members : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const addMemberToRole = async (
   req: Request,
@@ -717,15 +811,17 @@ export const addMemberToRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       role_id: roleId,
-      members: members ? members : []
+      members: members ? members : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const removeMemberFromRole = async (
   req: Request,
@@ -744,15 +840,17 @@ export const removeMemberFromRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       role_id: roleId,
-      members: members ? members : []
+      members: members ? members : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const addMyselfToRole = async (
   req: Request,
@@ -772,15 +870,17 @@ export const addMyselfToRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       role_id: roleId,
-      members: members ? members : []
+      members: members ? members : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const removeMyselfFromRole = async (
   req: Request,
@@ -800,15 +900,17 @@ export const removeMyselfFromRole = async (
       }
     );
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       role_id: roleId,
-      members: members ? members : []
+      members: members ? members : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getRolesAssignedWithUser = async (
   req: Request,
@@ -839,15 +941,17 @@ export const getRolesAssignedWithUser = async (
       number_of_users: role.number_of_users,
     }));
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       user_id: userId,
-      roles: filteredRoles ? filteredRoles : []
+      roles: filteredRoles ? filteredRoles : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getRolesAssignedWithMyself = async (
   req: Request,
@@ -878,15 +982,17 @@ export const getRolesAssignedWithMyself = async (
       number_of_users: role.number_of_users,
     }));
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       user_id: userId,
-      roles: filteredRoles ? filteredRoles : []
+      roles: filteredRoles ? filteredRoles : [],
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
 
 export const getCurrentUserPermissions = async (
   req: Request,
@@ -911,40 +1017,43 @@ export const getCurrentUserPermissions = async (
       }
     );
 
-    const isAdmin = (owner === userId) || (roles.some((role: any) => role.is_admin));
+    const isAdmin =
+      owner === userId || roles.some((role: any) => role.is_admin);
 
     const finalPermissions = roles.reduce((acc: any, role: any) => {
       let role_permissions;
       try {
         role_permissions = JSON.parse(role.permissions);
       } catch (error) {
-        console.error('Invalid JSON in role.permissions:', role.permissions);
+        log.error("Invalid JSON in role.permissions:", role.permissions);
         return acc;
       }
 
-      if (typeof role_permissions !== 'object' || role_permissions === null) {
-        console.error('role.permissions is not an object:', role_permissions);
+      if (typeof role_permissions !== "object" || role_permissions === null) {
+        log.error("role.permissions is not an object:", role_permissions);
         return acc;
       }
 
       for (const permission in role_permissions) {
-        if (role_permissions[permission] === 'ALLOWED') {
-          acc[permission] = 'ALLOWED';
-        } else if (acc[permission] !== 'ALLOWED') {
-          acc[permission] = 'DENIED';
+        if (role_permissions[permission] === "ALLOWED") {
+          acc[permission] = "ALLOWED";
+        } else if (acc[permission] !== "ALLOWED") {
+          acc[permission] = "DENIED";
         }
       }
 
       return acc;
     }, {});
 
-    return res.status(201).json({
+    res.status(201).json({
       server_id: serverId,
       user_id: userId,
       is_admin: isAdmin,
-      permissions: finalPermissions
+      permissions: finalPermissions,
     });
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
-}
+};
