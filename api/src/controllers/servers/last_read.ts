@@ -15,11 +15,11 @@ export const readMessages = async (
 
   const channel = res.locals.channelObject;
   if (!channel.conversation_id) {
-     res.status(404).json({
+    res.status(404).json({
       message:
         "Channel does not have a conversation. Please delete and create a new channel.",
     });
-     return;
+    return;
   }
 
   try {
@@ -37,19 +37,19 @@ export const readMessages = async (
     );
 
     if (!response) {
-       res.status(404).json({
+      res.status(404).json({
         message: "Error reading messages.",
       });
-       return;
+      return;
     }
 
-     res.status(204).send();
-     return;
+    res.status(204).send();
+    return;
   } catch (error: any) {
     console.error("Error reading messages: ", error.message);
-     res.status(500).json({
+    res.status(500).json({
       message: "Error reading messages.",
     });
-     return;
+    return;
   }
 };

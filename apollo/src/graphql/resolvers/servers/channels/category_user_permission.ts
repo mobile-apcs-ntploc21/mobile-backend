@@ -11,7 +11,7 @@ import { defaultCategoryRole } from "./category_role_permission";
 const createCategoryUserPermission = async (
   user_id: ObjectId,
   category_id: ObjectId,
-  permissions: String
+  permissions: string
 ) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -80,7 +80,6 @@ const categoryUserPermissionAPI: IResolvers = {
         const categoryUsers = await CategoryUserPermission.find({
           "_id.category_id": category_id,
         });
-
 
         // Use Promise.all to fetch all users
         return await Promise.all(
