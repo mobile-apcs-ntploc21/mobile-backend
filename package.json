@@ -21,6 +21,8 @@
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",
     "morgan": "^1.10.0",
+    "pino": "^9.5.0",
+    "pino-pretty": "^11.3.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
