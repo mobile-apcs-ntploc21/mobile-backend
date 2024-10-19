@@ -75,7 +75,34 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ## Installation (Backend System)
 
-To be updated
+Ensure you have NodeJS installed on your machine. If not, you can download it from [NodeJS](https://nodejs.org/en/).
+
+1. Install PNPM globally:
+```bash
+npm install -g pnpm
+```
+
+2. Clone the repository:
+```bash
+git clone https://github.com/mobile-apcs-ntploc21/mobile-backend.git
+```
+
+3. Install the dependencies:
+```bash
+pnpm install
+```
+
+4. Go to folders `api` and `apollo` you need to make a file called `config.env` from the provided template `config.env.template` and fill in the necessary information.
+
+5. Start the server:
+```bash
+pnpm start
+```
+
+If you want to run the server in development mode, you can use the following command:
+```bash
+pnpm dev
+```
 
 ## Contributor
 

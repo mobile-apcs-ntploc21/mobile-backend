@@ -3,6 +3,12 @@ on:
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'LICENSE'
+      - 'docs/**'
 jobs:
   lint-prettier:
     runs-on: ubuntu-latest
