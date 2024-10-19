@@ -1,11 +1,4 @@
 import graphQLClient from "./graphql";
-import {
-  serverCategoryPermissionQueries,
-  serverChannelPermissionQueries,
-  serverChannelQueries,
-  serverQueries,
-  serverRoleQueries,
-} from "../graphql/queries";
 import { ChannelPermissions } from "../constants/permissions";
 
 // ======================
@@ -100,14 +93,14 @@ export const getUserChannelPermissionsFunc = async (
     // Get server details and check if the user is the server owner
     const { server } = response;
     if (server.owner === userId) isServerOwner = true;
-  } catch (error) {
+  } catch (error: any) {
     throw new Error("Error fetching server details: " + error.message);
   }
 
   // Fetch roles assigned to the user
   const { getRolesAssignedWithUser: roles } = response;
 
-  const roleIds = roles.map((role) => role.id);
+  const roleIds = roles.map((role: any) => role.id);
   // Fetch all category and channel permissions in parallel (with user-specific permission)
   let categoryPermissions = response?.getCategoryRolesPermissions;
   let channelPermissions = response?.getChannelRolesPermissions;
@@ -116,9 +109,11 @@ export const getUserChannelPermissionsFunc = async (
 
   // Filter category and channel permissions with our roleIds
   categoryPermissions =
-    categoryPermissions?.filter((perm) => roleIds.includes(perm.id)) ?? null;
+    categoryPermissions?.filter((perm: any) => roleIds.includes(perm.id)) ??
+    null;
   channelPermissions =
-    channelPermissions?.filter((perm) => roleIds.includes(perm.id)) ?? null;
+    channelPermissions?.filter((perm: any) => roleIds.includes(perm.id)) ??
+    null;
 
   // Combine permissions from roles
   for (const role of roles) {
@@ -129,7 +124,7 @@ export const getUserChannelPermissionsFunc = async (
 
     // Apply category permissions if available
     const categoryPerm = categoryPermissions?.find(
-      (perm) => perm.role_id === role.id
+      (perm: any) => perm.role_id === role.id
     );
     const parsedCategoryPerms = categoryPerm
       ? JSON.parse(categoryPerm.permissions)
@@ -137,7 +132,7 @@ export const getUserChannelPermissionsFunc = async (
 
     // Apply channel permissions if available
     const channelPerm = channelPermissions?.find(
-      (perm) => perm.role_id === role.id
+      (perm: any) => perm.role_id === role.id
     );
     const parsedChannelPerms = channelPerm
       ? JSON.parse(channelPerm.permissions)
@@ -155,6 +150,7 @@ export const getUserChannelPermissionsFunc = async (
       if (finalPermissions[key] === "ALLOWED") {
         // @ts-ignore
         combinedPermissions[key] = "ALLOWED";
+        // @ts-ignore
       } else if (!combinedPermissions[key]) {
         // @ts-ignore
         combinedPermissions[key] = "DENIED";
@@ -187,6 +183,7 @@ export const getUserChannelPermissionsFunc = async (
     if (combinedPermissions.hasOwnProperty(key)) {
       // @ts-ignore
       finalFilteredPermissions[key] =
+        // @ts-ignore
         isServerOwner || isAdmin ? "ALLOWED" : combinedPermissions[key];
     }
   }

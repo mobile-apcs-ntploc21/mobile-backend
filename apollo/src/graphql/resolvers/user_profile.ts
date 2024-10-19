@@ -1,8 +1,6 @@
 import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
 import { PubSub } from "graphql-subscriptions";
-import { GraphQLScalarType, Kind } from "graphql";
-import mongoose from "mongoose";
 
 import UserModel from "../../models/user";
 import UserProfileModel from "../../models/user_profile";
@@ -18,23 +16,6 @@ export const defaultProfile = {
   avatar_url: "",
   banner_url: "",
 };
-
-const ObjectId = new GraphQLScalarType({
-  name: "ObjectId",
-  description: "Mongo object id scalar type",
-  parseValue(value: string) {
-    return new mongoose.Types.ObjectId(value);
-  },
-  serialize(value: mongoose.Types.ObjectId) {
-    return value.toHexString();
-  },
-  parseLiteral(ast) {
-    if (ast.kind === Kind.STRING) {
-      return new mongoose.Types.ObjectId(ast.value);
-    }
-    return null;
-  },
-});
 
 const userProfileApollo: IResolvers = {
   Query: {

@@ -1,13 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
-import { serverQueries, serverRoleQueries } from "../graphql/queries";
-import { log } from "@/utils/log";
 import { createQuery } from "./getUserChannelPermissions";
+import { log } from "@/utils/log";
+
+// ======================
 
 export const checkServerPermissionMiddleware = (
   requiredPermissions: string[]
 ) => {
-  return async (_req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const { uid, server_id } = res.locals;
 
     if (!server_id) {
@@ -16,6 +17,14 @@ export const checkServerPermissionMiddleware = (
         .json({ status: "fail", message: "Server ID is required." });
       return;
     }
+
+    const checkPermissionsQuery = createQuery();
+    const response = await graphQLClient().request(checkPermissionsQuery, {
+      server_id: server_id,
+      category_id: null,
+      channel_id: null,
+      user_id: uid,
+    });
 
     try {
       const {

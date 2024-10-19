@@ -416,6 +416,9 @@ const serverWs: IResolvers = {
             // Variables data (i.e., the data that the client sends)
             const v_server_id = String(variables?.server_id) || null;
             const v_user_id = String(variables?.user_id) || null;
+            if (!v_server_id) throw new Error("Server ID is required");
+            if (!v_user_id) throw new Error("User ID is required");
+            if (!user_id) throw new Error("User ID is required");
 
             // Check if the client user_id is in the list of server user_ids
             if (forceUser) {
@@ -451,6 +454,9 @@ const serverWs: IResolvers = {
             // Variables data (i.e., the data that the client sends)
             const v_server_id = variables.server_ids || []; // server_ids is an array
             const v_user_id = String(variables?.user_id) || null;
+            if (!v_server_id) throw new Error("Server ID is required");
+            if (!v_user_id) throw new Error("User ID is required");
+            if (!user_id) throw new Error("User ID is required");
 
             // Check if the client user_id is in the list of server user_ids
             if (forceUser) {

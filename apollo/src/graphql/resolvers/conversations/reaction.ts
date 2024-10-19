@@ -199,10 +199,12 @@ const unreactMessage = async (
 
   // Publish reaction event (unreact)
   publishEvent(ServerEvents.messageReactionRemoved, {
+    // @ts-ignore
     server_id: channel.server_id,
     type: ServerEvents.messageReactionRemoved,
     data: {
       message_id: message_id,
+      // @ts-ignore
       conversation_id: channel.conversation_id,
       reactions: reactions,
     },

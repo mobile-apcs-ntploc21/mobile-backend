@@ -23,7 +23,10 @@ interface ILastRead {
  * @param {*} conversation_id - ID of the conversation
  * @returns {Promise<ILastRead>} - Last read of the user in the conversation
  */
-const getLastRead = async (user_id, conversation_id): Promise<ILastRead> => {
+const getLastRead = async (
+  user_id: any,
+  conversation_id: any
+): Promise<ILastRead> => {
   const lastRead = await LastReadModel.findOne({
     user_id,
     conversation_id,
@@ -33,9 +36,13 @@ const getLastRead = async (user_id, conversation_id): Promise<ILastRead> => {
     throw new UserInputError("Last read not found");
   }
 
+  // @ts-ignore
   return {
+    // @ts-ignore
     user_id: lastRead._id.user_id,
+    // @ts-ignore
     conversation_id: lastRead._id.conversation_id,
+    // @ts-ignore
     last_message_read_id: lastRead.last_message_read_id,
   };
 };
@@ -47,7 +54,7 @@ const getLastRead = async (user_id, conversation_id): Promise<ILastRead> => {
  * @param {*} input - Input for creating a last read
  * @returns {Promise<ILastRead>}
  */
-const createLastRead = async (input): Promise<ILastRead> => {
+const createLastRead = async (input: any): Promise<ILastRead> => {
   // Begin a transaction
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -82,7 +89,7 @@ const createLastRead = async (input): Promise<ILastRead> => {
   }
 };
 
-const updateLastRead = async (input) => {
+const updateLastRead = async (input: any) => {
   // Begin a transaction
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -96,6 +103,7 @@ const updateLastRead = async (input) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    // @ts-ignore
     message_id = String(lastestMessage._id);
   }
 
@@ -136,8 +144,11 @@ const updateLastRead = async (input) => {
     session.endSession();
 
     return {
+      // @ts-ignore
       user_id: lastReadUpdated._id.user_id,
+      // @ts-ignore
       conversation_id: lastReadUpdated._id.conversation_id,
+      // @ts-ignore
       last_message_read_id: lastReadUpdated.last_message_read_id,
     };
   } catch (error: any) {

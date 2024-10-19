@@ -141,6 +141,7 @@ const getChannels = async (user_id: null, server_id: any) => {
 
     // Create a map of conversation_id to date of last read
     lastReadMessageMap = await lastReads.reduce((acc, lr) => {
+      // @ts-ignore
       acc[lr._id.conversation_id.toString()] = lr.updatedAt;
       return acc;
     }, {});
@@ -167,6 +168,7 @@ const getChannels = async (user_id: null, server_id: any) => {
       const conversationId = (channel.conversation_id || "").toString();
       const lastMessage = lastMessages[conversationId] || null;
       const extraField = extraFieldsMap[String(lastMessage?._id)] || null;
+      // @ts-ignore
       const lastReadMessage = lastReadMessageMap[conversationId] || 0;
 
       // console.log(String(lastMessage?._id), extraField);
@@ -252,6 +254,7 @@ const syncChannelTransaction = async () => {
     }).session(session);
 
     // Create a conversation for each channel if not exists
+    // @ts-ignore
     const conversationPromises = channels.map(async (channel) => {
       if (!channel.conversation_id) {
         const [conversation] = await ConversationModel.create([{}], {
