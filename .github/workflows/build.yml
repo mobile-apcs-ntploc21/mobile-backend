@@ -25,4 +25,4 @@ jobs:
         run: pnpm lint
 
       - name: Run Prettier
-        run: pnpm prettier --check .
+        run: pnpm prettier
