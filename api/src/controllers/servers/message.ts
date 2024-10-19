@@ -90,21 +90,21 @@ export const getMessages = async (
   const { before, after, around } = req.query;
 
   if (!channelId) {
-     res.status(400).json({ message: "Channel ID is required." });
-     return;
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
   if (limit && isNaN(parseInt(limit as string))) {
-     res.status(400).json({ message: "Limit must be a number." });
-     return;
+    res.status(400).json({ message: "Limit must be a number." });
+    return;
   }
 
   const channel = res.locals.channelObject;
   if (!channel.conversation_id) {
-     res.status(404).json({
+    res.status(404).json({
       message:
         "Channel does not have a conversation. Please delete and create a new channel.",
     });
-     return;
+    return;
   }
 
   try {
@@ -122,15 +122,15 @@ export const getMessages = async (
 
     if (!messages) {
       // Return empty array if no messages found
-       res.status(200).json({ messages: [] });
-       return;
+      res.status(200).json({ messages: [] });
+      return;
     }
 
-     res.status(200).json({ messages });
-     return;
+    res.status(200).json({ messages });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -257,8 +257,8 @@ export const getReactions = async (
       return;
     }
 
-     res.status(200).json({ reactions });
-     return;
+    res.status(200).json({ reactions });
+    return;
   } catch (error: any) {
     next(error);
     return;
@@ -276,27 +276,27 @@ export const createMessage = async (
   const { content, repliedMessageId, forwardedMessageId } = req.body;
 
   if (!channelId) {
-     res.status(400).json({ message: "Channel ID is required." });
-     return;
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
   }
   if (!content) {
-     res.status(400).json({ message: "Content is required." });
-     return;
+    res.status(400).json({ message: "Content is required." });
+    return;
   }
   if (content.length > 2000) {
-     res.status(400).json({
+    res.status(400).json({
       message: "Content must be less than or equal to 2000 characters.",
     });
-     return;
+    return;
   }
 
   const channel = res.locals.channelObject;
   if (!channel.conversation_id) {
-     res.status(404).json({
+    res.status(404).json({
       message:
         "Channel does not have a conversation. Please delete and create a new channel.",
     });
-     return;
+    return;
   }
 
   // Get all user, role, channel, and emoji mentions
@@ -326,11 +326,11 @@ export const createMessage = async (
       requestBody
     );
 
-     res.status(201).json({ message });
-     return;
+    res.status(201).json({ message });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -343,30 +343,30 @@ export const editMessage = async (
   const { content } = req.body;
 
   if (!message_id) {
-     res.status(400).json({ message: "Message ID is required." });
-     return;
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
 
   // Get the message and check if the user is the sender or they have permission to edit
   const message = await _getMessage(message_id).catch(() => null);
   if (!message) {
-     res.status(404).json({ message: "Message not found." });
-     return;
+    res.status(404).json({ message: "Message not found." });
+    return;
   }
   if (message.sender_id !== res.locals.uid) {
     const permissions = res.locals.userChannelPermissions;
 
     if (!permissions || permissions?.MANAGE_MESSAGE !== "ALLOWED") {
-       res.status(403).json({
+      res.status(403).json({
         message: "You do not have permission to edit this message.",
       });
-       return;
+      return;
     }
   }
 
   if (!content) {
-     res.status(400).json({ message: "Content is required." });
-     return;
+    res.status(400).json({ message: "Content is required." });
+    return;
   }
 
   // Get all user, role, channel, and emoji mentions
@@ -393,11 +393,11 @@ export const editMessage = async (
       requestBody
     );
 
-     res.status(200).json({ message });
-     return;
+    res.status(200).json({ message });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -409,25 +409,25 @@ export const deleteMessage = async (
   const { messageId: message_id, serverId, channelId } = req.params;
 
   if (!message_id) {
-     res.status(400).json({ message: "Message ID is required." });
-     return;
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
 
   // Get the message and check if the user is the sender or they have permission to edit
   const message = await _getMessage(message_id).catch(() => null);
   if (!message) {
-     res.status(404).json({ message: "Message not found." });
-     return;
+    res.status(404).json({ message: "Message not found." });
+    return;
   }
   if (message.sender_id !== res.locals.uid) {
     // Get the user role in the channel
     const permissions = res.locals.userChannelPermissions;
 
     if (!permissions || permissions?.MANAGE_MESSAGE !== "ALLOWED") {
-       res.status(403).json({
+      res.status(403).json({
         message: "You do not have permission to delete this message.",
       });
-       return;
+      return;
     }
   }
 
@@ -439,11 +439,11 @@ export const deleteMessage = async (
       }
     );
 
-     res.status(200).json({ deleted });
-     return;
+    res.status(200).json({ deleted });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -455,8 +455,8 @@ export const pinMessage = async (
   const { messageId: message_id } = req.params;
 
   if (!message_id) {
-     res.status(400).json({ message: "Message ID is required." });
-     return;
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
 
   try {
@@ -467,11 +467,11 @@ export const pinMessage = async (
       }
     );
 
-     res.status(200).json({ pinned });
-     return;
+    res.status(200).json({ pinned });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -483,8 +483,8 @@ export const unpinMessage = async (
   const { messageId: message_id } = req.params;
 
   if (!message_id) {
-     res.status(400).json({ message: "Message ID is required." });
-     return;
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
 
   try {
@@ -495,11 +495,11 @@ export const unpinMessage = async (
       }
     );
 
-     res.status(200).json({ unpinned });
-     return;
+    res.status(200).json({ unpinned });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -512,12 +512,12 @@ export const reactMessage = async (
   const { emoji_id } = req.body;
 
   if (!message_id) {
-     res.status(400).json({ message: "Message ID is required." });
-     return;
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
   if (!emoji_id) {
-     res.status(400).json({ message: "Emoji is required." });
-     return;
+    res.status(400).json({ message: "Emoji is required." });
+    return;
   }
 
   try {
@@ -532,11 +532,11 @@ export const reactMessage = async (
       }
     );
 
-     res.status(200).json({ reactions });
-     return;
+    res.status(200).json({ reactions });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };
 
@@ -549,12 +549,12 @@ export const unreactMessage = async (
   const { emoji_id } = req.body;
 
   if (!message_id) {
-     res.status(400).json({ message: "Message ID is required." });
-     return;
+    res.status(400).json({ message: "Message ID is required." });
+    return;
   }
   if (!emoji_id) {
-     res.status(400).json({ message: "Emoji is required." });
-     return;
+    res.status(400).json({ message: "Emoji is required." });
+    return;
   }
 
   try {
@@ -569,10 +569,10 @@ export const unreactMessage = async (
       }
     );
 
-     res.status(200).json({ reactions });
-     return;
+    res.status(200).json({ reactions });
+    return;
   } catch (error: any) {
-     next(error);
-     return;
+    next(error);
+    return;
   }
 };

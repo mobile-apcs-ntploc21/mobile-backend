@@ -870,7 +870,7 @@ const updateMessageTransaction = async (
  */
 const deleteMessageTransaction = async (
   message_id: string
-): Promise<Boolean> => {
+): Promise<boolean> => {
   // Start a session
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -937,7 +937,7 @@ const deleteMessageTransaction = async (
   } catch (e) {
     // Abort the transaction
     await session.abortTransaction();
-    session.endSession;
+    session.endSession();
   }
 
   return true;
