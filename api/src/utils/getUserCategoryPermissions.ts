@@ -1,9 +1,4 @@
 import graphQLClient from "./graphql";
-import {
-  serverCategoryPermissionQueries,
-  serverQueries,
-  serverRoleQueries,
-} from "../graphql/queries";
 import { CategoryPermissions } from "../constants/permissions";
 import { createQuery } from "./getUserChannelPermissions";
 
@@ -33,7 +28,7 @@ export const getUserCategoryPermissionsFunc = async (
   let isServerOwner = false;
   let combinedPermissions = {};
 
-  const checkPermissionsQuery = createQuery(null, categoryId);
+  const checkPermissionsQuery = createQuery(undefined, categoryId);
   const response = await graphQLClient().request(checkPermissionsQuery, {
     server_id: serverId,
     category_id: categoryId,
@@ -45,20 +40,20 @@ export const getUserCategoryPermissionsFunc = async (
     // Get server details and check if the user is the server owner
     const { server } = response;
     if (server.owner === userId) isServerOwner = true;
-  } catch (error) {
+  } catch (error: any) {
     throw new Error("Error fetching server details: " + error.message);
   }
 
   // Fetch roles assigned to the user
   const { getRolesAssignedWithUser: roles } = response;
-  const roleIds = roles.map((role) => role.id);
+  const roleIds = roles.map((role: any) => role.id);
 
   // Fetch all category and channel permissions in parallel (with user-specific permission)
   let { categoryPermissions, userCategoryPermissions } = response;
 
   // Filter category and channel permissions with our roleIds
   categoryPermissions =
-    categoryPermissions?.getCategoryRolesPermissions.filter((perm) =>
+    categoryPermissions?.getCategoryRolesPermissions.filter((perm: any) =>
       roleIds.includes(perm.id)
     ) ?? null;
 
@@ -71,7 +66,7 @@ export const getUserCategoryPermissionsFunc = async (
 
     // Apply category permissions if available
     const categoryPerm = categoryPermissions?.find(
-      (perm) => perm.role_id === role.id
+      (perm: any) => perm.role_id === role.id
     );
     const parsedCategoryPerms = categoryPerm
       ? JSON.parse(categoryPerm.permissions)
@@ -86,9 +81,14 @@ export const getUserCategoryPermissionsFunc = async (
     // Update the combinedPermissions
     for (const key in finalPermissions) {
       if (finalPermissions[key] === "ALLOWED") {
+        // @ts-ignore
         combinedPermissions[key] = "ALLOWED";
-      } else if (!combinedPermissions[key]) {
-        combinedPermissions[key] = "DENIED";
+      } else {
+        // @ts-ignore
+        if (!combinedPermissions[key]) {
+          // @ts-ignore
+          combinedPermissions[key] = "DENIED";
+        }
       }
     }
   }
@@ -114,6 +114,7 @@ export const getUserCategoryPermissionsFunc = async (
     if (combinedPermissions.hasOwnProperty(key)) {
       // @ts-ignore
       finalFilteredPermissions[key] =
+        // @ts-ignore
         isServerOwner || isAdmin ? "ALLOWED" : combinedPermissions[key];
     }
   }

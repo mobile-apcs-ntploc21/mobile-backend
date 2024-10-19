@@ -208,6 +208,7 @@ const assignedUserRoleAPI: IResolvers = {
           const serverRole = server_roles.find(
             (r) => String(r._id) === role_id
           );
+          if (!serverRole) return null;
 
           return {
             id: serverRole._id,
@@ -225,7 +226,7 @@ const assignedUserRoleAPI: IResolvers = {
         });
 
         return result;
-      } catch (error) {
+      } catch (error: any) {
         throw new UserInputError(error.message);
       }
     },

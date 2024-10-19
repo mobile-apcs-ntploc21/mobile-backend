@@ -3,12 +3,10 @@ import { UserInputError } from "apollo-server";
 import mongoose from "mongoose";
 
 import UserProfileModel from "@/models/user_profile";
-import serverModel from "@models/servers/server";
 import channelModel from "@models/servers/channels/channel";
 import messageModel from "@models/conversations/message";
 import conversationModel from "@models/conversations/conversation";
 import mentionModel from "@/models/conversations/mention";
-import attachmentModel from "@models/conversations/attachment";
 import MentionModel from "@/models/conversations/mention";
 import ReactionModel from "@/models/conversations/reaction";
 import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
@@ -185,15 +183,18 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
     const messageId = String(mention.message_id);
     if (mention.mention_user_id) {
       if (!mentionUsersMap.has(messageId)) mentionUsersMap.set(messageId, []);
+      // @ts-ignore
       mentionUsersMap.get(messageId).push(String(mention.mention_user_id));
     }
     if (mention.mention_role_id) {
       if (!mentionRolesMap.has(messageId)) mentionRolesMap.set(messageId, []);
+      // @ts-ignore
       mentionRolesMap.get(messageId).push(String(mention.mention_role_id));
     }
     if (mention.mention_channel_id) {
       if (!mentionChannelsMap.has(messageId))
         mentionChannelsMap.set(messageId, []);
+      // @ts-ignore
       mentionChannelsMap
         .get(messageId)
         .push(String(mention.mention_channel_id));
@@ -210,6 +211,7 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
       reactors: reaction.reactors.map(String),
     };
     if (!reactionsMap.has(messageId)) reactionsMap.set(messageId, []);
+    // @ts-ignore
     reactionsMap.get(messageId).push(reactionData);
   });
 
@@ -231,7 +233,9 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
     senderMap.set(String(sender.user_id), {
       user_id: String(sender.user_id),
       username: sender.username,
+      // @ts-ignore
       display_name: sender.display_name,
+      // @ts-ignore
       avatar_url: sender.avatar_url,
     });
   });
@@ -618,7 +622,9 @@ const createMessageTransaction = async (
     }
 
     // Filter the mentions
+    // @ts-ignore
     const { filteredRoles, filteredChannels } = await filterMentions(
+      // @ts-ignore
       String(channel.server_id),
       mention_roles,
       mention_channels
@@ -628,18 +634,22 @@ const createMessageTransaction = async (
     console.log("filteredChannels", filteredChannels);
 
     // Create the mentions
+    // @ts-ignore
     await mentionModel.create(
       [
+        // @ts-ignore
         ...mention_users.map((user_id) => ({
           conversation_id,
           message_id: message._id,
           mention_user_id: user_id,
         })),
+        // @ts-ignore
         ...filteredRoles.map((role_id) => ({
           conversation_id,
           message_id: message._id,
           mention_role_id: role_id,
         })),
+        // @ts-ignore
         ...filteredChannels.map((channel_id) => ({
           conversation_id,
           message_id: message._id,
@@ -672,6 +682,7 @@ const createMessageTransaction = async (
       const repliedMessage = messageData.replied_message;
       if (repliedMessage) {
         publishEvent(ServerEvents.messageMentionedUser, {
+          // @ts-ignore
           server_id: channel.server_id,
           user_id: repliedMessage.sender_id,
           forceUser: true,
@@ -786,6 +797,7 @@ const updateMessageTransaction = async (
 
     // Filter the mentions
     const { filteredRoles, filteredChannels } = await filterMentions(
+      // @ts-ignore
       String(channel.server_id),
       mention_roles,
       mention_channels
@@ -795,18 +807,22 @@ const updateMessageTransaction = async (
     await mentionModel.deleteMany({ message_id }, { session });
 
     // Create the mentions
+    // @ts-ignore
     await mentionModel.create(
       [
+        // @ts-ignore
         ...mention_users.map((user_id) => ({
           conversation_id: String(message.conversation_id),
           message_id: String(message._id),
           mention_user_id: user_id,
         })),
+        // @ts-ignore
         ...filteredRoles.map((role_id) => ({
           conversation_id: String(message.conversation_id),
           message_id: String(message._id),
           mention_role_id: role_id,
         })),
+        // @ts-ignore
         ...filteredChannels.map((channel_id) => ({
           conversation_id: String(message.conversation_id),
           message_id: String(message._id),
@@ -1004,6 +1020,7 @@ const unpinMessage = async (message_id: string): Promise<IMessage[]> => {
   });
 
   publishEvent(ServerEvents.messagePinRemoved, {
+    // @ts-ignore
     server_id: channel.server_id,
     type: ServerEvents.messagePinRemoved,
     data: {
