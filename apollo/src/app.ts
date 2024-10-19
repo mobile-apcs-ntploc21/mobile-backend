@@ -44,7 +44,7 @@ const startApp = async () => {
     cache: "bounded",
     typeDefs: apiTypeDefs,
     resolvers: apiResolvers,
-    introspection: config.IS_DEV,
+    introspection: config.MODE === "development",
     context: async ({ req, res }) => {
       try {
         const token = req.headers.authorization || "";
@@ -73,7 +73,7 @@ const startApp = async () => {
     cache: "bounded",
     typeDefs: wsTypeDefs,
     resolvers: wsResolvers,
-    introspection: config.IS_DEV,
+    introspection: config.MODE === "development",
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer: httpserver }),
       {
@@ -95,7 +95,7 @@ const startApp = async () => {
   });
 
   // Add rate limiter middleware if not in development mode
-  if (!config.IS_DEV) {
+  if (config.MODE !== "development") {
     app.use(config.GRAPHQL_ROUTE, limiter);
   }
 
