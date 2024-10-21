@@ -1,10 +1,7 @@
-import dotenv from "dotenv";
 import mongoose, { ConnectOptions } from "mongoose";
 import startApp from "./app";
 import { config } from "./config";
 import { log } from "@/utils/log";
-
-dotenv.config({ path: "./config.env" });
 
 const StartServer = async () => {
   mongoose.set("strictQuery", true);
