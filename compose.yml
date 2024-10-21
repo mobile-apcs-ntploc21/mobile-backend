@@ -1,28 +1,33 @@
 version: "3"
 services:
   api:
+    container_name: orantio-api
     build:
       context: .
       target: api
-    env_file:
-      - api/config.env
     networks:
       - orantio
-    container_name: orantio-api
-    command: pnpm start
+    env_file:
+      - api/config.env
+    environment:
+      - GQL_SERVER_URL=http://orantio-apollo:4000/graphql
+    ports:
+      - "4001:4001"
 
   apollo:
+    container_name: orantio-apollo
     build:
       context: .
       target: apollo
     networks:
       - orantio
-    container_name: orantio-backend
     env_file:
       - apollo/config.env
-    command: pnpm start
+    ports:
+      - "4000:4000"
 
   nginx:
+    container_name: orantio-nginx
     build:
       context: .
       dockerfile: Dockerfile.nginx
@@ -41,7 +46,6 @@ services:
       [
         "/wait-for-it.sh api:4001 apollo:4000 -- /docker-entrypoint.d/entrypoint.sh",
       ]
-    container_name: orantio-nginx
     depends_on:
       - api
       - apollo
