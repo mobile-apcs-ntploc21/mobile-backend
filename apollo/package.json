@@ -3,16 +3,17 @@
   "version": "1.0.0",
   "main": "src/server.ts",
   "_moduleAliases": {
-    "@": "src",
-    "@models": "src/models",
-    "@resolvers": "src/graphql/resolvers"
+    "@": "dist",
+    "@models": "dist/models",
+    "@resolvers": "dist/graphql/resolvers"
   },
   "scripts": {
     "lint": "eslint \"./**/*.ts\"",
     "prettier": "prettier --check \"./**/*.{ts,json}\"",
     "prettier-fix": "prettier --write \"./**/*.{ts,json}\"",
-    "start": "ts-node src/server.ts",
-    "dev": "nodemon src/server.ts"
+    "build": "tsc",
+    "start": "node -r module-alias/register dist/server.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts"
   },
   "dependencies": {
     "@graphql-tools/merge": "^9.0.4",

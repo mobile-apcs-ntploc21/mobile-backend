@@ -6,7 +6,6 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import morgan from "morgan";
 import xss from "xss-clean";
-import "module-alias/register";
 
 import globalErrorHandler from "./controllers/error";
 import friendRouter from "./routes/friend";

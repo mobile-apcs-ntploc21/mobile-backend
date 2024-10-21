@@ -8,8 +8,12 @@
     "lint": {
       "outputs": []
     },
+    "build": {
+      "cache": true,
+      "persistent": false
+    },
     "start": {
-      "dependsOn": ["lint"]
+      "dependsOn": ["build"]
     },
     "prettier": {
       "cache": false,

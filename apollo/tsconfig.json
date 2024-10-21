@@ -6,7 +6,7 @@
       "@models/*": ["models/*"],
       "@resolvers/*": ["graphql/resolvers/*"]
     },
-    "outDir": "bin",
+    "outDir": "dist",
     "composite": false,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,

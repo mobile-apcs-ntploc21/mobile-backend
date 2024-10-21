@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "main": "src/app.ts",
   "_moduleAliases": {
-    "@": "src"
+    "@": "dist"
   },
   "scripts": {
     "lint": "eslint \"./**/*.ts\"",
     "prettier": "prettier --check \"./**/*.{ts,json}\"",
     "prettier-fix": "prettier --write \"./**/*.{ts,json}\"",
-    "start": "ts-node src/app.ts",
-    "dev": "nodemon src/app.ts"
+    "build": "tsc",
+    "start": "node -r module-alias/register dist/app.js",
+    "dev": "ts-node-dev -r tsconfig-paths/register src/app.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.616.0",
