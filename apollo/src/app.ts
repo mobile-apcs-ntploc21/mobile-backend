@@ -7,7 +7,6 @@ import xss from "xss-clean";
 import mongoSanitize from "express-mongo-sanitize";
 import { ApolloServer } from "apollo-server-express";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
-import "module-alias/register";
 
 import http from "http";
 import { config } from "./config";

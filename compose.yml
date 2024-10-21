@@ -1,0 +1,50 @@
+version: "3"
+services:
+  api:
+    build:
+      context: .
+      target: api
+    env_file:
+      - api/config.env
+    networks:
+      - orantio
+    container_name: orantio-api
+    command: pnpm start
+
+  apollo:
+    build:
+      context: .
+      target: apollo
+    networks:
+      - orantio
+    container_name: orantio-backend
+    env_file:
+      - apollo/config.env
+    command: pnpm start
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/conf.d/nginx.conf.template
+      - ./entrypoint.sh:/docker-entrypoint.d/entrypoint.sh
+      - ./wait-for-it.sh:/wait-for-it.sh
+    ports:
+      - "80:80"
+    networks:
+      - orantio
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      [
+        "/wait-for-it.sh api:4001 apollo:4000 -- /docker-entrypoint.d/entrypoint.sh",
+      ]
+    container_name: orantio-nginx
+    depends_on:
+      - api
+      - apollo
+
+networks:
+  orantio:
