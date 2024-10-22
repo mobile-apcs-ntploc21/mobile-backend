@@ -641,6 +641,7 @@ export const messageQueries = {
           is_deleted
         }
 
+        is_pinned
         is_modified
         createdAt
       }
@@ -691,6 +692,7 @@ export const messageQueries = {
           is_deleted
         }
 
+        is_pinned
         is_modified
         createdAt
       }
