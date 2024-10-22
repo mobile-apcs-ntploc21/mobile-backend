@@ -47,13 +47,14 @@ const createEmojiTransaction = async (
     );
 
     // Check if the server has reached the emoji limit
-    if (serverObj.totalEmojis >= SERVER_MAX_EMOJI) {
+    if (serverObj.totalEmojis ?? 0 >= SERVER_MAX_EMOJI) {
       throw new ValidationError(
         "Server with given server_id has reached maximum nubmer of emojis allowed."
       );
     }
 
     // Increment the emoji count
+    // @ts-ignore
     serverObj.totalEmojis += 1;
     await serverObj.save({ session });
 
@@ -101,7 +102,7 @@ const updateEmojiTransaction = async (emoji_id: string, emoji_name: string) => {
   }
 };
 
-const deleteEmojiTransaction = async (emoji_id: string) => {
+const deleteEmojiTransaction = async (emoji_id: string): Promise<any> => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -125,6 +126,7 @@ const deleteEmojiTransaction = async (emoji_id: string) => {
     // Update the emoji
     emoji.name = new_name;
     emoji.is_deleted = true;
+    // @ts-ignore
     emoji.uploader_id = null;
     await emoji.save({ session });
 
@@ -140,7 +142,7 @@ const deleteEmojiTransaction = async (emoji_id: string) => {
     await session.commitTransaction();
     session.endSession();
 
-    return true;
+    return emoji;
   } catch (error: any) {
     await session.abortTransaction();
     session.endSession();
@@ -265,9 +267,11 @@ const emojisAPI: IResolvers = {
         // Publish event to the websocket server
         publishEvent(ServerEvents.serverUpdated, {
           type: ServerEvents.emojiDeleted,
-          server_id: emoji.server_id,
+          // @ts-ignore
+          server_id: result.server_id,
           data: {
-            ...emoji.toObject(),
+            //@ts-ignore
+            ...result.toObject(),
           },
         });
 
@@ -290,8 +294,10 @@ const emojisAPI: IResolvers = {
 
     // This function will use to sync/upload the Unicode emoji onto the database.
     // Only run this once, and run it perodically if Unicode has a new version.
-    syncUnicodeEmoji: async () => {
-      syncUnicodeEmoji();
+    syncUnicodeEmoji: async (_, { confirm }) => {
+      if (confirm) {
+        syncUnicodeEmoji();
+      }
     },
   },
 };
