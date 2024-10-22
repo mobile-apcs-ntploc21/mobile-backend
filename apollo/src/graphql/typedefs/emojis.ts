@@ -24,20 +24,24 @@ const gqlAPI = gql`
 
   extend type Query {
     # Use to get the server emojis
-    Emoji(server_id: ID!, emoji_id: ID!): Emoji
-    Emoji(server_id: ID!): Emoji
+    serverEmoji(server_id: ID!, emoji_id: ID!): Emoji
+    serverEmojis(server_id: ID!): [Emoji]
+    countNumberEmojis(server_id: ID!): Int!
 
     # Use to get Unicode emojis
-    Emoji(): Emoji
-    Emoji(unicode: String): Emoji
+    unicodeEmoji(): Emoji
+    unicodeEmoji(unicode: String): Emoji
   }
 
   # Mainly use for server emojis
   extend type Mutation {
     createServerEmoji(input: CreateEmojiInput!): Emoji!
-    uploadServerEmoji(emoji_id: ID!, name: String!): ServerEmoji!
+    updateServerEmoji(emoji_id: ID!, name: String!): Emoji!
     deleteServerEmoji(emoji_id: ID!): Boolean
     hardDeleteServerEmoji(emoji_id: ID!): Boolean
+
+    # Use to upload Unicode emoji onto the database, only ran this once.
+    syncUnicodeEmoji(): Boolean
   }
 `;
 
