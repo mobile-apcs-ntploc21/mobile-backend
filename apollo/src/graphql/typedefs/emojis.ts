@@ -26,11 +26,10 @@ const gqlAPI = gql`
     # Use to get the server emojis
     serverEmoji(server_id: ID!, emoji_id: ID!): Emoji
     serverEmojis(server_id: ID!): [Emoji]
-    countNumberEmojis(server_id: ID!): Int!
+    countServerEmojis(server_id: ID!): Int!
 
     # Use to get Unicode emojis
-    unicodeEmoji(): Emoji
-    unicodeEmoji(unicode: String): Emoji
+    # unicodeEmoji(): [Emoji]
   }
 
   # Mainly use for server emojis
@@ -41,7 +40,7 @@ const gqlAPI = gql`
     hardDeleteServerEmoji(emoji_id: ID!): Boolean
 
     # Use to upload Unicode emoji onto the database, only ran this once.
-    syncUnicodeEmoji(): Boolean
+    syncUnicodeEmoji(confirm: Boolean): Boolean
   }
 `;
 
