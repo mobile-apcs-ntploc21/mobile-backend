@@ -11,7 +11,12 @@ export default [
   {
     plugins: { prettier: prettierPlugin },
     rules: {
-      "prettier/prettier": "error",
+      "prettier/prettier": [
+        "error",
+        {
+          endOfLine: "auto",
+        },
+      ],
       "no-console": "off",
       "no-shadow": "off",
       "prefer-const": "off",
