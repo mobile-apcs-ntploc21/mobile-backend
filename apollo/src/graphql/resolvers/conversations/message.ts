@@ -491,13 +491,14 @@ const searchMessages = async (
   }
 
   // 3. Filter by sender
-  if (from) {
-    messageQuery.sender_id = from;
+  if (from && from.length > 0) {
+    const senders = await UserProfileModel.find({ $in: from });
+    messageQuery.sender_id = { $in: senders.map((sender) => sender.user_id) };
   }
 
   // 4. Filter by mention
-  if (mention) {
-    const mentions = await MentionModel.find({ mention_user_id: mention });
+  if (mention && mention.length > 0) {
+    const mentions = await MentionModel.find({ $in: mention });
     messageQuery._id = { $in: mentions.map((mention) => mention.message_id) };
   }
 
