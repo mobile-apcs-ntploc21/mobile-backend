@@ -178,7 +178,51 @@ const hardDeleteEmojiTransaction = async (emoji_id: string) => {
   }
 };
 
-const syncUnicodeEmoji = async () => {};
+// Read the Unicode emoji list (from local file: ../../constants/emojis.json)
+import emojiList from "../../constants/emojis.json";
+const syncUnicodeEmoji = async (): Promise<void> => {
+  // For each object (e.g. emoji) in the list, push to the Mongoose
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  // Create object list to store the emojis and save it to the database
+  const emojiObjects = [];
+
+  for (const emoji of emojiList) {
+    const emojiName = emoji.names[0];
+    const unicodeStr = emoji.strings[0];
+
+    // Remove the prefix and suffix ':' in the emoji_name
+    const name = emojiName.substring(1, emojiName.length - 1);
+
+    // Append the emoji object to the emojiList
+    emojiObjects.push({
+      name: name,
+      type: "unicode",
+      unicode: unicodeStr,
+    });
+  }
+
+  try {
+    const opts = { session, new: true };
+
+    // Upload the emojis to the database
+    await Promise.all(
+      emojiObjects.map(async (emoji) => {
+        await EmojiModel.create([emoji], opts);
+      })
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    console.log("Syncing emojis to the database is successful.");
+  } catch (error: any) {
+    await session.abortTransaction();
+    session.endSession();
+    throw new Error(error);
+  }
+};
 
 const emojisAPI: IResolvers = {
   Query: {
@@ -214,6 +258,17 @@ const emojisAPI: IResolvers = {
       }
 
       return serverObj.totalEmojis;
+    },
+    unicodeEmoji: async (_, { confirm, limit }) => {
+      if (confirm) {
+        const emojis = await EmojiModel.find({ type: "unicode" }).limit(
+          limit ?? 5000
+        );
+
+        return emojis;
+      } else {
+        throw new Error("Please confirm the action.");
+      }
     },
   },
   Mutation: {
@@ -296,7 +351,58 @@ const emojisAPI: IResolvers = {
     // Only run this once, and run it perodically if Unicode has a new version.
     syncUnicodeEmoji: async (_, { confirm }) => {
       if (confirm) {
-        syncUnicodeEmoji();
+        await syncUnicodeEmoji();
+      } else {
+        throw new Error("Please confirm the action.");
+      }
+    },
+
+    // This function will use to sync/upload the server emojis that on table server_emojis onto the unified database.
+    // Only run this once, and run it perodically if the unified database has a new version or has been dropped.
+    syncServerEmojis: async (_, { confirm }) => {
+      if (confirm) {
+        // Get all the server emojis
+        const serverEmojis = await ServerEmojiModel.find();
+
+        // Create object list to store the emojis and save it to the database
+        const emojiObjects = [];
+
+        for (const emoji of serverEmojis) {
+          emojiObjects.push({
+            name: emoji.name,
+            image_url: emoji.image_url,
+            server_id: emoji.server_id,
+            uploader_id: emoji.uploader_id,
+            is_deleted: emoji.is_deleted,
+            type: "server",
+          });
+        }
+
+        // Create a transaction
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+          const opts = { session, new: true };
+
+          // Upload the emojis to the database
+          await Promise.all(
+            emojiObjects.map(async (emoji) => {
+              await EmojiModel.create([emoji], opts);
+            })
+          );
+
+          await session.commitTransaction();
+          session.endSession();
+
+          console.log("Syncing server emojis to the database is successful.");
+        } catch (error: any) {
+          await session.abortTransaction();
+          session.endSession();
+          throw new Error(error);
+        }
+      } else {
+        throw new Error("Please confirm the action.");
       }
     },
   },
