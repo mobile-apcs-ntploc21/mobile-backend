@@ -10,6 +10,7 @@ interface IEmoji {
 
   // For unicode emojis
   unicode: string;
+  category: string;
 
   // For server emojis
   is_deleted: boolean;
@@ -35,6 +36,9 @@ const emojiSchema = new Schema<IEmoji>(
       required: [true, "Emoji type is required!"],
     },
     unicode: {
+      type: String,
+    },
+    category: {
       type: String,
     },
     is_deleted: {

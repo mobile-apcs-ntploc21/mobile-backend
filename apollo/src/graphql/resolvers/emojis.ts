@@ -180,10 +180,35 @@ const hardDeleteEmojiTransaction = async (emoji_id: string) => {
 
 // Read the Unicode emoji list (from local file: ../../constants/emojis.json)
 import emojiList from "../../constants/emojis.json";
+/* import emojiNewList from "../../constants/emojis2.json";
+
+const toMerge = async () => {
+  const mergedList = emojiList.map((item1, index) => {
+    const item2 = emojiNewList[index];
+
+    return {
+      ...item1,
+      category: item2.category,
+    };
+  });
+
+  return mergedList;
+};
+
+import { promises } from "fs"; */
+
 const syncUnicodeEmoji = async (): Promise<void> => {
   // For each object (e.g. emoji) in the list, push to the Mongoose
   const session = await mongoose.startSession();
   session.startTransaction();
+
+  /* const emojiList = await toMerge();
+
+  // Save the emojiList to the local
+  await promises.writeFile(
+    "./src/constants/emojis3.json",
+    JSON.stringify(emojiList, null, 2)
+  ); */
 
   // Create object list to store the emojis and save it to the database
   const emojiObjects = [];
@@ -200,6 +225,7 @@ const syncUnicodeEmoji = async (): Promise<void> => {
       name: name,
       type: "unicode",
       unicode: unicodeStr,
+      category: emoji.category,
     });
   }
 

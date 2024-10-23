@@ -7,6 +7,7 @@ const gqlTypes = gql`
     image_url: String
     type: String!
     unicode: String
+    category: String
     is_deleted: Boolean
     server_id: ID
     uploader_id: ID
