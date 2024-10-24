@@ -38,7 +38,7 @@ const gqlAPI = gql`
     serversEmojis(user_id: ID!): [EmojiGroup]
 
     # Use to get Unicode emojis
-    unicodeEmoji(confirm: Boolean): [EmojiGroup]
+    unicodeEmojis(confirm: Boolean): [EmojiGroup]
   }
 
   # Mainly use for server emojis

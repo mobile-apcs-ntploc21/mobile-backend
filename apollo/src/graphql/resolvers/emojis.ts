@@ -299,7 +299,7 @@ const emojisAPI: IResolvers = {
       return emojiGroups;
     },
     // This function will return a list of emojis that are grouped by name or category.
-    unicodeEmoji: async (_, { confirm }) => {
+    unicodeEmojis: async (_, { confirm }) => {
       if (confirm) {
         // Get all the emojis
         const emojis = await EmojiModel.find({ type: "unicode" });
