@@ -1,9 +1,9 @@
 import express from "express";
 
-import { processImage } from "../../utils/storage";
-import graphQLClient from "../../utils/graphql";
-import { serverEmojiQueries } from "../../graphql/queries";
-import { serverEmojiMutations } from "../../graphql/mutations";
+import { processImage } from "../utils/storage";
+import graphQLClient from "../utils/graphql";
+import { serverEmojiQueries } from "../graphql/queries";
+import { serverEmojiMutations } from "../graphql/mutations";
 import { log } from "@/utils/log";
 
 const _getServerEmojis = async (server_id: string) => {
@@ -103,6 +103,57 @@ export const getServerEmojis = async (
     return;
   }
 };
+
+export const getServerEmojisByUser = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    res.status(400).json({ message: "User ID is required." });
+    return;
+  }
+
+  try {
+    const emojis = await graphQLClient().request(
+      serverEmojiQueries.GET_SERVERS_EMOJIS,
+      {
+        user_id: userId,
+      }
+    );
+
+    res.status(200).json(emojis.serversEmojis);
+    return;
+  } catch (error) {
+    next(error);
+    return;
+  }
+};
+
+export const getUnicodeEmojis = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const emojis = await graphQLClient().request(
+      serverEmojiQueries.GET_UNICODE_EMOJIS,
+      {
+        confirm: true,
+      }
+    );
+
+    res.status(200).json(emojis.unicodeEmojis);
+    return;
+  } catch (error) {
+    next(error);
+    return;
+  }
+};
+
+// ============================
 
 export const createServerEmoji = async (
   req: express.Request,

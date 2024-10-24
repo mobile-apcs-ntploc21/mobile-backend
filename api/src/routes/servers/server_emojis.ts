@@ -2,7 +2,7 @@ import { Request, Response, NextFunction, Router } from "express";
 import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
 import { BaseRolePermissions as BRP } from "../../constants/permissions";
 
-import * as serverEmojiCtrl from "../../controllers/servers/serverEmojis";
+import * as serverEmojiCtrl from "../../controllers/emojis";
 
 const serverRouter = Router({ mergeParams: true });
 
