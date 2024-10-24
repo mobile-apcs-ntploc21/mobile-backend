@@ -7,6 +7,10 @@ import {
   removeSelf,
 } from "../../controllers/servers/server_member";
 import {
+  getUnicodeEmojis,
+  getServerEmojisByUser,
+} from "../../controllers/emojis";
+import {
   getCurrentUserPermissions,
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
@@ -16,6 +20,7 @@ import { authMiddleware } from "../../utils/authMiddleware";
 import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
 import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
 import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
+
 import categoryRouter from "./channels/category";
 import channelRouter from "./channels/channel";
 import serverOwnerRouter from "./server_owner";
@@ -23,7 +28,11 @@ import serverRoleRouter from "./server_permission";
 
 const serverRouter = Router();
 
-// Members
+// ================== Emojis =============================
+serverRouter.get("/emojis/unicode", authMiddleware, getUnicodeEmojis);
+serverRouter.get("/emojis/user/:userId", authMiddleware, getServerEmojisByUser);
+
+// ================== Members ============================
 serverRouter.use("/:serverId/owner", checkOwnerMiddleware, serverOwnerRouter);
 
 serverRouter.post("/join", authMiddleware, joinServer);

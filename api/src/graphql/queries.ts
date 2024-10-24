@@ -269,6 +269,33 @@ export const serverEmojiQueries = {
     }
   `,
 
+  GET_SERVERS_EMOJIS: gql`
+    query serversEmojis($user_id: ID!) {
+      serversEmojis(user_id: $user_id) {
+        name
+        emojis {
+          id
+          name
+          image_url
+          uploader_id
+        }
+      }
+    }
+  `,
+
+  GET_UNICODE_EMOJIS: gql`
+    query unicodeEmojis($confirm: Boolean) {
+      unicodeEmojis(confirm: $confirm) {
+        name
+        emojis {
+          id
+          name
+          unicode
+        }
+      }
+    }
+  `,
+
   COUNT_SERVER_EMOJIS: gql`
     query countServerEmojis($server_id: ID!) {
       countServerEmojis(server_id: $server_id)
