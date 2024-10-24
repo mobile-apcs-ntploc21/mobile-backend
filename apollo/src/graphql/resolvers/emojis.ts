@@ -262,8 +262,11 @@ const emojisAPI: IResolvers = {
 
       return serverObj.totalEmojis;
     },
+    // This function will return a list of emojis that are grouped by the server name.
     serversEmojis: async (_, { user_id }) => {
-      const servers = await ServerMemberModel.find({ user_id }).lean();
+      const servers = await ServerMemberModel.find({
+        "_id.user_id": user_id,
+      }).lean();
 
       if (!servers) {
         throw new UserInputError("User with given user_id not found.");
@@ -277,8 +280,18 @@ const emojisAPI: IResolvers = {
           is_deleted: false,
         });
 
+        const serverObj = await ServerModel.findById(
+          server._id.server_id
+        ).lean();
+
+        if (!serverObj) {
+          throw new UserInputError(
+            "Server with given server_id not found on the database."
+          );
+        }
+
         emojiGroups.push({
-          name: server._id.server_id,
+          name: serverObj.name,
           emojis,
         });
       }
