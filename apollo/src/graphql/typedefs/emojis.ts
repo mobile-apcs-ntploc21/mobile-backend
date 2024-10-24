@@ -23,14 +23,22 @@ const gqlAPI = gql`
     uploader_id: ID!
   }
 
+  # Output for the query of a list of [{ServerName/Category: [Emoji]}]
+  type EmojiGroup {
+    name: String!
+    emojis: [Emoji]
+  }
+
   extend type Query {
     # Use to get the server emojis
     serverEmoji(server_id: ID!, emoji_id: ID!): Emoji
     serverEmojis(server_id: ID!): [Emoji]
     countServerEmojis(server_id: ID!): Int!
 
+    serversEmojis(user_id: ID!): [EmojiGroup]
+
     # Use to get Unicode emojis
-    unicodeEmoji(confirm: Boolean, limit: Int): [Emoji]
+    unicodeEmoji(confirm: Boolean): [EmojiGroup]
   }
 
   # Mainly use for server emojis

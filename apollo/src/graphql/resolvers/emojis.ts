@@ -4,6 +4,7 @@ import { UserInputError, ValidationError } from "apollo-server";
 
 import ServerEmojiModel from "@/models/servers/serverEmoji";
 import ServerModel from "@/models/servers/server";
+import ServerMemberModel from "@/models/servers/server_member";
 import EmojiModel from "@/models/emojis";
 import { publishEvent, ServerEvents } from "../pubsub/pubsub";
 
@@ -180,35 +181,11 @@ const hardDeleteEmojiTransaction = async (emoji_id: string) => {
 
 // Read the Unicode emoji list (from local file: ../../constants/emojis.json)
 import emojiList from "../../constants/emojis.json";
-/* import emojiNewList from "../../constants/emojis2.json";
-
-const toMerge = async () => {
-  const mergedList = emojiList.map((item1, index) => {
-    const item2 = emojiNewList[index];
-
-    return {
-      ...item1,
-      category: item2.category,
-    };
-  });
-
-  return mergedList;
-};
-
-import { promises } from "fs"; */
 
 const syncUnicodeEmoji = async (): Promise<void> => {
   // For each object (e.g. emoji) in the list, push to the Mongoose
   const session = await mongoose.startSession();
   session.startTransaction();
-
-  /* const emojiList = await toMerge();
-
-  // Save the emojiList to the local
-  await promises.writeFile(
-    "./src/constants/emojis3.json",
-    JSON.stringify(emojiList, null, 2)
-  ); */
 
   // Create object list to store the emojis and save it to the database
   const emojiObjects = [];
@@ -285,13 +262,58 @@ const emojisAPI: IResolvers = {
 
       return serverObj.totalEmojis;
     },
-    unicodeEmoji: async (_, { confirm, limit }) => {
-      if (confirm) {
-        const emojis = await EmojiModel.find({ type: "unicode" }).limit(
-          limit ?? 5000
-        );
+    serversEmojis: async (_, { user_id }) => {
+      const servers = await ServerMemberModel.find({ user_id }).lean();
 
-        return emojis;
+      if (!servers) {
+        throw new UserInputError("User with given user_id not found.");
+      }
+
+      const emojiGroups = [];
+
+      for (const server of servers) {
+        const emojis = await EmojiModel.find({
+          server_id: server._id.server_id,
+          is_deleted: false,
+        });
+
+        emojiGroups.push({
+          name: server._id.server_id,
+          emojis,
+        });
+      }
+
+      return emojiGroups;
+    },
+    // This function will return a list of emojis that are grouped by name or category.
+    unicodeEmoji: async (_, { confirm }) => {
+      if (confirm) {
+        // Get all the emojis
+        const emojis = await EmojiModel.find({ type: "unicode" });
+
+        // Create a map to store the emojis
+        const emojiMap = new Map();
+
+        for (const emoji of emojis) {
+          if (emojiMap.has(emoji.category)) {
+            emojiMap.get(emoji.category).push(emoji);
+          } else {
+            emojiMap.set(emoji.category, [emoji]);
+          }
+        }
+
+        // Create an array to store the emojis
+        const emojiGroups: any = [];
+
+        // Append the emojis to the emojiGroups
+        emojiMap.forEach((value, key) => {
+          emojiGroups.push({
+            name: key,
+            emojis: value,
+          });
+        });
+
+        return emojiGroups;
       } else {
         throw new Error("Please confirm the action.");
       }
