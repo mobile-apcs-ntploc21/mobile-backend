@@ -272,7 +272,8 @@ const emojisAPI: IResolvers = {
         throw new UserInputError("User with given user_id not found.");
       }
 
-      const emojiGroups = [];
+      const emojiGroups: { name: string; position: number; emojis: any[] }[] =
+        [];
 
       for (const server of servers) {
         const emojis = await EmojiModel.find({
@@ -292,9 +293,13 @@ const emojisAPI: IResolvers = {
 
         emojiGroups.push({
           name: serverObj.name,
+          position: server.position ?? 0,
           emojis,
         });
       }
+
+      // Sort the emojiGroups by position
+      emojiGroups.sort((a, b) => a.position - b.position);
 
       return emojiGroups;
     },
@@ -316,7 +321,7 @@ const emojisAPI: IResolvers = {
         }
 
         // Create an array to store the emojis
-        const emojiGroups: any = [];
+        const emojiGroups: { name: string; emojis: any[] }[] = [];
 
         // Append the emojis to the emojiGroups
         emojiMap.forEach((value, key) => {
@@ -324,6 +329,23 @@ const emojisAPI: IResolvers = {
             name: key,
             emojis: value,
           });
+        });
+
+        // Sort the emojiGroups by the appointed list:
+        // ["People", "Nature", "Foods", "Activities", "Travel", "Objects", "Symbols", "Flags"]
+        const order = [
+          "People",
+          "Nature",
+          "Foods",
+          "Activities",
+          "Travel",
+          "Objects",
+          "Symbols",
+          "Flags",
+        ];
+
+        emojiGroups.sort((a, b) => {
+          return order.indexOf(a.name) - order.indexOf(b.name);
         });
 
         return emojiGroups;
