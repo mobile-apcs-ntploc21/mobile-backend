@@ -32,10 +32,10 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
-const swaggerRouter = Router().use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDocs)
-);
+const swaggerRouter = Router()
+  .use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs))
+  .get("/api-docs.json", (_, res) => {
+    res.json(swaggerDocs);
+  });
 
 export default swaggerRouter;
