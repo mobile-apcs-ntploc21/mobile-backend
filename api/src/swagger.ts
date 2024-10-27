@@ -1,6 +1,6 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-import { Express, Router } from "express";
+import { Router } from "express";
 import config from "./config";
 
 const swaggerOptions = {
@@ -21,6 +21,11 @@ const swaggerOptions = {
         },
       },
     },
+    tags: [
+      {
+        name: "Users",
+      },
+    ],
     servers: [
       {
         url: `http://localhost:${config.PORT}/api/v1`,
