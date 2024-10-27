@@ -11,6 +11,12 @@ const userRouter = Router();
 
 /**
  * @swagger
+ * tags:
+ *  name: Users
+ */
+
+/**
+ * @swagger
  * /users/me:
  *    get:
  *      summary: Given a valid JWT token, return the user information
@@ -34,12 +40,7 @@ const userRouter = Router();
  *                  phone_number:
  *                    type: string
  *        401:
- *          description: Unauthorized
- *          content:
- *            application/json:
- *              example:
- *                status: fail
- *                message: The user belonging to this token does no longer exist
+ *          $ref: '#/components/responses/AuthMiddlewareError'
  */
 userRouter.get("/me", authMiddleware, getMe);
 
@@ -232,6 +233,8 @@ userRouter.post("/refresh", refresh);
  *            application/json:
  *              example:
  *                message: Missing required fields
+ *        401:
+ *          $ref: '#/components/responses/AuthMiddlewareError'
  */
 userRouter.post("/logout", authMiddleware, logoutUser);
 

@@ -21,18 +21,13 @@ const swaggerOptions = {
         },
       },
     },
-    tags: [
-      {
-        name: "Users",
-      },
-    ],
     servers: [
       {
         url: `http://localhost:${config.PORT}/api/v1`,
       },
     ],
   },
-  apis: ["./src/routes/*.ts"],
+  apis: ["./src/routes/*.ts", "./src/utils/*.ts"],
 };
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
