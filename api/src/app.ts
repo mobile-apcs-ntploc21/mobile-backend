@@ -20,6 +20,7 @@ import { authMiddleware } from "./utils/authMiddleware";
 import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
 import config from "@/config";
 import { log } from "@/utils/log";
+import swaggerRouter from "./swagger";
 
 const app = express();
 
@@ -47,6 +48,9 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+// Swagger
+app.use(swaggerRouter);
 
 // Set default route
 /// Users
