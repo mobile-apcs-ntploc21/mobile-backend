@@ -498,7 +498,7 @@ friendRouter.get("/friends/requests/sent", getSentFriendRequests);
  *      - bearerAuth: []
  *    responses:
  *      200:
- *        description: List of friends
+ *        description: List of blocked users
  *        content:
  *          application/json:
  *            schema:
@@ -539,7 +539,7 @@ friendRouter.get("/block/", getBlockedUsers);
  *         description: User ID
  *    responses:
  *      200:
- *        description: List of friends
+ *        description: Get the relationship type between the current user and user with `id`
  *        content:
  *          application/json:
  *            schema:
