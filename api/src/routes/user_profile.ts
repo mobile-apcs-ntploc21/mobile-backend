@@ -5,7 +5,7 @@ import * as up from "@/controllers/user_profile";
  * @swagger
  * tags:
  *  name: User profile
- * 
+ *
  * components:
  *  schemas:
  *    ExtendedUserProfile:
@@ -144,7 +144,7 @@ userProfileRouter.get("/:userId", up.getProfile);
  *        required: true
  *        type: string
  *      - in: path
- *        name: serverId    
+ *        name: serverId
  *        required: true
  *        type: string
  *    responses:
@@ -175,7 +175,7 @@ userProfileRouter.get("/:userId/:serverId", up.getProfile);
  *      - bearerAuth: []
  *    parameters:
  *      - in: path
- *        name: serverId    
+ *        name: serverId
  *        required: true
  *        type: string
  *    responses:

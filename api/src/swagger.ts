@@ -35,7 +35,7 @@ const swaggerSpec = swaggerJSDoc(options);
 const swaggerOptions: SwaggerUiOptions = {
   swaggerOptions: {
     operationsSorter: (a: any, b: any) => {
-      var methodsOrder = [
+      const methodsOrder = [
         "get",
         "post",
         "put",
@@ -44,7 +44,7 @@ const swaggerOptions: SwaggerUiOptions = {
         "options",
         "trace",
       ];
-      var result =
+      let result =
         methodsOrder.indexOf(a.get("method")) -
         methodsOrder.indexOf(b.get("method"));
 
