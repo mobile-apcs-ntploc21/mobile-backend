@@ -2,6 +2,40 @@ import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
 import { serverMemberQueries } from "../graphql/queries";
 
+/**
+ * @swagger
+ * components:
+ *  schemas:
+ *    CommonError:
+ *      type: object
+ *      properties:
+ *        status:
+ *          type: string
+ *        message:
+ *          type: string
+ *
+ *  responses:
+ *    CheckMembership:
+ *      description: You are not a member of this server
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/CommonError'
+ *          example:
+ *            status: fail
+ *            message: You are not a member of this server
+ *
+ *    ServerIdRequired:
+ *      description: Server ID is required
+ *      content:
+ *         application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/CommonError'
+ *          example:
+ *            status: fail
+ *            message: Server ID is required
+ */
+
 export const checkMembershipMiddleware = async (
   req: Request,
   res: Response,

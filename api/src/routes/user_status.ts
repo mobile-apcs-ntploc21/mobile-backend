@@ -23,11 +23,9 @@ import {
  *        - INVISIBLE
  *        - OFFLINE
  *
- *    UserStatus:
+ *    UserStatusWithoutId:
  *      type: object
  *      properties:
- *        user_id:
- *          type: string
  *        type:
  *          $ref: '#/components/schemas/StatusType'
  *        last_seen:
@@ -37,6 +35,14 @@ import {
  *          type: string
  *        is_online:
  *          type: boolean
+ *
+ *    UserStatus:
+ *      allOf:
+ *        - type: object
+ *          properties:
+ *            user_id:
+ *              type: string
+ *        - $ref: '#/components/schemas/UserStatusWithoutId'
  */
 
 const userStatusRouter = Router();
