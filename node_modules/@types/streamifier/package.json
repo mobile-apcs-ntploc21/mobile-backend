@@ -1,0 +1,27 @@
+{
+    "name": "@types/streamifier",
+    "version": "0.1.2",
+    "description": "TypeScript definitions for streamifier",
+    "homepage": "https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/streamifier",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Idan Attias",
+            "githubUsername": "idan-at",
+            "url": "https://github.com/idan-at"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/streamifier"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@types/node": "*"
+    },
+    "typesPublisherContentHash": "396c0b4fd855e829dad6479c0bdebd1f037198056d308f2f89eb501858df0e54",
+    "typeScriptVersion": "4.5"
+}
