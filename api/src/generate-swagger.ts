@@ -1,4 +1,4 @@
 import { swaggerSpec } from "./swagger";
 import fs from "fs";
 
-fs.writeFileSync("swagger.json", JSON.stringify(swaggerSpec, null, 2));
+fs.writeFileSync("./docs/swagger.json", JSON.stringify(swaggerSpec, null, 2));

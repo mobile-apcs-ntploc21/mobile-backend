@@ -1,0 +1,2048 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Orantio API Documentation",
+    "version": "1.0.0",
+    "description": "This is the API documentation for communicating between mobile application and the server."
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string"
+          },
+          "banner_url": {
+            "type": "string"
+          },
+          "about_me": {
+            "type": "string"
+          }
+        }
+      },
+      "RelationshipType": {
+        "type": "string",
+        "enum": [
+          "NOT-FRIEND",
+          "REQUEST-SENT",
+          "REQUEST-RECEIVED",
+          "FRIEND",
+          "BLOCK",
+          "UNDEFINED"
+        ]
+      },
+      "UserSettings": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "friendReqFromEveryone": {
+            "type": "boolean"
+          },
+          "friendReqFromFoFriends": {
+            "type": "boolean"
+          },
+          "friendReqFromServer": {
+            "type": "boolean"
+          },
+          "enableNotif": {
+            "type": "boolean"
+          },
+          "notifSound": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ExtendedUserProfile": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "server_id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string"
+          },
+          "banner_url": {
+            "type": "string"
+          },
+          "about_me": {
+            "type": "string"
+          }
+        }
+      },
+      "UserServer": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "server_id": {
+            "type": "string"
+          }
+        }
+      },
+      "StatusType": {
+        "type": "string",
+        "enum": [
+          "ONLINE",
+          "IDLE",
+          "DO_NOT_DISTURB",
+          "INVISIBLE",
+          "OFFLINE"
+        ]
+      },
+      "UserStatus": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/StatusType"
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status_text": {
+            "type": "string"
+          },
+          "is_online": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "responses": {
+      "AuthMiddlewareError": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "fail"
+                },
+                "message": {
+                  "type": "string",
+                  "enum": [
+                    "You are not authorized to access this route",
+                    "The user belonging to this token does no longer exist",
+                    "User recently changed password, please login again"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4001/api/v1"
+    }
+  ],
+  "paths": {
+    "/friends/{id}": {
+      "post": {
+        "summary": "Add user with `id` as friend (Send friend request).",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful send the friend request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Friend request sent."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotAddSelf": {
+                    "value": {
+                      "message": "You cannot add yourself as a friend."
+                    }
+                  },
+                  "cannotAdd": {
+                    "value": {
+                      "message": "You cannot add this user as a friend."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove user with `id` from friends",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful remove friend",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Friend removed."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotRemoveSelf": {
+                    "value": {
+                      "message": "You cannot remove yourself as a friend."
+                    }
+                  },
+                  "cannotRemove": {
+                    "value": {
+                      "message": "You cannot remove this user as a friend."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/cancel/sent/{id}": {
+      "delete": {
+        "summary": "Cancel friend request to user with `id`",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful cancel the sent friend request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Friend request cancelled."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotCancelSelf": {
+                    "value": {
+                      "message": "You cannot cancel friend request to yourself."
+                    }
+                  },
+                  "cannotCancel": {
+                    "value": {
+                      "message": "You cannot cancel friend request to this user."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/accept/{id}": {
+      "post": {
+        "summary": "Accept friend request from user with `id`",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful accept the friend request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Friend request accepted."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotAcceptSelf": {
+                    "value": {
+                      "message": "You cannot accept yourself as a friend."
+                    }
+                  },
+                  "cannotAccept": {
+                    "value": {
+                      "message": "You cannot accept this user as a friend."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/cancel/received/{id}": {
+      "delete": {
+        "summary": "Cancel received friend request from user with `id`",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful cancel the received friend request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Friend request cancelled."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotCancelSelf": {
+                    "value": {
+                      "message": "You cannot cancel received friend request from yourself."
+                    }
+                  },
+                  "cannotCancel": {
+                    "value": {
+                      "message": "You cannot cancel received friend request from this user."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/block/{id}": {
+      "post": {
+        "summary": "Block user with `id`",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful block",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "User blocked."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotRemoveSelf": {
+                    "value": {
+                      "message": "You cannot block yourself."
+                    }
+                  },
+                  "duplicateBlock": {
+                    "value": {
+                      "message": "You have already blocked this user."
+                    }
+                  },
+                  "isBlocked": {
+                    "value": {
+                      "message": "You have already been blocked by this user."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unblock user with `id`",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful unblock",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "User unblocked."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "cannotUnblockSelf": {
+                    "value": {
+                      "message": "You cannot unblock yourself."
+                    }
+                  },
+                  "notBlockYet": {
+                    "value": {
+                      "message": "You have not blocked this user."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends": {
+      "get": {
+        "summary": "Get all friends of the current user",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of friends",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "friends": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserProfile"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/received": {
+      "get": {
+        "summary": "Get all received friend requests of the current user",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of friends",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "friends": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserProfile"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests/sent": {
+      "get": {
+        "summary": "Get all sent friend requests of the current user",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of friends",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "friends": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserProfile"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/block": {
+      "get": {
+        "summary": "Get all blocked users of the current user",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of blocked users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "friends": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserProfile"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/relationship/{id}": {
+      "get": {
+        "summary": "Get relationship type between the current user and user with `id`",
+        "tags": [
+          "Friends"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get the relationship type between the current user and user with `id`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "$ref": "#/components/schemas/RelationshipType"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "summary": "Get user's settings",
+        "tags": [
+          "Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieve user settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Settings is not in JSON format !"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user settings",
+        "tags": [
+          "Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful retrieve user settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "settings": {
+                      "$ref": "#/components/schemas/UserSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/settings/reset": {
+      "put": {
+        "summary": "Restore default user settings",
+        "tags": [
+          "Settings"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful restore user settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "settings": {
+                      "$ref": "#/components/schemas/UserSettings"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/profile/me": {
+      "get": {
+        "summary": "Get profile of the authenticated user",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "User profile not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Profile not found."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/u/{username}": {
+      "get": {
+        "summary": "Get user's profile by username",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Username is required",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Username is required."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "Profile with matching username not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Profile with matching username not found."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/{userId}": {
+      "get": {
+        "summary": "Get user profile by user ID",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "User profile not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Profile not found."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/{userId}/{serverId}": {
+      "get": {
+        "summary": "Get user profile in a server",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "User profile not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Profile not found."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/{serverId}": {
+      "post": {
+        "summary": "Create user profile in a server",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Failed to create user profile",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server error: User ID is not assigned yet. Please contact the server owner."
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update user profile in a server",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "uploadAvatar": {
+                    "value": {
+                      "message": "Failed to upload avatar. Maybe check file type."
+                    }
+                  },
+                  "uploadBanner": {
+                    "value": {
+                      "message": "Failed to upload banner. Maybe check file type."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Failed to create user profile",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server error: User ID is not assigned yet. Please contact the server owner."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user profile in a server",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserServer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "value": {
+                    "message": "User ID is required."
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/profile": {
+      "patch": {
+        "summary": "Update user profile",
+        "tags": [
+          "User profile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedUserProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "uploadAvatar": {
+                    "value": {
+                      "message": "Failed to upload avatar. Maybe check file type."
+                    }
+                  },
+                  "uploadBanner": {
+                    "value": {
+                      "message": "Failed to upload banner. Maybe check file type."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Failed to create user profile",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server error: User ID is not assigned yet. Please contact the server owner."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Get status of the sender",
+        "tags": [
+          "User status"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful get the user status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/statuses": {
+      "get": {
+        "summary": "Get status of multiple users",
+        "tags": [
+          "User status"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "user_ids": [
+                  "uid1",
+                  "uid2"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserStatus"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/status/{id}": {
+      "get": {
+        "summary": "Get status of the requested user",
+        "tags": [
+          "User status"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful get the requested user's status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/status/type": {
+      "post": {
+        "summary": "Update the status's type of the sender",
+        "tags": [
+          "User status"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "$ref": "#/components/schemas/StatusType"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful update the status type of the sender",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "$ref": "#/components/schemas/StatusType"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/status/custom": {
+      "post": {
+        "summary": "Update the status text of the sender",
+        "tags": [
+          "User status"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status_text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful update the status type of the sender",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": {
+                      "type": "string"
+                    },
+                    "status_text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "summary": "Given a valid JWT token, return the user information",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieve user information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "phone_number": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/users/register": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "age": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful register",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "phone_number": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "last_modified": {
+                      "type": "string"
+                    },
+                    "jwtToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "missingFields": {
+                    "value": {
+                      "message": "Missing required fields"
+                    }
+                  },
+                  "duplicateEmail": {
+                    "value": {
+                      "message": "Email already exists"
+                    }
+                  },
+                  "duplicateUsername": {
+                    "value": {
+                      "message": "Username already exists"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "summary": "Given a valid email and password, return the user information",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "User ID"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "phone_number": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "jwtToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "missingFields": {
+                    "value": {
+                      "message": "Missing required fields"
+                    }
+                  },
+                  "invalidCredentials": {
+                    "value": {
+                      "message": "Invalid email or password"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/refresh": {
+      "post": {
+        "summary": "Given a valid refresh token, return a new JWT token and refresh token. Also remove the old refresh token from database",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "User ID"
+                    },
+                    "jwtToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid token",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Invalid token"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/logout": {
+      "post": {
+        "summary": "To log out user, remove the current user refresh token from database",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful logout",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Logout success"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Missing required fields"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Friends"
+    },
+    {
+      "name": "Settings"
+    },
+    {
+      "name": "User profile"
+    },
+    {
+      "name": "User status"
+    },
+    {
+      "name": "Users"
+    }
+  ]
+}
