@@ -3,7 +3,12 @@ name: Deploy Swagger Docs
 on:
   push:
     branches:
-      - playground
+      - master
+    paths-ignore:
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CODE_OF_CONDUCT.md"
+      - "LICENSE"
 
 permissions:
   contents: write
