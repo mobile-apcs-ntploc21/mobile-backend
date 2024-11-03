@@ -40,6 +40,7 @@ jobs:
         run: |
           pnpm run generate-swagger
           cp swagger.json ./docs
+          cp dist/swagger/operations-sorter.js ./docs
 
       - name: Create HTML
         working-directory: api
@@ -59,11 +60,32 @@ jobs:
             <body>
               <div id="swagger-ui"></div>
               <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+              <script src="./operations-sorter.js"></script>
               <script>
                 window.onload = function () {
                   const ui = SwaggerUIBundle({
                     url: "swagger.json",
                     dom_id: "#swagger-ui",
+                    operationsSorter: (a, b) => {
+                      const methodsOrder = [
+                        "get",
+                        "post",
+                        "put",
+                        "patch",
+                        "delete",
+                        "options",
+                        "trace",
+                      ];
+                      let result =
+                        methodsOrder.indexOf(a.get("method")) -
+                        methodsOrder.indexOf(b.get("method"));
+
+                      if (result === 0) {
+                        result = a.get("path").localeCompare(b.get("path"));
+                      }
+
+                      return result;
+                    },
                   });
                 };
               </script>

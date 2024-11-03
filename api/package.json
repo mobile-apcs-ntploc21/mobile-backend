@@ -6,7 +6,7 @@
     "@": "dist"
   },
   "scripts": {
-    "generate-swagger": "tsc && node -r module-alias/register dist/generate-swagger.js",
+    "generate-swagger": "tsc && node -r module-alias/register dist/swagger/generate-swagger.js",
     "lint": "eslint \"./**/*.ts\"",
     "prettier": "prettier --check \"./**/*.{ts,json}\"",
     "prettier-fix": "prettier --write \"./**/*.{ts,json}\"",
