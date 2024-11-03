@@ -3,7 +3,7 @@ name: Deploy Swagger Docs
 on:
   push:
     branches:
-      - main
+      - playground
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
         run: pnpm install
 
       - name: Generate Swagger docs
-        run: pnpm run generate-docs
+        run: pnpm run generate-swagger
         working-directory: ./api
 
       - name: Deploy to GitHub Pages
