@@ -1,6 +1,7 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi, { SwaggerUiOptions } from "swagger-ui-express";
 import { Router } from "express";
+
 import config from "./config";
 
 const options = {
@@ -67,4 +68,5 @@ const swaggerRouter = Router()
     res.json(swaggerSpec);
   });
 
+export { swaggerSpec };
 export default swaggerRouter;
