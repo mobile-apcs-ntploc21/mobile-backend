@@ -27,15 +27,49 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Generate Swagger docs
-        run: pnpm run generate-swagger
-        working-directory: ./api
+      - name: Create docs directory
+        working-directory: api
+        run: mkdir docs
 
       - name: Copy Swagger UI files
+        working-directory: api
+        run: cp node_modules/swagger-ui-dist/* docs/ -r
+
+      - name: Generate Swagger docs
+        working-directory: api
         run: |
-          cp node_modules/swagger-ui-dist/swagger-ui.css ./docs/
-          cp node_modules/swagger-ui-dist/swagger-ui-bundle.js ./docs/
-        working-directory: ./api
+          pnpm run generate-swagger
+          cp swagger.json ./docs
+
+      - name: Create HTML
+        working-directory: api
+        run: |
+          cat << 'EOF' > docs/index.html
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <title>API Documentation</title>
+              <link
+                rel="stylesheet"
+                type="text/css"
+                href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"
+              />
+            </head>
+            <body>
+              <div id="swagger-ui"></div>
+              <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+              <script>
+                window.onload = function () {
+                  const ui = SwaggerUIBundle({
+                    url: "swagger.json",
+                    dom_id: "#swagger-ui",
+                  });
+                };
+              </script>
+            </body>
+          </html>
+          EOF
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
