@@ -1,6 +1,25 @@
 import { NextFunction, Request, Response } from "express";
 import { getUserChannelPermissionsFunc } from "../utils/getUserChannelPermissions";
 
+/**
+ * @swagger
+ * components:
+ *  responses:
+ *    CheckChannelPermissionMiddlewareError:
+ *      description: Error response when the user does not have the required permissions.
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              status:
+ *                type: string
+ *                example: fail
+ *              message:
+ *                type: string
+ *                example: Forbidden
+ */
+
 export const checkChannelPermissionMiddleware = (
   requiredPermissions: string[]
 ) => {
@@ -12,7 +31,7 @@ export const checkChannelPermissionMiddleware = (
       return;
     }
 
-    let currentUserPermissions = null;
+    let currentUserPermissions: any = null;
     if (channel_id && res.locals?.userChannelId === channel_id) {
       currentUserPermissions = res.locals.userChannelPermissions;
     } else {

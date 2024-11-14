@@ -2,8 +2,9 @@ import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError } from "apollo-server";
 import mongoose from "mongoose";
 
+// import ServerEmoji from "@/models/servers/serverEmoji";
 import reactionModel from "@/models/conversations/reaction";
-import ServerEmoji from "@/models/servers/serverEmoji";
+import EmojiModel from "@/models/emojis";
 import messageModel from "@models/conversations/message";
 import userModel from "@models/user";
 import channelModel from "@models/servers/channels/channel";
@@ -73,7 +74,7 @@ const reactMessage = async (
     }
 
     // Check if emoji exists
-    const emoji = await ServerEmoji.findById(input.emoji)
+    const emoji = await EmojiModel.findById(input.emoji)
       .session(session)
       .lean();
     if (!emoji) {

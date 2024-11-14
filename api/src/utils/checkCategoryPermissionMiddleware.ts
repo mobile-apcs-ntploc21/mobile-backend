@@ -1,6 +1,25 @@
 import { NextFunction, Request, Response } from "express";
 import { getUserCategoryPermissionsFunc } from "../utils/getUserCategoryPermissions";
 
+/**
+ * @swagger
+ * components:
+ *  responses:
+ *    CheckCategoryPermissionMiddlewareError:
+ *      description: Error response when the user is not allowed to access the category.
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              status:
+ *                type: string
+ *                example: fail
+ *              message:
+ *                type: string
+ *                example: Forbidden
+ */
+
 export const checkCategoryPermissionMiddleware = (
   requiredPermissions: string[]
 ) => {
@@ -12,7 +31,7 @@ export const checkCategoryPermissionMiddleware = (
       return;
     }
 
-    let currentUserPermissions = null;
+    let currentUserPermissions: any = null;
     if (category_id && res.locals?.userCategoryId === category_id) {
       currentUserPermissions = res.locals.userCategoryPermissions;
     } else {

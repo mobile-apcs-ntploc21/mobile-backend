@@ -76,7 +76,9 @@ export const getUserServers = async (
       server.position = index;
     });
 
-    res.status(200).json({ ...servers });
+    res.status(200).json({
+      servers: servers,
+    });
     return;
   } catch (error) {
     next(error);
