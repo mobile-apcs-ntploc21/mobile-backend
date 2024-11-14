@@ -7,6 +7,7 @@ enum ModelNames {
   UserProfile = "user_profiles",
   UserStatus = "user_statuses",
   UserSetting = "settings",
+  Emojis = "emojis",
   Channel = "channels",
   Category = "categories",
   ServerRole = "server_roles",

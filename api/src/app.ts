@@ -10,7 +10,7 @@ import xss from "xss-clean";
 import globalErrorHandler from "./controllers/error";
 import friendRouter from "./routes/friend";
 import serverRouter from "./routes/servers/server";
-import serverEmojiRouter from "./routes/servers/serverEmojis";
+import serverEmojiRouter from "./routes/servers/server_emojis";
 import serverBansRouter from "./routes/servers/server_bans";
 import settingsRouter from "./routes/settings";
 import userRouter from "./routes/user";
@@ -62,7 +62,6 @@ app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 
 /// Server
 app.use("/api/v1/servers", serverRouter);
-app.use("/api/v1/servers", serverEmojiRouter);
 app.use(
   "/api/v1/servers/:serverId/emojis",
   authMiddleware,

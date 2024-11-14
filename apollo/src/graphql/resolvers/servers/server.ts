@@ -9,7 +9,7 @@ import ServerModel from "../../../models/servers/server";
 import ServerBansModel from "../../../models/servers/server_bans";
 import ServerMemberModel from "../../../models/servers/server_member";
 import ServerRoleModel from "../../../models/servers/server_role";
-import ServerEmoji from "../../../models/servers/serverEmoji";
+import EmojiModel from "@/models/emojis";
 import ServerChannelModel from "@/models/servers/channels/channel";
 import ServerCategoryModel from "@/models/servers/channels/category";
 import UserModel from "../../../models/user";
@@ -116,7 +116,7 @@ const deleteServerTransaction = async (server_id: any) => {
       { session }
     );
     // Delete server emojis
-    await ServerEmoji.deleteMany({ server_id }, { session });
+    await EmojiModel.deleteMany({ server_id }, { session });
     // Delete server bans
     await ServerBansModel.deleteMany(
       { "_id.server_id": server_id },

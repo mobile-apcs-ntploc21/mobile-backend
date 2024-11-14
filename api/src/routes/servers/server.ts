@@ -7,6 +7,10 @@ import {
   removeSelf,
 } from "../../controllers/servers/server_member";
 import {
+  getUnicodeEmojis,
+  getServerEmojisByUser,
+} from "../../controllers/emojis";
+import {
   getCurrentUserPermissions,
   getRolesAssignedWithMyself,
   getRolesAssignedWithUser,
@@ -16,6 +20,7 @@ import { authMiddleware } from "../../utils/authMiddleware";
 import { checkMembershipMiddleware } from "../../utils/checkMembershipMiddleware";
 import { checkOwnerMiddleware } from "../../utils/checkOwnerMiddleware";
 import { checkServerPermissionMiddleware } from "../../utils/checkServerPermissionMiddleware";
+
 import categoryRouter from "./channels/category";
 import channelRouter from "./channels/channel";
 import serverOwnerRouter from "./server_owner";
@@ -23,7 +28,67 @@ import serverRoleRouter from "./server_permission";
 
 const serverRouter = Router();
 
-// Members
+// ================== Emojis =============================
+/**
+ * @swagger
+ *  /servers/emojis/unicode:
+ *    get:
+ *      summary: Retrieve all unicode emojis
+ *      description: Retrieve all unicode emojis.
+ *      tags: [Server Emojis]
+ *      security:
+ *        - bearerAuth: []
+ *      responses:
+ *        '200':
+ *          description: Successful response with the emojis.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: array
+ *                items:
+ *                  $ref: '#/components/schemas/UnicodeEmoji'
+ *        '401':
+ *          $ref: '#/components/responses/AuthMiddlewareError'
+ */
+serverRouter.get("/emojis/unicode", authMiddleware, getUnicodeEmojis);
+
+/**
+ * @swagger
+ *  /servers/emojis/user/{userId}:
+ *    get:
+ *      summary: Retrieve all emojis by a user
+ *      description: Retrieve all emojis by a user.
+ *      tags: [Server Emojis]
+ *      security:
+ *        - bearerAuth: []
+ *      parameters:
+ *        - name: userId
+ *          in: path
+ *          required: true
+ *          description: The ID of the user.
+ *          schema:
+ *            type: string
+ *      responses:
+ *        '200':
+ *          description: Successful response with the emojis.
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: array
+ *                items:
+ *                  $ref: '#/components/schemas/ServerEmoji'
+ *        '400':
+ *          description: Missing user ID.
+ *          content:
+ *            application/json:
+ *              example:
+ *                message: User ID is required.
+ *        '401':
+ *          $ref: '#/components/responses/AuthMiddlewareError'
+ */
+serverRouter.get("/emojis/user/:userId", authMiddleware, getServerEmojisByUser);
+
+// ================== Members ============================
 serverRouter.use("/:serverId/owner", checkOwnerMiddleware, serverOwnerRouter);
 
 serverRouter.post("/join", authMiddleware, joinServer);

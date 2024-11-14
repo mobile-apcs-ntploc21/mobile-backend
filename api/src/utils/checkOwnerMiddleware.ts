@@ -3,6 +3,25 @@ import graphQLClient from "../utils/graphql";
 import { serverQueries } from "../graphql/queries";
 import { log } from "@/utils/log";
 
+/**
+ * @swagger
+ * components:
+ *  responses:
+ *    CheckOwnerMiddlewareError:
+ *      description: Error response when the user is not the owner of the server.
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              status:
+ *                type: string
+ *                example: fail
+ *              message:
+ *                type: string
+ *                example: You are not the owner of this server
+ */
+
 export const checkOwnerMiddleware = async (
   req: Request,
   res: Response,

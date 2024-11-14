@@ -12,6 +12,35 @@ import * as categoryCtrl from "../../../controllers/servers/channels/category";
 
 const categoryRouter = Router({ mergeParams: true });
 
+// ===== Swagger Components =====
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Category:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The Category ID
+ *           example: 0123456789abcdef01234567
+ *         server_id:
+ *           type: string
+ *           description: The Server ID
+ *           example: 0123456789abcdef01234567
+ *         name:
+ *           type: string
+ *           description: The Category name
+ *           example: General
+ *         position:
+ *           type: integer
+ *           description: The position of the Category in the Server
+ *           example: 0
+ */
+
+// ==============================
+
 // Move all category route
 categoryRouter.patch(
   "/move",
