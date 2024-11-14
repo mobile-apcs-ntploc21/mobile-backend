@@ -48,6 +48,284 @@
           "UNDEFINED"
         ]
       },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Category ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "server_id": {
+            "type": "string",
+            "description": "The Server ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Category name",
+            "example": "General"
+          },
+          "position": {
+            "type": "integer",
+            "description": "The position of the Category in the Server",
+            "example": 0
+          }
+        }
+      },
+      "Channel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The Channel ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "server_id": {
+            "type": "string",
+            "description": "The Server ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "The Conversation ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "category_id": {
+            "type": "string",
+            "description": "The Category ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "name": {
+            "type": "string",
+            "description": "The Channel name",
+            "example": "General"
+          },
+          "description": {
+            "type": "string",
+            "description": "The Channel description",
+            "example": "General chat"
+          },
+          "last_message_id": {
+            "type": "string",
+            "description": "The ID of the last message in the Channel",
+            "example": null
+          },
+          "position": {
+            "type": "integer",
+            "description": "The position of the Channel in the Category",
+            "example": 0
+          },
+          "last_message": {
+            "$ref": "#/components/schemas/Message"
+          },
+          "has_new_message": {
+            "type": "boolean",
+            "description": "True if the Channel has a new message",
+            "example": false
+          },
+          "number_of_unread_mentions": {
+            "type": "integer",
+            "description": "The number of unread mentions in the Channel",
+            "example": 0
+          },
+          "is_nsfw": {
+            "type": "boolean",
+            "description": "True if the Channel is NSFW",
+            "example": false
+          },
+          "is_archived": {
+            "type": "boolean",
+            "description": "True if the Channel is archived",
+            "example": false
+          }
+        },
+        "example": {
+          "id": "0123456789abcdef01234567",
+          "server_id": "0123456789abcdef01234567",
+          "conversation_id": "0123456789abcdef01234567",
+          "category_id": "0123456789abcdef01234567",
+          "name": "general",
+          "description": "General chat",
+          "last_message_id": "0123456789abcdef01234567",
+          "position": 0,
+          "last_message": null,
+          "has_new_message": false,
+          "number_of_unread_mentions": 0,
+          "is_nsfw": false,
+          "is_archived": false
+        }
+      },
+      "MessageReaction": {
+        "type": "object",
+        "description": "A message reaction object",
+        "properties": {
+          "emoji_id": {
+            "type": "string",
+            "description": "The ID of the emoji",
+            "example": "0123456789abcdef0123456"
+          },
+          "count": {
+            "type": "integer",
+            "description": "The number of reactions",
+            "example": 1
+          },
+          "reactors": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "The IDs of the users who reacted to the message",
+              "example": [
+                "0123456789abcdef01234567"
+              ]
+            }
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "description": "A message object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The message ID",
+            "example": "0123456789abcdef01234567"
+          },
+          "conversation_id": {
+            "type": "string",
+            "description": "The ID of the conversation this message belongs to",
+            "example": "0123456789abcdef01234567"
+          },
+          "sender_id": {
+            "type": "string",
+            "description": "The ID of the user who sent the message",
+            "example": "0123456789abcdef01234567"
+          },
+          "author": {
+            "$ref": "#/components/schemas/UserProfile"
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the message",
+            "example": "Hello, World!"
+          },
+          "replied_message_id": {
+            "type": "string",
+            "description": "The ID of the message this message is replying to",
+            "example": "0123456789abcdef01234567"
+          },
+          "forwarded_message_id": {
+            "type": "string",
+            "description": "The ID of the message this message is forwarding to",
+            "example": "0123456789abcdef01234567"
+          },
+          "mention_users": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "The IDs of the users mentioned in the message",
+              "example": [
+                "0123456789abcdef01234567"
+              ]
+            }
+          },
+          "mention_roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "The IDs of the roles mentioned in the message",
+              "example": [
+                "0123456789abcdef01234567"
+              ]
+            }
+          },
+          "mention_channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "The IDs of the channels mentioned in the message",
+              "example": [
+                "0123456789abcdef01234567"
+              ]
+            }
+          },
+          "emojis": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "The IDs of the emojis used in the message",
+              "example": [
+                "0123456789abcdef01234567"
+              ]
+            }
+          },
+          "reactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageReaction"
+            }
+          },
+          "replied_message": {
+            "$ref": "#/components/schemas/Message"
+          },
+          "is_pinned": {
+            "type": "boolean",
+            "description": "True if the message is pinned",
+            "example": false
+          },
+          "is_modified": {
+            "type": "boolean",
+            "description": "True if the message is modified",
+            "example": false
+          }
+        }
+      },
+      "ServerEmoji": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The emoji ID. Encoded in 12-byte ObjectId (refer to MongoDB ObjectId).",
+            "example": "0123456789abcdef01234567"
+          },
+          "name": {
+            "type": "string",
+            "description": "The emoji name.",
+            "example": "smiley",
+            "pattern": "^[a-zA-Z0-9_]{2,32}$"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "The emoji image URL.",
+            "example": "https://example.com/emoji.png"
+          },
+          "uploader_id": {
+            "type": "string",
+            "description": "The emoji's uploader ID.",
+            "example": "0123456789abcdef01234567"
+          }
+        }
+      },
+      "UnicodeEmoji": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The emoji ID. Encoded in 12-byte ObjectId (refer to MongoDB ObjectId).",
+            "example": "0123456789abcdef01234567"
+          },
+          "unicode": {
+            "type": "string",
+            "description": "The unicode emoji.",
+            "example": "😊"
+          },
+          "name": {
+            "type": "string",
+            "description": "The emoji name.",
+            "example": "smiley"
+          }
+        }
+      },
       "UserSettings": {
         "type": "object",
         "properties": {
@@ -162,6 +440,86 @@
                     "The user belonging to this token does no longer exist",
                     "User recently changed password, please login again"
                   ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "CheckCategoryPermissionMiddlewareError": {
+        "description": "Error response when the user is not allowed to access the category.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "fail"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Forbidden"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CheckChannelPermissionMiddlewareError": {
+        "description": "Error response when the user does not have the required permissions.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "fail"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Forbidden"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CheckMembershipMiddlewareError": {
+        "description": "Error response when the user is not a member of the server.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "fail"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "You are not a member of this server"
+                }
+              }
+            }
+          }
+        }
+      },
+      "CheckOwnerMiddlewareError": {
+        "description": "Error response when the user is not the owner of the server.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "fail"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "You are not the owner of this server"
                 }
               }
             }
@@ -947,6 +1305,557 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "description": {
+      "0": "S",
+      "1": "e",
+      "2": "r",
+      "3": "v",
+      "4": "e",
+      "5": "r",
+      "6": " ",
+      "7": "E",
+      "8": "m",
+      "9": "o",
+      "10": "j",
+      "11": "i",
+      "12": "s",
+      "13": " ",
+      "14": "m",
+      "15": "a",
+      "16": "n",
+      "17": "a",
+      "18": "g",
+      "19": "e",
+      "20": "m",
+      "21": "e",
+      "22": "n",
+      "23": "t"
+    },
+    "/servers/{serverId}/emojis/{emojiId}": {
+      "get": {
+        "summary": "Retrieve a specific server emoji",
+        "description": "Retrieve a specific server emoji by its ID.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "emojiId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the emoji to retrieve.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the emoji details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/ServerEmoji"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid server ID or invalid emoji ID.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server ID and Emoji ID are required."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "Emoji not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Emoji not found."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update a Server Emoji",
+        "description": "Use to update a server emoji by providing the emoji ID.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the server to update the emoji in.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "emojiId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the emoji to update.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The new emoji name to update.",
+                    "example": "smiley2"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful update server emoji.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerEmoji"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid server ID, emoji ID, or name.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server ID, emoji ID, and name are required."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "Emoji not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Emoji not found."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a Server Emoji",
+        "description": "Use to delete a server emoji with the given emoji ID.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "serverId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the server to delete the emoji from.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "emojiId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the emoji to delete.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful delete server emoji.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid server ID or emoji ID.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server ID and Emoji ID are required."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "404": {
+            "description": "Emoji not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Emoji not found."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/servers/{serverId}/emojis": {
+      "get": {
+        "summary": "Retrieve all emojis in a server",
+        "description": "Use to retrieve all emojis in a server by providing the server ID.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful retrieve server emojis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServerEmoji"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid server ID or server with given ID not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Server ID is required."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a Server Emoji",
+        "description": "Use to create a server emoji, given all the required fields.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serverId",
+            "required": true,
+            "description": "The ID of the server to create the emoji in.",
+            "type": "string"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The emoji name.",
+                    "example": "smiley"
+                  },
+                  "image_url": {
+                    "type": "string",
+                    "description": "The emoji image URL.",
+                    "example": "https://example.com/emoji.png"
+                  },
+                  "uploader_id": {
+                    "type": "string",
+                    "description": "The ID of the user who uploaded the emoji.",
+                    "example": "0123456789abcdef01234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful create server emoji.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerEmoji"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid server ID or server with given ID not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "oneOf": [
+                    {
+                      "message": "Server ID, name, and image are required."
+                    },
+                    {
+                      "message": "Server emoji limit reached."
+                    },
+                    {
+                      "message": "Emoji name already exists."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "500": {
+            "description": "Failed to upload image.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Failed to upload image."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/servers/{serverId}/owner/members": {
+      "post": {
+        "summary": "Add members to a server",
+        "description": "Add members to a server. Given a list of user IDs, add them to the server.",
+        "tags": [
+          "Server Owner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "An array of user IDs to add to the server.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": [
+                "userId1",
+                "userId2"
+              ]
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful response with the updated server members."
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "403": {
+            "$ref": "#/components/responses/CheckMembershipMiddlewareError"
+          },
+          "404": {
+            "$ref": "#/components/responses/CheckOwnerMiddlewareError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove members from a server",
+        "description": "Remove members from a server. Given a list of user IDs, remove them from the server.",
+        "tags": [
+          "Server Owner"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "An array of IDs of the user to remove from the server.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "example": [
+                "userId1",
+                "userId2"
+              ]
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful response with the updated server members."
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          },
+          "403": {
+            "$ref": "#/components/responses/CheckMembershipMiddlewareError"
+          },
+          "404": {
+            "$ref": "#/components/responses/CheckOwnerMiddlewareError"
+          }
+        }
+      }
+    },
+    "/servers/emojis/unicode": {
+      "get": {
+        "summary": "Retrieve all unicode emojis",
+        "description": "Retrieve all unicode emojis.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the emojis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UnicodeEmoji"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
+          }
+        }
+      }
+    },
+    "/servers/emojis/user/{userId}": {
+      "get": {
+        "summary": "Retrieve all emojis by a user",
+        "description": "Retrieve all emojis by a user.",
+        "tags": [
+          "Server Emojis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with the emojis.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServerEmoji"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing user ID.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "User ID is required."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthMiddlewareError"
           }
         }
       }
@@ -2031,6 +2940,9 @@
   "tags": [
     {
       "name": "Friends"
+    },
+    {
+      "name": "Server Emojis"
     },
     {
       "name": "Settings"
