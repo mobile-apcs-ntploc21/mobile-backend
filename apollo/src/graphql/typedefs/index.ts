@@ -17,7 +17,6 @@ import {
 import serverBans from "./servers/server_bans";
 import serverSchema from "./servers/server";
 import serverMemberSchema from "./servers/server_member";
-import serverEmoji from "./servers/serverEmoji";
 import server_role from "./servers/server_role";
 import assigned_user_role from "./servers/assigned_user_role";
 /// Channel
@@ -28,6 +27,7 @@ import channel_user_permission from "./servers/channels/channel_user_permission"
 import category_role_permission from "./servers/channels/category_role_permission";
 import category_user_permission from "./servers/channels/category_user_permission";
 /// Conversation
+import emojis from "./emojis";
 import message from "./conversations/message";
 import reaction from "./conversations/reaction";
 import last_read from "./conversations/last_read";
@@ -61,13 +61,13 @@ export const apiTypeDefs = mergeTypeDefs([
   userSettingsSchema,
   userProfileApollo,
 
+  emojis.API,
   message.API,
   reaction.API,
   last_read.API,
 
   serverMemberSchema.API,
   serverSchema.API,
-  serverEmoji.API,
   serverBans.API,
   server_role.API,
   assigned_user_role.API,

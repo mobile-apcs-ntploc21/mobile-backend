@@ -4,6 +4,28 @@ import { GET_USER_BY_ID } from "../graphql/queries";
 import jwt from "jsonwebtoken";
 import config from "../config";
 
+/**
+ * @swagger
+ * components:
+ *   responses:
+ *     AuthMiddlewareError:
+ *       description: Unauthorized
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                  type: string
+ *                  example: fail
+ *               message:
+ *                  type: string
+ *                  enum:
+ *                    - You are not authorized to access this route
+ *                    - The user belonging to this token does no longer exist
+ *                    - User recently changed password, please login again
+ */
+
 // Get user by ID
 const getUserById = async (id: string) => {
   const response = await graphQLClient().request(GET_USER_BY_ID, {

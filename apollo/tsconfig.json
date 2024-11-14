@@ -19,7 +19,6 @@
     "module": "commonjs",
     "esModuleInterop": true,
     "lib": ["es6"],
-    "sourceMap": true,
     "removeComments": true,
     "noImplicitAny": true,
     "strictNullChecks": true,

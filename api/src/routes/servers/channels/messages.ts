@@ -12,6 +12,102 @@ import { readMessages } from "../../../controllers/servers/last_read";
 
 const messageRouter = Router({ mergeParams: true });
 
+// ====== Swagger Components ======
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     MessageReaction:
+ *       type: object
+ *       description: A message reaction object
+ *       properties:
+ *         emoji_id:
+ *           type: string
+ *           description: The ID of the emoji
+ *           example: 0123456789abcdef0123456
+ *         count:
+ *           type: integer
+ *           description: The number of reactions
+ *           example: 1
+ *         reactors:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: The IDs of the users who reacted to the message
+ *             example: [0123456789abcdef01234567]
+ *     Message:
+ *       type: object
+ *       description: A message object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The message ID
+ *           example: 0123456789abcdef01234567
+ *         conversation_id:
+ *           type: string
+ *           description: The ID of the conversation this message belongs to
+ *           example: 0123456789abcdef01234567
+ *         sender_id:
+ *           type: string
+ *           description: The ID of the user who sent the message
+ *           example: 0123456789abcdef01234567
+ *         author:
+ *           $ref: '#/components/schemas/UserProfile'
+ *         content:
+ *           type: string
+ *           description: The content of the message
+ *           example: Hello, World!
+ *         replied_message_id:
+ *           type: string
+ *           description: The ID of the message this message is replying to
+ *           example: 0123456789abcdef01234567
+ *         forwarded_message_id:
+ *           type: string
+ *           description: The ID of the message this message is forwarding to
+ *           example: 0123456789abcdef01234567
+ *         mention_users:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: The IDs of the users mentioned in the message
+ *             example: [0123456789abcdef01234567]
+ *         mention_roles:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: The IDs of the roles mentioned in the message
+ *             example: [0123456789abcdef01234567]
+ *         mention_channels:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: The IDs of the channels mentioned in the message
+ *             example: [0123456789abcdef01234567]
+ *         emojis:
+ *           type: array
+ *           items:
+ *             type: string
+ *             description: The IDs of the emojis used in the message
+ *             example: [0123456789abcdef01234567]
+ *         reactions:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/MessageReaction'
+ *         replied_message:
+ *           $ref: '#/components/schemas/Message'
+ *         is_pinned:
+ *           type: boolean
+ *           description: True if the message is pinned
+ *           example: false
+ *         is_modified:
+ *           type: boolean
+ *           description: True if the message is modified
+ *           example: false
+ */
+
+// ================================
+
 // Get list of messages in a channel
 messageRouter.get("/", messageCtrl.getMessages);
 

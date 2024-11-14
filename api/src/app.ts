@@ -10,7 +10,7 @@ import xss from "xss-clean";
 import globalErrorHandler from "./controllers/error";
 import friendRouter from "./routes/friend";
 import serverRouter from "./routes/servers/server";
-import serverEmojiRouter from "./routes/servers/serverEmojis";
+import serverEmojiRouter from "./routes/servers/server_emojis";
 import serverBansRouter from "./routes/servers/server_bans";
 import settingsRouter from "./routes/settings";
 import userRouter from "./routes/user";
@@ -20,6 +20,7 @@ import { authMiddleware } from "./utils/authMiddleware";
 import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
 import config from "@/config";
 import { log } from "@/utils/log";
+import swaggerRouter from "./swagger";
 
 const app = express();
 
@@ -48,6 +49,9 @@ if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 app.use(express.json());
 app.use(cors());
 
+// Swagger
+app.use(swaggerRouter);
+
 // Set default route
 /// Users
 app.use("/api/v1/users", userRouter);
@@ -58,7 +62,6 @@ app.use("/api/v1/profile/", authMiddleware, userProfileRouter);
 
 /// Server
 app.use("/api/v1/servers", serverRouter);
-app.use("/api/v1/servers", serverEmojiRouter);
 app.use(
   "/api/v1/servers/:serverId/emojis",
   authMiddleware,

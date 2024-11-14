@@ -1,0 +1,105 @@
+name: Deploy Swagger Docs
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CODE_OF_CONDUCT.md"
+      - "LICENSE"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create docs directory
+        working-directory: api
+        run: mkdir docs
+
+      - name: Copy Swagger UI files
+        working-directory: api
+        run: cp node_modules/swagger-ui-dist/* docs/ -r
+
+      - name: Generate Swagger docs
+        working-directory: api
+        run: |
+          pnpm run generate-swagger
+          cp swagger.json ./docs
+          cp dist/swagger/operations-sorter.js ./docs
+
+      - name: Create HTML
+        working-directory: api
+        run: |
+          cat << 'EOF' > docs/index.html
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <title>API Documentation</title>
+              <link
+                rel="stylesheet"
+                type="text/css"
+                href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"
+              />
+            </head>
+            <body>
+              <div id="swagger-ui"></div>
+              <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+              <script src="./operations-sorter.js"></script>
+              <script>
+                window.onload = function () {
+                  const ui = SwaggerUIBundle({
+                    url: "swagger.json",
+                    dom_id: "#swagger-ui",
+                    operationsSorter: (a, b) => {
+                      const methodsOrder = [
+                        "get",
+                        "post",
+                        "put",
+                        "patch",
+                        "delete",
+                        "options",
+                        "trace",
+                      ];
+                      let result =
+                        methodsOrder.indexOf(a.get("method")) -
+                        methodsOrder.indexOf(b.get("method"));
+
+                      if (result === 0) {
+                        result = a.get("path").localeCompare(b.get("path"));
+                      }
+
+                      return result;
+                    },
+                  });
+                };
+              </script>
+            </body>
+          </html>
+          EOF
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./api/docs

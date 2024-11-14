@@ -9,7 +9,6 @@ import userSettingsResolvers from "./userSettings";
 import { userProfileApollo, userProfileWs } from "./user_profile";
 /// Server
 import serverResolver from "./servers/server";
-import serverEmoji from "./servers/serverEmoji";
 import serverMemberResolver from "./servers/server_member";
 import serverBansResolver from "./servers/server_bans";
 /// Channel
@@ -22,6 +21,7 @@ import channel_user_permission from "./servers/channels/channel_user_permission"
 import category_role_permission from "./servers/channels/category_role_permission";
 import category_user_permission from "./servers/channels/category_user_permission";
 /// Conversation
+import emojisResolver from "./emojis";
 import messageResolver from "./conversations/message";
 import reactionResolver from "./conversations/reaction";
 import lastReadResolver from "./conversations/last_read";
@@ -35,13 +35,13 @@ export const apiResolvers = mergeResolvers([
   userSettingsResolvers,
   userStatusResolvers_API,
 
+  emojisResolver.API,
   messageResolver.API,
   reactionResolver.API,
   lastReadResolver,
 
   serverResolver.API,
   serverMemberResolver.API,
-  serverEmoji.API,
   serverBansResolver,
   server_role.API,
 

@@ -51,8 +51,8 @@ const gqlQuery = gql`
     inChannel: [ID]
     inConversation: [ID]
     text: String
-    from: ID
-    mention: ID
+    from: [ID]
+    mention: [ID]
     has: AttachmentType
   }
 
