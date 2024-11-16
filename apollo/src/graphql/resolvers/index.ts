@@ -41,6 +41,7 @@ import {
   directMessageWs,
 } from "./conversations/direct_message";
 
+
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
 export const apiResolvers = mergeResolvers([
@@ -77,6 +78,8 @@ export const apiResolvers = mergeResolvers([
   cronjobResolver,
 
   directMessageAPI,
+
+  directMessageAPI,
 ]);
 
 export const wsResolvers = mergeResolvers([
@@ -84,5 +87,6 @@ export const wsResolvers = mergeResolvers([
   userStatusResolvers_Ws,
   userProfileWs,
   serverResolver.Ws,
+  directMessageWs,
   directMessageWs,
 ]);
