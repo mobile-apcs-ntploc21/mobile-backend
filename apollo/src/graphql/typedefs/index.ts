@@ -40,6 +40,7 @@ import subscriptions from "./payment/subscriptions";
 import expireDate from "./expire_date";
 /// Cronjob
 import cronjob from "./cronjob";
+import direct_message from "./conversations/direct_message";
 
 const linkedSchema = gql`
   scalar JSON
@@ -96,6 +97,8 @@ export const apiTypeDefs = mergeTypeDefs([
   expireDate.API,
 
   cronjob.API,
+
+  direct_message.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
@@ -107,4 +110,6 @@ export const wsTypeDefs = mergeTypeDefs([
   serverSchema.Ws,
 
   channel.WS,
+
+  direct_message.WS,
 ]);
