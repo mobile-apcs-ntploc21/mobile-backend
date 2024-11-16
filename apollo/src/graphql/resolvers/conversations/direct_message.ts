@@ -1,9 +1,9 @@
 import mongoose, { ObjectId } from "mongoose";
+import { IResolvers } from "@graphql-tools/utils";
 
 import ConversationModel from "@/models/conversations/conversation";
 import UserModel from "@/models/user";
 import DirectMessageModel from "@/models/conversations/direct_message";
-import { IResolvers } from "@graphql-tools/utils";
 
 const directMessageAPI: IResolvers = {
   Query: {
@@ -40,14 +40,16 @@ const directMessageAPI: IResolvers = {
         const [conversation] = await ConversationModel.create([{}], {
           session,
         });
-        const dm = await DirectMessageModel.create(
-          {
-            _id: {
-              user_first_id: uid1,
-              user_second_id: uid2,
+        const [dm] = await DirectMessageModel.create(
+          [
+            {
+              _id: {
+                user_first_id: uid1,
+                user_second_id: uid2,
+              },
+              conversation_id: conversation._id,
             },
-            conversation_id: conversation._id,
-          },
+          ],
           { session }
         );
 
@@ -61,9 +63,22 @@ const directMessageAPI: IResolvers = {
       }
     },
     deleteDirectMessage: async (_, { conversation_id }) => {
-      return await DirectMessageModel.deleteOne({ conversation_id });
+      const result = await DirectMessageModel.deleteOne({ conversation_id });
+      return result.deletedCount > 0;
     },
   },
 };
 
-export { directMessageAPI };
+const directMessageWs: IResolvers = {
+  Subscription: {
+    directMessageUpdated: {
+      subscribe: async (_, { conversation_id }, { pubsub }) => {
+        return pubsub.asyncIterator(
+          `DIRECT_MESSAGE_UPDATED_${conversation_id}`
+        );
+      },
+    },
+  },
+};
+
+export { directMessageAPI, directMessageWs };

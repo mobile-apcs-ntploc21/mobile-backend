@@ -31,15 +31,6 @@ import emojis from "./emojis";
 import message from "./conversations/message";
 import reaction from "./conversations/reaction";
 import last_read from "./conversations/last_read";
-/// Payment
-import paymentlog from "./payment/paymentlog";
-import orders from "./payment/orders";
-import packages from "./payment/packages";
-import subscriptions from "./payment/subscriptions";
-/// ExpireDate
-import expireDate from "./expire_date";
-/// Cronjob
-import cronjob from "./cronjob";
 import direct_message from "./conversations/direct_message";
 
 const linkedSchema = gql`
@@ -88,15 +79,6 @@ export const apiTypeDefs = mergeTypeDefs([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
-
-  packages.API,
-  orders.API,
-  paymentlog.API,
-  subscriptions.API,
-
-  expireDate.API,
-
-  cronjob.API,
 
   direct_message.API,
 ]);
