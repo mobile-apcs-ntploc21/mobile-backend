@@ -7,7 +7,7 @@ interface IDirectMessage {
     user_second_id: Schema.Types.ObjectId;
   };
   conversation_id: Schema.Types.ObjectId;
-  latest_message_id: Schema.Types.ObjectId | null;
+  latest_message: Schema.Types.ObjectId | null;
   has_new_message: boolean;
   number_of_unread_mentions: number;
 }
@@ -31,7 +31,7 @@ const directMessageSchema = new Schema<IDirectMessage>(
       ref: ModelNames.Conversation,
       required: [true, "Conversation ID is required!"],
     },
-    latest_message_id: {
+    latest_message: {
       type: Schema.Types.ObjectId,
       ref: ModelNames.Message,
       default: null,
