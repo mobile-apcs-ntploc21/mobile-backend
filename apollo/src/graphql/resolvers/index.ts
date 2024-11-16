@@ -36,6 +36,10 @@ import expireDateResolver from "./expire_date";
 
 /// Cronjob
 import cronjobResolver from "./cronjob";
+import {
+  directMessageAPI,
+  directMessageWs,
+} from "./conversations/direct_message";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -71,6 +75,8 @@ export const apiResolvers = mergeResolvers([
 
   expireDateResolver,
   cronjobResolver,
+
+  directMessageAPI,
 ]);
 
 export const wsResolvers = mergeResolvers([
@@ -78,4 +84,5 @@ export const wsResolvers = mergeResolvers([
   userStatusResolvers_Ws,
   userProfileWs,
   serverResolver.Ws,
+  directMessageWs,
 ]);
