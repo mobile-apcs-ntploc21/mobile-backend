@@ -4,19 +4,31 @@ import { IResolvers } from "@graphql-tools/utils";
 import ConversationModel from "@/models/conversations/conversation";
 import UserModel from "@/models/user";
 import DirectMessageModel from "@/models/conversations/direct_message";
+import { log } from "@/utils/log";
+import MessageModel from "@/models/conversations/message";
 
 const directMessageAPI: IResolvers = {
   Query: {
     getDirectMessage: async (_, { conversation_id }) => {
-      return await DirectMessageModel.findById(conversation_id);
+      const result: any = await DirectMessageModel.findOne({ conversation_id });
+      if (!result) return null;
+      result.latest_message = await MessageModel.findById(
+        result.latest_message_id
+      );
+      return result;
     },
     getDirectMessages: async (_, { user_id }) => {
-      return await DirectMessageModel.find({
+      const result = await DirectMessageModel.find({
         $or: [
           { "_id.user_first_id": user_id },
           { "_id.user_second_id": user_id },
         ],
       });
+      // eslint-disable-next-line prettier/prettier
+      for (const dm of result)
+        // @ts-ignore
+        dm.latest_message = await MessageModel.findById(dm.latest_message_id);
+      return result;
     },
   },
   Mutation: {
