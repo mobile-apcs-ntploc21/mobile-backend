@@ -10,7 +10,6 @@ import userModel from "@models/user";
 import channelModel from "@models/servers/channels/channel";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 import { log } from "@/utils/log";
-import { PubSub } from "graphql-subscriptions";
 
 // ===========================
 
@@ -146,10 +145,10 @@ const reactMessage = async (
 
 const reactMessageInDM = async (
   message_id: string,
-  conversation_id: string,
-  input: { sender_id: string; emoji: string },
-  directMessagePubSub: PubSub
+  input: { sender_id: string; emoji: string }
 ) => {
+  let channel = null;
+
   // Start a session
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -157,10 +156,7 @@ const reactMessageInDM = async (
   try {
     // Check if message exists
     const message = await messageModel
-      .findOne({
-        message_id,
-        conversation_id,
-      })
+      .findById(message_id)
       .session(session)
       .lean();
     if (!message) {
@@ -223,15 +219,6 @@ const reactMessageInDM = async (
     .lean();
 
   // Publish reaction event
-  directMessagePubSub.publish(ServerEvents.messageReactionAdded, {
-    conversation_id,
-    type: ServerEvents.messageReactionAdded,
-    data: {
-      message_id: message_id,
-      conversation_id,
-      reactions: reactions,
-    },
-  });
 
   // @ts-ignore
   reactions.forEach((reaction) => (reaction.id = reaction._id));
@@ -313,9 +300,7 @@ const unreactMessage = async (
 
 const unreactMessageInDM = async (
   message_id: string,
-  conversation_id: string,
-  input: { sender_id: string; emoji: string },
-  directMessagePubSub: PubSub
+  input: { sender_id: string; emoji: string }
 ) => {
   // Start a session
   const session = await mongoose.startSession();
@@ -323,12 +308,7 @@ const unreactMessageInDM = async (
 
   try {
     // Check if message exists
-    const message = await messageModel
-      .findOne({
-        message_id: message_id,
-        conversation_id: conversation_id,
-      })
-      .session(session);
+    const message = await messageModel.findById(message_id).session(session);
     if (!message) {
       throw new UserInputError("Message not found!");
     }
@@ -366,18 +346,6 @@ const unreactMessageInDM = async (
     .lean();
 
   // Publish reaction event (unreact)
-  directMessagePubSub.publish(ServerEvents.messageReactionRemoved, {
-    // @ts-ignore
-    conversation_id,
-    type: ServerEvents.messageReactionRemoved,
-    data: {
-      message_id: message_id,
-      // @ts-ignore
-      conversation_id,
-      reactions: reactions,
-    },
-  });
-
   return reactions;
 };
 
@@ -411,25 +379,12 @@ const reactionAPI: IResolvers = {
   Mutation: {
     reactMessage: async (_, { message_id, input }) =>
       reactMessage(message_id, input),
-    reactMessageInDM: async (
-      _,
-      { message_id, conversation_id, input },
-      { directMessagePubSub }
-    ) =>
-      reactMessageInDM(message_id, conversation_id, input, directMessagePubSub),
+    reactMessageInDM: async (_, { message_id, input }) =>
+      reactMessageInDM(message_id, input),
     unreactMessage: async (_, { message_id, input }) =>
       unreactMessage(message_id, input),
-    unreactMessageInDM: async (
-      _,
-      { message_id, conversation_id, input },
-      { directMessagePubSub }
-    ) =>
-      unreactMessageInDM(
-        message_id,
-        conversation_id,
-        input,
-        directMessagePubSub
-      ),
+    unreactMessageInDM: async (_, { message_id, input }) =>
+      unreactMessageInDM(message_id, input),
   },
 };
 
