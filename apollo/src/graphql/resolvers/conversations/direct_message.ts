@@ -24,9 +24,10 @@ const directMessageAPI: IResolvers = {
           { "_id.user_second_id": user_id },
         ],
       });
-      for (const dm of result)
+      for (const dm of result) {
         // @ts-ignore
         dm.latest_message = await MessageModel.findById(dm.latest_message_id);
+      }
       return result;
     },
   },
