@@ -15,10 +15,6 @@ import ServerRoleModel from "@/models/servers/server_role";
 import AttachmentModel from "@/models/conversations/attachment";
 import { log } from "@/utils/log";
 import DirectMessageModel from "@/models/conversations/direct_message";
-import { publishMessage } from "@/rabbitmq";
-import { config } from "@/config";
-import serverModel from "@models/servers/server";
-import { PubSub } from "graphql-subscriptions";
 
 // ==========================
 interface IMessageReaction {
@@ -838,8 +834,7 @@ const createMessageTransaction = async (
 
 const createMessageInDMTransaction = async (
   conversation_id: string,
-  input: any,
-  directMessagePubSub: PubSub
+  input: any
 ): Promise<IMessage> => {
   // Extract the input
   const { sender_id, content, mention_users } = input;
@@ -923,28 +918,20 @@ const createMessageInDMTransaction = async (
     if (replied_message_id) {
       const repliedMessage = messageData.replied_message;
       if (repliedMessage) {
-        directMessagePubSub.publish(ServerEvents.messageMentionedUser, {
-          // @ts-ignore
-          conversation_id,
-          user_id: repliedMessage.sender_id,
-          forceUser: true,
-          type: ServerEvents.messageMentionedUser,
-          data: {
-            conversation_id,
-            message_id: message._id,
-          },
-        });
+        // publishEvent(ServerEvents.messageMentionedUser, {
+        //   // @ts-ignore
+        //   server_id: channel.server_id,
+        //   user_id: repliedMessage.sender_id,
+        //   forceUser: true,
+        //   type: ServerEvents.messageMentionedUser,
+        //   data: {
+        //     conversation_id,
+        //     message_id: message._id,
+        //   },
+        // });
       }
     }
 
-    directMessagePubSub.publish(ServerEvents.messageAdded, {
-      conversation_id,
-      type: ServerEvents.messageAdded,
-      data: {
-        conversation_id,
-        message: messageData,
-      },
-    });
     return messageData;
   } catch (error) {
     // Abort the transaction
@@ -1203,8 +1190,7 @@ const deleteMessageTransaction = async (
 };
 
 const deleteMessageInDMTransaction = async (
-  message_id: string,
-  directMessagePubSub: PubSub
+  message_id: string
 ): Promise<boolean> => {
   // Start a session
   const session = await mongoose.startSession();
@@ -1248,16 +1234,6 @@ const deleteMessageInDMTransaction = async (
       },
       { session, new: true }
     );
-
-    directMessagePubSub.publish(ServerEvents.messageDeleted, {
-      conversation_id: message.conversation_id,
-      type: ServerEvents.messageDeleted,
-      data: {
-        conversation_id: message.conversation_id,
-        message_id: message_id,
-        replied_message_id: message.replied_message_id,
-      },
-    });
 
     // Commit the transaction
     await session.commitTransaction();
@@ -1430,6 +1406,32 @@ const pinMessageInDM = async (
   const [extraFields] = await fetchExtraFields(pinnedMessages);
   return await Promise.all(
     pinnedMessages.map((message) => castToIMessage(message, extraFields))
+  );
+};
+
+const pinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
+  const message = await messageModel.findByIdAndUpdate(
+    {
+      _id: message_id,
+    },
+    {
+      is_deleted: false,
+      is_pinned: true,
+    }
+  );
+
+  if (!message) {
+    throw new UserInputError("Message not found!");
+  }
+
+  // Get all pinned messages
+  const pinnedMessages = await messageModel.find({
+    conversation_id: message.conversation_id,
+    is_pinned: true,
+  });
+
+  return await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message))
   );
 };
 
@@ -1690,6 +1692,34 @@ const unpinMessageInDM = async (
   return pinnedIMessages;
 };
 
+const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
+  const message = await messageModel.findByIdAndUpdate(
+    {
+      _id: message_id,
+    },
+    {
+      is_deleted: false,
+      is_pinned: false,
+    }
+  );
+
+  if (!message) {
+    throw new UserInputError("Message not found in the pinned list!");
+  }
+
+  // Get all pinned messages
+  const pinnedMessages = await messageModel.find({
+    conversation_id: message.conversation_id,
+    is_pinned: true,
+  });
+
+  const pinnedIMessages = await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message))
+  );
+
+  return pinnedIMessages;
+};
+
 // ==========================
 
 const messageAPI: IResolvers = {
@@ -1710,32 +1740,20 @@ const messageAPI: IResolvers = {
   Mutation: {
     createMessage: async (_, { conversation_id, input }) =>
       createMessageTransaction(conversation_id, input),
-    createMessageInDM: async (
-      _,
-      { conversation_id, input },
-      { directMessagePubSub }
-    ) =>
-      createMessageInDMTransaction(conversation_id, input, directMessagePubSub),
+    createMessageInDM: async (_, { conversation_id, input }) =>
+      createMessageInDMTransaction(conversation_id, input),
     editMessage: async (_, { message_id, input }) =>
       updateMessageTransaction(message_id, input),
     editMessageInDM: async (_, { message_id, input }) =>
       updateMessageInDMTransaction(message_id, input),
     deleteMessage: async (_, { message_id }) =>
       deleteMessageTransaction(message_id),
-    deleteMessageInDM: async (_, { message_id }, { directMessagePubSub }) =>
-      deleteMessageInDMTransaction(message_id, directMessagePubSub),
+    deleteMessageInDM: async (_, { message_id }) =>
+      deleteMessageInDMTransaction(message_id),
     pinMessage: async (_, { message_id }) => pinMessage(message_id),
-    pinMessageInDM: async (
-      _,
-      { message_id, conversation_id },
-      { directMessagePubSub }
-    ) => pinMessageInDM(message_id, conversation_id, directMessagePubSub),
+    pinMessageInDM: async (_, { message_id }) => pinMessageInDM(message_id),
     unpinMessage: async (_, { message_id }) => unpinMessage(message_id),
-    unpinMessageInDM: async (
-      _,
-      { message_id, conversation_id },
-      { directMessagePubSub }
-    ) => unpinMessageInDM(message_id, conversation_id, directMessagePubSub),
+    unpinMessageInDM: async (_, { message_id }) => unpinMessageInDM(message_id),
   },
 };
 
