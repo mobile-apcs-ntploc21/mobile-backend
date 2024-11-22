@@ -6,7 +6,6 @@ const config = {
   PORT: process.env.PORT ?? 4000,
   MODE: process.env.NODE_ENV ?? "development",
 
-  REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "password",
   REDIS_HOST: process.env.REDIS_HOST ?? "localhost",
   REDIS_PORT: process.env.REDIS_PORT?.toString() ?? "6379",
 
