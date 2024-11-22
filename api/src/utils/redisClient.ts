@@ -1,7 +1,6 @@
 import { createClient } from "redis";
 import fs from "fs/promises";
 import path from "path";
-import { promisify } from "util";
 import config from "../config";
 
 const STORE_PATH = path.join(__dirname, "../../store.json");
@@ -13,23 +12,23 @@ class Redis {
   private url: string;
 
   constructor(url: string = REDIS_URL, options: any = {}) {
-    this.url = url;
+    this.url = url || REDIS_URL;
     this.client = createClient({
       url: this.url,
+      ...options,
     });
 
     this.client.on("error", (error) => {
       console.error(error);
     });
     this.client.on("connect", () => {
-      console.log("Connected to Redis");
+      console.log(`Connected to Redis via URL ${this.url}`);
     });
   }
 
   public async start(): Promise<void> {
     try {
       await this.client.connect();
-      console.log("Connected to Redis");
     } catch (error) {
       console.error("Cannot connected to Redis:", error);
     }
@@ -41,8 +40,9 @@ class Redis {
    */
   async read(key: string): Promise<any> {
     try {
-      const getAsync = promisify(this.client.get).bind(this.client);
-      const value = await getAsync(key);
+      const value = await this.client.get(key);
+      console.log("Read from Redis:", key, value);
+
       return value;
     } catch (error) {
       console.error("Error reading from Redis:", error);
@@ -62,8 +62,12 @@ class Redis {
   ): Promise<void> {
     // Default expiry is 24 hours
     try {
-      const setAsync = promisify(this.client.set).bind(this.client);
-      await setAsync(key, value, "EX", expires);
+      if (expires === 0) {
+        await this.client.set(key, value);
+        return;
+      }
+
+      await this.client.setEx(key, expires, value);
     } catch (error) {
       console.error("Error writing to Redis:", error);
     }
@@ -83,6 +87,7 @@ class Redis {
   ): Promise<any | null> {
     try {
       const value = await this.read(key);
+
       if (value) {
         return JSON.parse(value);
       }
@@ -106,6 +111,8 @@ class Redis {
 
   async saveStoreToDisk(): Promise<void> {}
 
+  async loadStoreFromDisk(): Promise<void> {}
+
   async disconnect(): Promise<void> {
     try {
       await this.client.quit();
@@ -116,7 +123,18 @@ class Redis {
   }
 }
 
-const redis = new Redis();
+const options: any =
+  config.REDIS_HOST === "localhost"
+    ? {}
+    : {
+        password: config.REDIS_PASSWORD,
+        socket: {
+          host: config.REDIS_HOST,
+          port: config.REDIS_PORT,
+        },
+      };
+
+const redis = new Redis(REDIS_URL, options);
 redis.start();
 
 export default redis;
