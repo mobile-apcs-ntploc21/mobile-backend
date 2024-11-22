@@ -12,6 +12,7 @@ import {
   LOGOUT_USER,
 } from "../graphql/queries";
 import config from "../config";
+import { USERS } from "../constants/redisKey";
 
 // Generate JWT token
 const generateToken = (payload: any) => {
@@ -46,11 +47,6 @@ const getUserByUsername = async (username: string) => {
 
   return response.getUserByUsername;
 };
-
-// ========================================
-// Redis Setup
-const USER_ACCOUNT_TTL = 60 * 60 * 24; // 24 hours
-const USER_ACCOUNT_PREFIX = "USER_ACCOUNT_";
 
 // ========================================
 
@@ -283,20 +279,25 @@ export const getMe = async (
 ) => {
   try {
     const token = res.locals.token;
+    const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
 
-    const cacheKey = USER_ACCOUNT_PREFIX + res.locals.uid;
+    const cacheKey = USERS.USER_ACCOUNT.key({ user_id: decoded.id });
 
     // Check if user data is in cache
     const cachedData = await redisClient.fetch(
       cacheKey,
       async () => {
-        const user = await getUserByEmail(res.locals.email);
+        const user = await getUserByEmail(decoded.email);
         return user;
       },
-      USER_ACCOUNT_TTL
+      USERS.USER_ACCOUNT.TTL
     );
 
-    const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
+
     const user = await getUserByEmail(decoded.email);
 
     if (!user) {
