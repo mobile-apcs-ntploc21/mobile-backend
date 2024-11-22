@@ -49,6 +49,11 @@ const getUserByUsername = async (username: string) => {
 };
 
 // ========================================
+// Redis Setup
+const USER_ACCOUNT_TTL = 60 * 60 * 24; // 24 hours
+const USER_ACCOUNT_PREFIX = "USER_ACCOUNT_";
+
+// ========================================
 
 export const createUser = async (
   req: express.Request,
@@ -279,6 +284,19 @@ export const getMe = async (
 ) => {
   try {
     const token = res.locals.token;
+
+    const cacheKey = USER_ACCOUNT_PREFIX + res.locals.uid;
+
+    // Check if user data is in cache
+    const cachedData = await redisClient.fetch(
+      cacheKey,
+      async () => {
+        const user = await getUserByEmail(res.locals.email);
+        return user;
+      },
+      USER_ACCOUNT_TTL
+    );
+
     const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
 
     const cacheKey = USERS.USER_ACCOUNT.key({ user_id: decoded.id });
