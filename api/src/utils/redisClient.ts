@@ -1,6 +1,7 @@
 import { createClient } from "redis";
 import fs from "fs/promises";
 import path from "path";
+import { promisify } from "util";
 import config from "../config";
 
 const STORE_PATH = path.join(__dirname, "../../store.json");
@@ -12,23 +13,23 @@ class Redis {
   private url: string;
 
   constructor(url: string = REDIS_URL, options: any = {}) {
-    this.url = url || REDIS_URL;
+    this.url = url;
     this.client = createClient({
       url: this.url,
-      ...options,
     });
 
     this.client.on("error", (error) => {
       console.error(error);
     });
     this.client.on("connect", () => {
-      console.log(`Connected to Redis via URL ${this.url}`);
+      console.log("Connected to Redis");
     });
   }
 
   public async start(): Promise<void> {
     try {
       await this.client.connect();
+      console.log("Connected to Redis");
     } catch (error) {
       console.error("Cannot connected to Redis:", error);
     }
@@ -40,8 +41,8 @@ class Redis {
    */
   async read(key: string): Promise<any> {
     try {
-      const value = await this.client.get(key);
-
+      const getAsync = promisify(this.client.get).bind(this.client);
+      const value = await getAsync(key);
       return value;
     } catch (error) {
       console.error("Error reading from Redis:", error);
@@ -59,28 +60,10 @@ class Redis {
     value: any,
     expires: number = 60 * 60 * 24
   ): Promise<void> {
-    // Convert value into string
-    let _value: string;
-
-    switch (typeof value) {
-      case "string":
-        _value = value;
-        break;
-      case "object":
-        _value = JSON.stringify(value);
-        break;
-      default:
-        _value = value.toString();
-    }
-
     // Default expiry is 24 hours
     try {
-      if (expires === 0) {
-        await this.client.set(key, value);
-        return;
-      }
-
-      await this.client.setEx(key, expires, _value);
+      const setAsync = promisify(this.client.set).bind(this.client);
+      await setAsync(key, value, "EX", expires);
     } catch (error) {
       console.error("Error writing to Redis:", error);
     }
@@ -100,7 +83,6 @@ class Redis {
   ): Promise<any | null> {
     try {
       const value = await this.read(key);
-
       if (value) {
         return JSON.parse(value);
       }
@@ -114,33 +96,6 @@ class Redis {
     }
   }
 
-  /**
-   * Delete data from Redis
-   * @param key Redis key
-   */
-  async delete(key: string): Promise<void> {
-    try {
-      await this.client.del(key);
-    } catch (error) {
-      console.error("Error deleting from Redis:", error);
-    }
-  }
-
-  async scanAndDelete(prefix: string, chunkSize: number = 1000): Promise<void> {
-    try {
-      const keys = this.client.scanIterator({
-        MATCH: `${prefix}*`,
-        COUNT: chunkSize,
-      });
-
-      for await (const key of keys) {
-        await this.client.del(key);
-      }
-    } catch (error) {
-      console.error("Error scanning and deleting from Redis:", error);
-    }
-  }
-
   async ensureDataDir(): Promise<void> {
     try {
       await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
@@ -150,8 +105,6 @@ class Redis {
   }
 
   async saveStoreToDisk(): Promise<void> {}
-
-  async loadStoreFromDisk(): Promise<void> {}
 
   async disconnect(): Promise<void> {
     try {
@@ -163,18 +116,7 @@ class Redis {
   }
 }
 
-const options: any =
-  config.REDIS_HOST === "localhost"
-    ? {}
-    : {
-        password: config.REDIS_PASSWORD,
-        socket: {
-          host: config.REDIS_HOST,
-          port: config.REDIS_PORT,
-        },
-      };
-
-const redis = new Redis(REDIS_URL, options);
+const redis = new Redis();
 redis.start();
 
 export default redis;
