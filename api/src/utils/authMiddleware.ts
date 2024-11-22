@@ -82,8 +82,7 @@ export const authMiddleware = async (
     );
 
     if (cachedData) {
-      // Convert cached data to JSON
-      res.locals.uid = decoded.id;
+      res.locals.uid = cachedData.id;
       res.locals.token = token;
       next();
       return;
