@@ -1,6 +1,7 @@
 import { Upload } from "@aws-sdk/lib-storage";
 import {
   DeleteObjectCommand,
+  PutObjectCommand,
   PutObjectCommandInput,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -9,6 +10,7 @@ import sharp from "sharp";
 import streamifier from "streamifier";
 import config from "../config";
 import { log } from "@/utils/log";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // AWS S3 Config
 export const s3 = new S3Client({
@@ -184,4 +186,23 @@ export const compressImage = async (image: any) => {
     filename,
     mimetype,
   };
+};
+
+export const generatePresignedUrl = async (key: string, fileType: string) => {
+  try {
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      ContentType: fileType,
+    });
+
+    const url = await getSignedUrl(s3, command, {
+      expiresIn: 3600,
+    });
+
+    return url;
+  } catch (err: any) {
+    log.error(err.message);
+    throw new Error(err.message);
+  }
 };

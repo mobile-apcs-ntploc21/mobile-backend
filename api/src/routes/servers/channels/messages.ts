@@ -124,6 +124,13 @@ messageRouter.post(
   messageCtrl.createMessage
 );
 
+// Upload a file with pre-signed URL
+messageRouter.post(
+  "/upload",
+  checkChannelPermissionMiddleware([ChP.SEND_MESSAGE]),
+  messageCtrl.uploadFile
+);
+
 // Edit a message
 messageRouter.put("/:messageId", messageCtrl.editMessage);
 
