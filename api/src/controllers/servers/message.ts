@@ -2,6 +2,8 @@ import express from "express";
 import graphQLClient from "../../utils/graphql";
 import { messageQueries } from "../../graphql/queries";
 import { messageMutations } from "../../graphql/mutations";
+import { generatePresignedUrl } from "@/utils/storage";
+import { v4 as uuidv4 } from "uuid";
 
 // ==============
 
@@ -338,6 +340,68 @@ export const createMessage = async (
     );
 
     res.status(201).json({ message });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
+export const uploadFile = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { channelId, serverId } = req.params;
+  const { fileName, fileType, fileSize } = req.body;
+
+  if (!serverId) {
+    res.status(400).json({ message: "Server ID is required." });
+    return;
+  }
+
+  if (!channelId) {
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
+  }
+
+  if (!fileName) {
+    res.status(400).json({ message: "File name are required." });
+    return;
+  }
+
+  if (!fileType) {
+    res.status(400).json({ message: "File type is required." });
+    return;
+  }
+
+  if (!fileSize) {
+    res.status(400).json({ message: "File size is required." });
+    return;
+  }
+
+  if (fileSize > 10485760) {
+    res.status(400).json({ message: "File size must be less than 10MB." });
+    return;
+  }
+
+  const channel = res.locals.channelObject;
+  if (!channel.conversation_id) {
+    res.status(404).json({
+      message:
+        "Channel does not have a conversation. Please delete and create a new channel.",
+    });
+    return;
+  }
+
+  try {
+    const fileExtension = fileName.split(".").pop();
+    const key = `attachments/${serverId}/${channelId}/${uuidv4()}.${fileExtension}`;
+
+    const uploadUrl = await generatePresignedUrl(key, fileType);
+
+    res.status(200).json({ uploadUrl, key });
+
     return;
   } catch (error: any) {
     next(error);
