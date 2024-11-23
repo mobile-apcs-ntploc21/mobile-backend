@@ -2,6 +2,11 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       PORT: number;
+
+      REDIS_PASSWORD?: string;
+      REDIS_HOST: string;
+      REDIS_PORT: number;
+
       JWT_SECRET: string;
       JWT_EXPIRES_IN: string;
       JWT_REFRESH_SECRET: string;
