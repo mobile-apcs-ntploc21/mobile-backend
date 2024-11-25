@@ -11,7 +11,8 @@ const gqlType = gql`
   type MessageAttachment {
     type: AttachmentType!
     url: String!
-    filename: String
+    filename: String!
+    size: Int!
   }
 
   type MessageReaction {
@@ -30,6 +31,7 @@ const gqlType = gql`
     content: String!
     replied_message_id: ID
     forwarded_message_id: ID
+    attachments: [MessageAttachment]
 
     mention_users: [ID]
     mention_roles: [ID]
@@ -93,10 +95,18 @@ const gqlQuery = gql`
 `;
 
 const gqlMutation = gql`
+  input MessageAttachmentInput {
+    type: AttachmentType!
+    url: String!
+    filename: String!
+    size: Int!
+  }
+
   # Add a message to a conversation
   input AddMessageInput {
     sender_id: ID!
     content: String!
+    attachments: [MessageAttachmentInput]!
 
     mention_users: [ID]!
     mention_roles: [ID]!

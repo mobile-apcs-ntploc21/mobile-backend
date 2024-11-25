@@ -857,6 +857,12 @@ export const messageMutations = {
         content
         replied_message_id
         forwarded_message_id
+        attachments {
+          type
+          filename
+          size
+          url
+        }
         mention_users
         mention_roles
         mention_channels
