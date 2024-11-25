@@ -12,6 +12,7 @@ import ReactionModel from "@/models/conversations/reaction";
 import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 import ServerRoleModel from "@/models/servers/server_role";
+import AttachmentModel from "@/models/conversations/attachment";
 
 // ==========================
 interface IMessageReaction {
@@ -27,6 +28,20 @@ interface IProfile {
   avatar_url: string;
 }
 
+enum AttachmentType {
+  IMAGE = "IMAGE",
+  VIDEO = "VIDEO",
+  FILE = "FILE",
+  AUDIO = "AUDIO",
+}
+
+interface IAttachment {
+  type: AttachmentType;
+  url: string;
+  filename: string;
+  size: number;
+}
+
 interface IMessage {
   id: string;
 
@@ -37,6 +52,7 @@ interface IMessage {
   content: string;
   replied_message_id?: string;
   forwarded_message_id?: string;
+  attachments?: IAttachment[];
 
   mention_users?: string[];
   mention_roles?: string[];
@@ -137,42 +153,44 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
     .filter(Boolean);
 
   // 1. Perform all the fetch operations in parallel to minimize blocking
-  const [mentions, reactions, repliedMessages, senders] = await Promise.all([
-    mentionModel.find({ message_id: { $in: messageIds } }).lean(),
-    ReactionModel.aggregate([
-      { $match: { message_id: { $in: messageIds } } },
-      {
-        $group: {
-          _id: "$message_id",
-          reactions: {
-            $push: { emoji_id: "$emoji_id", reactors: "$sender_id" },
+  const [mentions, reactions, repliedMessages, senders, attachments] =
+    await Promise.all([
+      mentionModel.find({ message_id: { $in: messageIds } }).lean(),
+      ReactionModel.aggregate([
+        { $match: { message_id: { $in: messageIds } } },
+        {
+          $group: {
+            _id: "$message_id",
+            reactions: {
+              $push: { emoji_id: "$emoji_id", reactors: "$sender_id" },
+            },
           },
         },
-      },
-      { $unwind: "$reactions" },
-      {
-        $group: {
-          _id: {
-            message_id: "$_id",
-            emoji_id: "$reactions.emoji_id",
+        { $unwind: "$reactions" },
+        {
+          $group: {
+            _id: {
+              message_id: "$_id",
+              emoji_id: "$reactions.emoji_id",
+            },
+            reactors: { $push: "$reactions.reactors" },
           },
-          reactors: { $push: "$reactions.reactors" },
         },
-      },
-      {
-        $project: {
-          _id: "$_id.message_id",
-          emoji_id: "$_id.emoji_id",
-          reactors: 1,
-          count: { $size: "$reactors" },
+        {
+          $project: {
+            _id: "$_id.message_id",
+            emoji_id: "$_id.emoji_id",
+            reactors: 1,
+            count: { $size: "$reactors" },
+          },
         },
-      },
-    ]),
-    repliedMessageIds.length > 0
-      ? messageModel.find({ _id: { $in: repliedMessageIds } }).lean()
-      : Promise.resolve([]),
-    UserProfileModel.find({ user_id: { $in: senderIds } }).lean(),
-  ]);
+      ]),
+      repliedMessageIds.length > 0
+        ? messageModel.find({ _id: { $in: repliedMessageIds } }).lean()
+        : Promise.resolve([]),
+      UserProfileModel.find({ user_id: { $in: senderIds } }).lean(),
+      AttachmentModel.find({ message_id: { $in: messageIds } }).lean(),
+    ]);
 
   // 2. Process mentions
   const mentionUsersMap = new Map<string, string[]>();
@@ -246,7 +264,20 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
     emojis: getMatches(msg.content, emoji_regex, 2),
   }));
 
-  // 7. Return the extra fields for each message
+  // 7. Process attachments for each message
+  const attachmentsMap = new Map<string, IAttachment[]>();
+  attachments.forEach((attachment) => {
+    const messageId = String(attachment.message_id);
+    if (!attachmentsMap.has(messageId)) attachmentsMap.set(messageId, []);
+    attachmentsMap.get(messageId)!.push({
+      type: attachment.attachment_type as AttachmentType,
+      url: attachment.attachment_url,
+      filename: attachment.filename,
+      size: attachment.size,
+    });
+  });
+
+  // 8. Return the extra fields for each message
   return messages.map((msg) => ({
     id: String(msg._id),
     author: senderMap.get(String(msg.sender_id)) || null,
@@ -257,6 +288,7 @@ export const fetchExtraFields = async (messages: any[]): Promise<any> => {
     reactions: reactionsMap.get(String(msg._id)) || [],
     replied_message:
       repliedMessagesMap.get(String(msg.replied_message_id)) || null,
+    attachments: attachmentsMap.get(String(msg._id)) || [],
   }));
 };
 
@@ -281,6 +313,7 @@ export const castToIMessage = async (
   let emojis = extra?.emojis || []; // List of emoji IDs
   let reactions: IMessageReaction[] = extra?.reactions || []; // List of reactions
   let replied_message: IMessage = extra?.replied_message || null; // Replied message
+  let attachments: IAttachment[] = extra?.attachments || []; // List of attachments
 
   // Fetch the replied message
   if (message.replied_message_id && message.replied_message_id !== null) {
@@ -313,6 +346,7 @@ export const castToIMessage = async (
     content: message.content,
     replied_message_id: message.replied_message_id,
     forwarded_message_id: message.forwarded_message_id,
+    attachments: attachments,
 
     mention_users: mention_users,
     mention_roles: mention_roles,
@@ -566,6 +600,7 @@ const createMessageTransaction = async (
   const {
     sender_id,
     content,
+    attachments,
     mention_users,
     mention_roles,
     mention_channels,
@@ -620,6 +655,22 @@ const createMessageTransaction = async (
 
     if (!message) {
       throw new UserInputError("Message not created. Try again later!");
+    }
+
+    // Create the attachments
+    if (attachments && attachments.length > 0) {
+      await AttachmentModel.create(
+        // @ts-ignore
+        attachments.map((attachment) => ({
+          message_id: message._id,
+          sender_id,
+          attachment_url: attachment.url,
+          attachment_type: attachment.type,
+          filename: attachment.filename,
+          size: attachment.size,
+        })),
+        { session, new: true }
+      );
     }
 
     // Filter the mentions
@@ -677,6 +728,7 @@ const createMessageTransaction = async (
 
     const [extraFields] = await fetchExtraFields([message]);
     const messageData = await castToIMessage(message, extraFields);
+    console.log(messageData);
 
     // Check if the message is a reply then publish the event of mention to that user
     if (replied_message_id) {

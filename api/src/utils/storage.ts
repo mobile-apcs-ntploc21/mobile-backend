@@ -1,6 +1,7 @@
 import { Upload } from "@aws-sdk/lib-storage";
 import {
   DeleteObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   PutObjectCommandInput,
   S3Client,
@@ -188,6 +189,12 @@ export const compressImage = async (image: any) => {
   };
 };
 
+/**
+ * Generate a presigned URL for the file
+ * @param {string} key - The key of the file
+ * @param {string} fileType - The type of the file
+ * @returns {Promise<string>} - The presigned URL
+ */
 export const generatePresignedUrl = async (key: string, fileType: string) => {
   try {
     const command = new PutObjectCommand({
@@ -201,6 +208,31 @@ export const generatePresignedUrl = async (key: string, fileType: string) => {
     });
 
     return url;
+  } catch (err: any) {
+    log.error(err.message);
+    throw new Error(err.message);
+  }
+};
+
+/**
+ * Get the file information
+ * @param {string} key - The key of the file
+ * @returns {Promise<{ contentType: string, contentLength: number }>} - The file information
+ */
+export const getFileInfo = async (key: string) => {
+  try {
+    const command = new HeadObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    const data = await s3.send(command);
+    const fileInfo = {
+      contentType: data.ContentType,
+      contentLength: data.ContentLength,
+    };
+
+    return fileInfo;
   } catch (err: any) {
     log.error(err.message);
     throw new Error(err.message);

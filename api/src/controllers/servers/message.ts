@@ -2,8 +2,9 @@ import express from "express";
 import graphQLClient from "../../utils/graphql";
 import { messageQueries } from "../../graphql/queries";
 import { messageMutations } from "../../graphql/mutations";
-import { generatePresignedUrl } from "@/utils/storage";
+import { generatePresignedUrl, getFileInfo } from "@/utils/storage";
 import { v4 as uuidv4 } from "uuid";
+import config from "@/config";
 
 // ==============
 
@@ -147,7 +148,7 @@ export const searchMessages = async (
     content,
     author_id: _author_id,
     mentions: _mentions,
-    has,
+    has: has,
     in: _inChannel,
     conversationIds,
   } = req.query;
@@ -286,7 +287,8 @@ export const createMessage = async (
   next: express.NextFunction
 ) => {
   const { channelId } = req.params;
-  const { content, repliedMessageId, forwardedMessageId } = req.body;
+  const { content, repliedMessageId, forwardedMessageId, attachments } =
+    req.body;
 
   if (!channelId) {
     res.status(400).json({ message: "Channel ID is required." });
@@ -312,6 +314,40 @@ export const createMessage = async (
     return;
   }
 
+  // Transform the attachments
+  const transformedAttachments = await Promise.all(
+    attachments?.map(async (attachment: any) => {
+      if (!attachment.filename || !attachment.key) {
+        res.status(400).json({
+          message: "Attachment file name and key are required.",
+        });
+      }
+
+      const fileInfo = await getFileInfo(attachment.key);
+      if (!fileInfo) {
+        res.status(404).json({ message: "Attachment not found." });
+        return;
+      }
+
+      let attachmentType = "FILE";
+      if (fileInfo.contentType?.includes("image")) {
+        attachmentType = "IMAGE";
+      } else if (fileInfo.contentType?.includes("video")) {
+        attachmentType = "VIDEO";
+      } else if (fileInfo.contentType?.includes("audio")) {
+        attachmentType = "AUDIO";
+      }
+
+      const url = `${config.CDN_URL}/${attachment.key}`;
+      return {
+        type: attachmentType,
+        size: fileInfo.contentLength,
+        url: url,
+        filename: attachment.filename,
+      };
+    }) || []
+  );
+
   // Get all user, role, channel, and emoji mentions
   const mention_users = getMatches(content, user_regex, 1);
   const mention_roles = getMatches(content, role_regex, 1);
@@ -324,6 +360,7 @@ export const createMessage = async (
       input: {
         sender_id: res.locals.uid,
         content,
+        attachments: transformedAttachments,
 
         mention_users: mention_users,
         mention_roles: mention_roles,
@@ -353,7 +390,7 @@ export const uploadFile = async (
   next: express.NextFunction
 ) => {
   const { channelId, serverId } = req.params;
-  const { fileName, fileType, fileSize } = req.body;
+  const { filename, fileType, fileSize } = req.body;
 
   if (!serverId) {
     res.status(400).json({ message: "Server ID is required." });
@@ -365,7 +402,7 @@ export const uploadFile = async (
     return;
   }
 
-  if (!fileName) {
+  if (!filename) {
     res.status(400).json({ message: "File name are required." });
     return;
   }
@@ -395,7 +432,7 @@ export const uploadFile = async (
   }
 
   try {
-    const fileExtension = fileName.split(".").pop();
+    const fileExtension = filename.split(".").pop();
     const key = `attachments/${serverId}/${channelId}/${uuidv4()}.${fileExtension}`;
 
     const uploadUrl = await generatePresignedUrl(key, fileType);
