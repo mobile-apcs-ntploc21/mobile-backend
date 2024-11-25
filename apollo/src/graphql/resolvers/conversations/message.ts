@@ -536,11 +536,15 @@ const searchMessages = async (
     messageQuery._id = { $in: mentions.map((mention) => mention.message_id) };
   }
 
-  // 5. Filter by attachment (TODO)
-  if (has) {
-    // const attachments = await AttachmentModel.find({ attachment_id: has });
+  // 5. Filter by attachment
+  if (has && has.length > 0) {
+    const attachments = await AttachmentModel.find({
+      attachment_type: { $in: has },
+    });
+    messageQuery._id = {
+      $in: attachments.map((attachment) => attachment.message_id),
+    };
   }
-
   // Execute the query with pagination
   messages = await messageModel
     .find(messageQuery)
