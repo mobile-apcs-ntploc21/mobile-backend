@@ -6,26 +6,49 @@ import { serverQueries } from "../../graphql/queries";
 import { serverMutations } from "../../graphql/mutations";
 import { log } from "@/utils/log";
 
+import redisClient from "@/utils/redisClient";
+import { SERVERS } from "@/constants/redisKey";
+
 const getServerOverview = async (server_id: string) => {
-  const response = await graphQLClient().request(
-    serverQueries.GET_SERVER_BY_ID,
-    {
-      server_id,
-    }
+  const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
+
+  const cachedData = await redisClient.fetch(
+    cachedKey,
+    async () => {
+      const response = await graphQLClient().request(
+        serverQueries.GET_SERVER_BY_ID,
+        {
+          server_id,
+        }
+      );
+
+      return response.server;
+    },
+    SERVERS.SERVER_OVERVIEW.TTL
   );
 
-  return response.server;
+  return cachedData;
 };
 
 const getServersByUserId = async (userId: string) => {
-  const response = await graphQLClient().request(
-    serverQueries.GET_SERVERS_BY_USER_ID,
-    {
-      user_id: userId,
-    }
+  const cachedKey = SERVERS.SERVER_LIST.key({ user_id: userId });
+
+  const cachedData = await redisClient.fetch(
+    cachedKey,
+    async () => {
+      const response = await graphQLClient().request(
+        serverQueries.GET_SERVERS_BY_USER_ID,
+        {
+          user_id: userId,
+        }
+      );
+
+      return response.servers;
+    },
+    SERVERS.SERVER_LIST.TTL
   );
 
-  return response.servers;
+  return cachedData;
 };
 
 // ============================
@@ -162,6 +185,10 @@ export const updateServer = async (
       }
     );
 
+    // Clear cache
+    const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
+    await redisClient.delete(cachedKey);
+
     res.status(200).json({ ...response.updateServer });
     return;
   } catch (error) {
@@ -264,14 +291,24 @@ export const getInviteCode = async (
   }
 
   try {
-    const response = await graphQLClient(user_token).request(
-      serverQueries.GET_INVITE_CODE,
-      {
-        server_id: server_id,
-      }
+    const cacheKey = SERVERS.SERVER_INVITE_CODES.key({ server_id });
+
+    const cachedData = await redisClient.fetch(
+      cacheKey,
+      async () => {
+        const response = await graphQLClient(user_token).request(
+          serverQueries.GET_INVITE_CODE,
+          {
+            server_id: server_id,
+          }
+        );
+
+        return response.getInviteCode;
+      },
+      SERVERS.SERVER_INVITE_CODES.TTL
     );
 
-    res.status(200).json({ ...response.getInviteCode });
+    res.status(200).json({ ...cachedData });
     return;
   } catch (error) {
     next(error);
