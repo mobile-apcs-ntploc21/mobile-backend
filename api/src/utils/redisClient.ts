@@ -60,6 +60,20 @@ class Redis {
     value: any,
     expires: number = 60 * 60 * 24
   ): Promise<void> {
+    // Convert value into string
+    let _value: string;
+
+    switch (typeof value) {
+      case "string":
+        _value = value;
+        break;
+      case "object":
+        _value = JSON.stringify(value);
+        break;
+      default:
+        _value = value.toString();
+    }
+
     // Default expiry is 24 hours
     try {
       if (expires === 0) {
@@ -67,7 +81,7 @@ class Redis {
         return;
       }
 
-      await this.client.setEx(key, expires, value);
+      await this.client.setEx(key, expires, _value);
     } catch (error) {
       console.error("Error writing to Redis:", error);
     }
