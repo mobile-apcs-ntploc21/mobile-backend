@@ -3,15 +3,28 @@ import graphQLClient from "../utils/graphql";
 import { settingsMutations } from "../graphql/mutations";
 import { settingsQueries } from "../graphql/queries";
 
+import RedisCache from "../utils/redisClient";
+import { USERS } from "../constants/redisKey";
+
 const getUserSettings = async (user_id: string) => {
-  const response = await graphQLClient().request(
-    settingsQueries.GET_USER_SETTINGS,
-    {
-      user_id: user_id,
-    }
+  const cacheKey = USERS.USER_SETTINGS.key({ user_id: user_id });
+
+  const cachedData = await RedisCache.fetch(
+    cacheKey,
+    async () => {
+      const response = await graphQLClient().request(
+        settingsQueries.GET_USER_SETTINGS,
+        {
+          user_id: user_id,
+        }
+      );
+
+      return response.getUserSettings;
+    },
+    USERS.USER_SETTINGS.TTL
   );
 
-  return response.getUserSettings;
+  return cachedData;
 };
 
 /* ======================================== */

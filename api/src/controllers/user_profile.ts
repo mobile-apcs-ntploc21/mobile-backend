@@ -1,10 +1,12 @@
 import express from "express";
-import streamifier from "streamifier";
 
 import { processImage } from "../utils/storage";
 import graphQLClient from "../utils/graphql";
 import { userProfileQueries } from "../graphql/queries";
 import { userProfileMutation } from "../graphql/mutations";
+
+import redisClient from "@/utils/redisClient";
+import { USERS } from "../constants/redisKey";
 
 /**
  * To get user profile with user_id and server_id parameters
@@ -15,15 +17,30 @@ import { userProfileMutation } from "../graphql/mutations";
  * @returns {JSON} user profile
  */
 const getUserProfile = async (userId: string, serverId: string) => {
-  const response = await graphQLClient().request(
-    userProfileQueries.GET_USER_PROFILE,
-    {
-      user_id: userId,
-      server_id: serverId,
-    }
+  // Apply RedisCache
+  const cacheKey =
+    serverId === null
+      ? USERS.USER_PROFILE.key({ user_id: userId })
+      : USERS.SERVER_PROFILE.key({ user_id: userId, server_id: serverId });
+
+  // Check if the cache exists
+  const cachedData = await redisClient.fetch(
+    cacheKey,
+    async () => {
+      const response = await graphQLClient().request(
+        userProfileQueries.GET_USER_PROFILE,
+        {
+          user_id: userId,
+          server_id: serverId,
+        }
+      );
+
+      return response.getUserProfile;
+    },
+    USERS.USER_PROFILE.TTL
   );
 
-  return response.getUserProfile;
+  return cachedData;
 };
 
 /* ======================================== */

@@ -3,6 +3,9 @@ import graphQLClient from "../utils/graphql";
 import { userStatusQueries } from "../graphql/queries";
 import { userStatusMutations } from "../graphql/mutations";
 
+import RedisClient from "@/utils/redisClient";
+import { USERS } from "../constants/redisKey";
+
 export const getCurrentUserStatus = async (
   req: Request,
   res: Response,
@@ -10,13 +13,22 @@ export const getCurrentUserStatus = async (
 ) => {
   try {
     const { uid } = res.locals;
-    const userStatus = await graphQLClient().request(
-      userStatusQueries.GET_USER_STATUS,
-      {
-        user_id: uid,
-      }
+
+    const redisKey = USERS.USER_STATUS.key({ user_id: uid });
+    const cachedData = await RedisClient.fetch(
+      redisKey,
+      async () => {
+        return await graphQLClient().request(
+          userStatusQueries.GET_USER_STATUS,
+          {
+            user_id: uid,
+          }
+        );
+      },
+      USERS.USER_STATUS.TTL
     );
-    res.status(200).json(userStatus.getUserStatus);
+
+    res.status(200).json(cachedData);
   } catch (error) {
     next(error);
   }
@@ -29,13 +41,22 @@ export const getUserStatus = async (
 ) => {
   try {
     const { id } = req.params;
-    const userStatus = await graphQLClient().request(
-      userStatusQueries.GET_USER_STATUS,
-      {
-        user_id: id,
-      }
+
+    const redisKey = USERS.USER_STATUS.key({ user_id: id });
+    const cachedData = await RedisClient.fetch(
+      redisKey,
+      async () => {
+        return await graphQLClient().request(
+          userStatusQueries.GET_USER_STATUS,
+          {
+            user_id: id,
+          }
+        );
+      },
+      USERS.USER_STATUS.TTL
     );
-    res.status(200).json(userStatus.getUserStatus);
+
+    res.status(200).json(cachedData);
   } catch (error) {
     next(error);
   }
@@ -68,6 +89,10 @@ export const updateStatusType = async (
   try {
     const { uid: user_id } = res.locals;
     const { type } = req.body;
+
+    const cacheKey = USERS.USER_STATUS.key({ user_id });
+
+    // Update the database first
     const { updateStatusType: response } = await graphQLClient().request(
       userStatusMutations.UPDATE_USER_STATUS_TYPE,
       {
@@ -75,6 +100,12 @@ export const updateStatusType = async (
         type,
       }
     );
+
+    // Update the cache
+    if (response) {
+      await RedisClient.write(cacheKey, response, USERS.USER_STATUS.TTL);
+    }
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
@@ -89,6 +120,10 @@ export const updateStatusText = async (
   try {
     const { uid: user_id } = res.locals;
     const { status_text } = req.body;
+
+    const cacheKey = USERS.USER_STATUS.key({ user_id });
+
+    // Update the database first
     const { updateStatusText: response } = await graphQLClient().request(
       userStatusMutations.UPDATE_USER_STATUS_TEXT,
       {
@@ -96,6 +131,12 @@ export const updateStatusText = async (
         status_text,
       }
     );
+
+    // Update the cache
+    if (response) {
+      await RedisClient.write(cacheKey, response, USERS.USER_STATUS.TTL);
+    }
+
     res.status(200).json(response);
   } catch (error) {
     next(error);
