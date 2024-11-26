@@ -115,6 +115,19 @@ class Redis {
     }
   }
 
+  /**
+   * Delete data from Redis
+   * @param key Redis key
+   */
+  async delete(key: string): Promise<void> {
+    try {
+      await this.client.del(key);
+      console.log("Deleted from Redis:", key);
+    } catch (error) {
+      console.error("Error deleting from Redis:", error);
+    }
+  }
+
   async ensureDataDir(): Promise<void> {
     try {
       await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
