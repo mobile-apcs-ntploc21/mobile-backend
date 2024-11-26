@@ -28,6 +28,7 @@ interface ServersConfig {
 
 interface MiddlewareConfig {
   AUTH_MIDDLEWARE: RedisKeyConfig;
+  MEMBERSHIP_MIDDLEWARE: RedisKeyConfig;
 }
 
 export const USERS: UsersConfig = {
@@ -75,9 +76,60 @@ export const USERS: UsersConfig = {
   },
 };
 
+export const SERVERS: ServersConfig = {
+  SERVER_OVERVIEW: {
+    key: (params: { server_id: string }) =>
+      `SERVER_OVERVIEW_${params?.server_id}`,
+    TTL: 60 * 60 * 1,
+  },
+  SERVER_MEMBERS: {
+    key: (params: { server_id: string }) =>
+      `SERVER_MEMBERS_${params?.server_id}`,
+    TTL: 60 * 15,
+  },
+  SERVER_LIST: {
+    key: (params: { user_id: string }) => `SERVER_LIST_${params?.user_id}`,
+    TTL: 60 * 60 * 1,
+  },
+  SERVER_INVITE_CODES: {
+    key: (params: { server_id: string }) =>
+      `SERVER_INVITE_CODES_${params?.server_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_ROLES: {
+    key: (params: { server_id: string }) => `SERVER_ROLES_${params?.server_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_ROLE: {
+    key: (params: { server_id: string; role_id: string }) =>
+      `SERVER_ROLE_${params?.server_id}_${params?.role_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_PERMISSIONS: {
+    key: (params: { server_id: string }) =>
+      `SERVER_PERMISSIONS_${params?.server_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_CONVERSATION: {
+    key: (params: { server_id: string }) =>
+      `SERVER_CONVERSATION_${params?.server_id}`,
+    TTL: 60 * 15,
+  },
+  SERVER_EMOJI: {
+    key: (params: { server_id: string }) => `SERVER_EMOJI_${params?.server_id}`,
+    TTL: 60 * 60 * 1,
+  },
+};
+
 export const MIDDLEWARE: MiddlewareConfig = {
   AUTH_MIDDLEWARE: {
     key: (params: { token: string }) => `AUTH_MIDDLEWARE_${params?.token}`,
     TTL: 60 * 15, // 15 minutes
+  },
+  MEMBERSHIP_MIDDLEWARE: {
+    key: (params: { user_id: string; server_id: string }) => {
+      return `MEMBERSHIP_MIDDLEWARE_${params?.user_id}_${params?.server_id}`;
+    },
+    TTL: 60 * 15,
   },
 };
