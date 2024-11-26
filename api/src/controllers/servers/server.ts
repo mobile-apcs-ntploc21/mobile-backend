@@ -185,13 +185,9 @@ export const updateServer = async (
       }
     );
 
-    // Write new data to cache
+    // Clear cache
     const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
-    await redisClient.write(
-      cachedKey,
-      JSON.stringify(response.updateServer),
-      SERVERS.SERVER_OVERVIEW.TTL
-    );
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({ ...response.updateServer });
     return;
