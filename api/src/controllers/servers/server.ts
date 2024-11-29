@@ -185,9 +185,13 @@ export const updateServer = async (
       }
     );
 
-    // Clear cache
+    // Write new data to cache
     const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
-    await redisClient.delete(cachedKey);
+    await redisClient.write(
+      cachedKey,
+      JSON.stringify(response.updateServer),
+      SERVERS.SERVER_OVERVIEW.TTL
+    );
 
     res.status(200).json({ ...response.updateServer });
     return;
@@ -231,6 +235,12 @@ export const deleteServer = async (
       }
     );
 
+    // Clear cache for server overview and members
+    let cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
+    cachedKey = SERVERS.SERVER_MEMBERS.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
+
     res.status(200).json({ message: "Server deleted successfully" });
     return;
   } catch (error) {
@@ -268,6 +278,10 @@ export const transferOwnership = async (
         user_id: user_id,
       }
     );
+
+    // Clear cache for server getServerOverview
+    const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({ message: "Ownership transferred successfully" });
     return;
@@ -358,6 +372,10 @@ export const createInviteCode = async (
       }
     );
 
+    // Clear cache for invite codes
+    const cacheKey = SERVERS.SERVER_INVITE_CODES.key({ server_id });
+    await redisClient.delete(cacheKey);
+
     res.status(201).json({ ...response.createInviteCode });
     return;
   } catch (error) {
@@ -390,6 +408,10 @@ export const deleteInviteCode = async (
         url: url,
       }
     );
+
+    // Clear cache for invite codes
+    const cacheKey = SERVERS.SERVER_INVITE_CODES.key({ server_id });
+    await redisClient.delete(cacheKey);
 
     res.status(200).json({ message: "Invite code deleted successfully" });
     return;
