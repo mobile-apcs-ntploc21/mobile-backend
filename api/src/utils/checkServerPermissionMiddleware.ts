@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
+import redisClient from "../utils/redisClient";
+import { SERVERS } from "../constants/redisKey";
 import { createQuery } from "./getUserChannelPermissions";
 import { log } from "@/utils/log";
 
@@ -19,12 +21,21 @@ export const checkServerPermissionMiddleware = (
     }
 
     const checkPermissionsQuery = createQuery();
-    const response = await graphQLClient().request(checkPermissionsQuery, {
-      server_id: server_id,
-      category_id: null,
-      channel_id: null,
-      user_id: uid,
-    });
+    const cachedKey = SERVERS.USER_PERMISSIONS.key({ user_id: uid, server_id });
+    const response = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const response = await graphQLClient().request(checkPermissionsQuery, {
+          server_id: server_id,
+          category_id: null,
+          channel_id: null,
+          user_id: uid,
+        });
+
+        return response;
+      },
+      SERVERS.USER_PERMISSIONS.TTL
+    );
 
     try {
       const {
