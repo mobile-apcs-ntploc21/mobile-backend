@@ -41,7 +41,6 @@ class Redis {
   async read(key: string): Promise<any> {
     try {
       const value = await this.client.get(key);
-      console.log("Read from Redis:", key, value);
 
       return value;
     } catch (error) {
@@ -122,9 +121,23 @@ class Redis {
   async delete(key: string): Promise<void> {
     try {
       await this.client.del(key);
-      console.log("Deleted from Redis:", key);
     } catch (error) {
       console.error("Error deleting from Redis:", error);
+    }
+  }
+
+  async scanAndDelete(prefix: string, chunkSize: number = 1000): Promise<void> {
+    try {
+      const keys = this.client.scanIterator({
+        MATCH: `${prefix}*`,
+        COUNT: chunkSize,
+      });
+
+      for await (const key of keys) {
+        await this.client.del(key);
+      }
+    } catch (error) {
+      console.error("Error scanning and deleting from Redis:", error);
     }
   }
 
