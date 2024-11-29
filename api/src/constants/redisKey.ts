@@ -21,7 +21,8 @@ interface ServersConfig {
   SERVER_INVITE_CODES: RedisKeyConfig;
   SERVER_ROLES: RedisKeyConfig;
   SERVER_ROLE: RedisKeyConfig;
-  SERVER_PERMISSIONS: RedisKeyConfig;
+  USER_ROLES: RedisKeyConfig;
+  USER_PERMISSIONS: RedisKeyConfig;
   SERVER_CONVERSATION: RedisKeyConfig;
   SERVER_EMOJI: RedisKeyConfig;
 }
@@ -105,9 +106,14 @@ export const SERVERS: ServersConfig = {
       `SERVER_ROLE_${params?.server_id}_${params?.role_id}`,
     TTL: 60 * 10,
   },
-  SERVER_PERMISSIONS: {
-    key: (params: { server_id: string }) =>
-      `SERVER_PERMISSIONS_${params?.server_id}`,
+  USER_ROLES: {
+    key: (params: { user_id: string; server_id: string }) =>
+      `USER_ROLES_${params?.server_id}_${params?.user_id}`,
+    TTL: 60 * 10,
+  },
+  USER_PERMISSIONS: {
+    key: (params: { user_id: string; server_id: string }) =>
+      `USER_PERMISSIONS_${params?.server_id}_${params?.user_id}`,
     TTL: 60 * 10,
   },
   SERVER_CONVERSATION: {
