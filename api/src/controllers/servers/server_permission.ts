@@ -4,6 +4,9 @@ import { serverQueries, serverRoleQueries } from "../../graphql/queries";
 import { serverRoleMutations } from "../../graphql/mutations";
 import { log } from "@/utils/log";
 
+import redisClient from "@/utils/redisClient";
+import { SERVERS } from "@/constants/redisKey";
+
 export const getServerRoles = async (
   req: Request,
   res: Response,
@@ -12,11 +15,21 @@ export const getServerRoles = async (
   const serverId = res.locals.server_id;
 
   try {
-    const { getServerRoles: roles } = await graphQLClient().request(
-      serverRoleQueries.GET_SERVER_ROLES,
-      {
-        server_id: serverId,
-      }
+    // Apply caches to the response
+    const cachedKey = SERVERS.SERVER_ROLES.key({ server_id: serverId });
+    const roles = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getServerRoles: roles } = await graphQLClient().request(
+          serverRoleQueries.GET_SERVER_ROLES,
+          {
+            server_id: serverId,
+          }
+        );
+
+        return roles;
+      },
+      SERVERS.SERVER_ROLES.TTL
     );
 
     if (!roles) {
@@ -63,11 +76,23 @@ export const getServerRole = async (
   const serverId = res.locals.server_id;
 
   try {
-    const { getServerRole: role } = await graphQLClient().request(
-      serverRoleQueries.GET_SERVER_ROLE,
-      {
-        role_id: roleId,
-      }
+    const cachedKey = SERVERS.SERVER_ROLE.key({
+      server_id: serverId,
+      role_id: roleId,
+    });
+    const role = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getServerRole: role } = await graphQLClient().request(
+          serverRoleQueries.GET_SERVER_ROLE,
+          {
+            role_id: roleId,
+          }
+        );
+
+        return role;
+      },
+      SERVERS.SERVER_ROLE.TTL
     );
 
     res.json({
@@ -160,6 +185,7 @@ export const createServerRole = async (
       last_modified: response.createServerRole.last_modified,
       number_of_users: response.createServerRole.number_of_users,
     });
+
     return;
   } catch (error) {
     next(error);
@@ -194,6 +220,12 @@ export const deleteServerRole = async (
       last_modified: response.deleteServerRole.last_modified,
       number_of_users: response.deleteServerRole.number_of_users,
     });
+
+    // Invalidate the cache
+    const serverId = response.deleteServerRole.server_id;
+    const cachedKey = SERVERS.SERVER_ROLES.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
+
     return;
   } catch (error) {
     next(error);
@@ -249,6 +281,19 @@ export const updateServerRole = async (
         role_id: roleId,
         input: updatedRole,
       }
+    );
+
+    // Invalidate the cache and update
+    const serverId = response.updateServerRole.server_id;
+    let cachedKey = SERVERS.SERVER_ROLES.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
+    cachedKey = SERVERS.SERVER_ROLE.key({
+      server_id: serverId,
+      role_id: roleId,
+    });
+    await redisClient.write(
+      cachedKey,
+      JSON.stringify(response.updateServerRole)
     );
 
     res.status(201).json({
