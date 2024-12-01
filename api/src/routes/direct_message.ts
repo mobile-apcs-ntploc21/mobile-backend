@@ -1,10 +1,10 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   getDirectMessage,
   getDirectMessages,
   createDirectMessage,
   deleteDirectMessage,
-} from '../controllers/direct_message';
+} from "../controllers/direct_message";
 
 /**
  * @swagger
@@ -69,8 +69,7 @@ const directMessageRouter = Router();
  *                  message: Direct message not found.
  *
  */
-directMessageRouter.get('/:conversationId', getDirectMessage);
-
+directMessageRouter.get("/:conversationId", getDirectMessage);
 
 /**
  * @swagger
@@ -104,13 +103,13 @@ directMessageRouter.get('/:conversationId', getDirectMessage);
  *        '401':
  *          $ref: '#/components/responses/AuthMiddlewareError'
  */
-directMessageRouter.get('/user/:userId', getDirectMessages);
+directMessageRouter.get("/user/:userId", getDirectMessages);
 
 /**
  * @swagger
  *  /directMessages:
  *    post:
- *      summary: 
+ *      summary:
  *      tags: [Direct Messages]
  *      requestBody:
  *        required: true
@@ -142,7 +141,7 @@ directMessageRouter.get('/user/:userId', getDirectMessages);
  *              example:
  *                message: Missing User ID(s)
  */
-directMessageRouter.post('/', createDirectMessage);
+directMessageRouter.post("/", createDirectMessage);
 
 /**
  * @swagger
@@ -173,6 +172,6 @@ directMessageRouter.post('/', createDirectMessage);
  *            example:
  *              message: Conversation ID is required.
  */
-directMessageRouter.delete('/:conversationId', deleteDirectMessage);
+directMessageRouter.delete("/:conversationId", deleteDirectMessage);
 
 export default directMessageRouter;

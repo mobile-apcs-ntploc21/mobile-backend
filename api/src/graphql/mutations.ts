@@ -1247,7 +1247,10 @@ export const directMessageMutations = {
 export const directMessageMutations = {
   CREATE_DIRECT_MESSAGE: gql`
     mutation createDirectMessage($user_first_id: ID!, $user_second_id: ID!) {
-      createDirectMessage(user_first_id: $user_first_id, user_second_id: $user_second_id) {
+      createDirectMessage(
+        user_first_id: $user_first_id
+        user_second_id: $user_second_id
+      ) {
         _id {
           user_first_id
           user_second_id
