@@ -47,6 +47,14 @@ const gqlType = gql`
 `;
 
 const gqlQuery = gql`
+  input DirectMessageSearchQuery {
+    inConversation: [ID]
+    text: String
+    from: [ID]
+    mention: [ID]
+    has: AttachmentType
+  }
+
   input SearchQuery {
     inChannel: [ID]
     inConversation: [ID]
@@ -107,6 +115,17 @@ const gqlMutation = gql`
     forwarded_message_id: ID
   }
 
+  input AddDirectMessageInput {
+    sender_id: ID!
+    content: String!
+
+    mention_users: [ID]!
+    emojis: [ID]!
+
+    replied_message_id: ID
+    forwarded_message_id: ID
+  }
+
   input EditMessageInput {
     content: String!
 
@@ -116,21 +135,36 @@ const gqlMutation = gql`
     emojis: [ID]!
   }
 
+  input EditDirectMessageInput {
+    content: String!
+
+    mention_users: [ID]!
+    emojis: [ID]!
+  }
+
   extend type Mutation {
     # Create a message
     createMessage(conversation_id: ID!, input: AddMessageInput!): Message
+    createMessageInDM(
+      conversation_id: ID!
+      input: AddDirectMessageInput!
+    ): Message
 
     # Edit a message
     editMessage(message_id: ID!, input: EditMessageInput): Message
+    editMessageInDM(message_id: ID!, input: EditDirectMessageInput): Message
 
     # Delete a message
     deleteMessage(message_id: ID!): Boolean
+    deleteMessageInDM(message_id: ID!): Boolean
 
     # Pin a message
     pinMessage(message_id: ID!): [Message]
+    pinMessageInDM(message_id: ID!): [Message]
 
     # Unpin a message
     unpinMessage(message_id: ID!): [Message]
+    unpinMessageInDM(message_id: ID!): [Message]
   }
 `;
 

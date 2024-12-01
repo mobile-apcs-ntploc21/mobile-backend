@@ -12,6 +12,8 @@ import ReactionModel from "@/models/conversations/reaction";
 import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 import ServerRoleModel from "@/models/servers/server_role";
+import { log } from "@/utils/log";
+import DirectMessageModel from "@/models/conversations/direct_message";
 
 // ==========================
 interface IMessageReaction {
@@ -631,8 +633,8 @@ const createMessageTransaction = async (
       mention_channels
     );
 
-    console.log("filteredRoles", filteredRoles);
-    console.log("filteredChannels", filteredChannels);
+    log.debug("filteredRoles", filteredRoles);
+    log.debug("filteredChannels", filteredChannels);
 
     // Create the mentions
     // @ts-ignore
@@ -755,6 +757,116 @@ const createMessageTransaction = async (
   }
 };
 
+const createMessageInDMTransaction = async (
+  conversation_id: string,
+  input: any
+): Promise<IMessage> => {
+  // Extract the input
+  const { sender_id, content, mention_users } = input;
+  let { replied_message_id, forwarded_message_id } = input;
+
+  // Check if conversation ID exists
+  const conversation = await conversationModel.findById(conversation_id);
+  if (!conversation) {
+    throw new UserInputError("Conversation/Chat not found!");
+  }
+
+  // Start a session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Check whether the replied message exists in the conversation
+    if (replied_message_id) {
+      const repliedMessage = await messageModel
+        .findById(replied_message_id)
+        .lean();
+
+      if (
+        !repliedMessage ||
+        String(repliedMessage.conversation_id) !== conversation_id
+      ) {
+        // Reset the replied message ID since it's invalid
+        replied_message_id = null;
+      }
+    }
+
+    // Create the message
+    const [message] = await messageModel.create(
+      [
+        {
+          conversation_id,
+          sender_id,
+          content,
+          replied_message_id: replied_message_id || null,
+          forwarded_message_id: forwarded_message_id || null,
+        },
+      ],
+      { session, new: true }
+    );
+
+    if (!message) {
+      throw new UserInputError("Message not created. Try again later!");
+    }
+
+    // Create the mentions
+    await mentionModel.create(
+      [
+        ...mention_users.map((user_id: string) => ({
+          conversation_id,
+          message_id: message._id,
+          mention_user_id: user_id,
+        })),
+      ],
+      { session, new: true }
+    );
+
+    // Update the last message in the channel model
+    await DirectMessageModel.updateOne(
+      {
+        conversation_id: conversation_id,
+      },
+      {
+        latest_message_id: message._id,
+      },
+      { session, new: true }
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    const [extraFields] = await fetchExtraFields([message]);
+    const messageData = await castToIMessage(message, extraFields);
+
+    // Check if the message is a reply then publish the event of mention to that user
+    if (replied_message_id) {
+      const repliedMessage = messageData.replied_message;
+      if (repliedMessage) {
+        // publishEvent(ServerEvents.messageMentionedUser, {
+        //   // @ts-ignore
+        //   server_id: channel.server_id,
+        //   user_id: repliedMessage.sender_id,
+        //   forceUser: true,
+        //   type: ServerEvents.messageMentionedUser,
+        //   data: {
+        //     conversation_id,
+        //     message_id: message._id,
+        //   },
+        // });
+      }
+    }
+
+    return messageData;
+  } catch (error) {
+    // Abort the transaction
+    await session.abortTransaction();
+    session.endSession();
+
+    throw error;
+  }
+};
+
 /**
  * Transaction for updating a message in a conversation.
  * It will also update the mentions associated with the message.
@@ -862,6 +974,64 @@ const updateMessageTransaction = async (
   }
 };
 
+const updateMessageInDMTransaction = async (
+  message_id: string,
+  input: any
+): Promise<IMessage> => {
+  // Extract the input
+  const { content, mention_users } = input;
+
+  // Start a session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Update the message content and is_modified flag
+    const message = await messageModel
+      .findByIdAndUpdate(
+        message_id,
+        { content: content, is_modified: true },
+        { session, new: true }
+      )
+      .lean();
+
+    if (!message) {
+      throw new UserInputError("Message not found or cannot be update!");
+    }
+
+    // Remove all mentions associated with the message
+    await mentionModel.deleteMany({ message_id }, { session });
+
+    // Create the mentions
+    await mentionModel.create(
+      [
+        ...mention_users.map((user_id: string) => ({
+          conversation_id: String(message.conversation_id),
+          message_id: String(message._id),
+          mention_user_id: user_id,
+        })),
+      ],
+      { session, new: true }
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Publish the message event (edited)
+    const [extraFields] = await fetchExtraFields([message]);
+    const messageData = await castToIMessage(message, extraFields);
+
+    return messageData;
+  } catch (error) {
+    // Abort the transaction
+    await session.abortTransaction();
+    session.endSession();
+
+    throw error;
+  }
+};
+
 /**
  * Transaction for delete a message in a conversation
  *
@@ -944,6 +1114,64 @@ const deleteMessageTransaction = async (
   return true;
 };
 
+const deleteMessageInDMTransaction = async (
+  message_id: string
+): Promise<boolean> => {
+  // Start a session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Update the message
+    const message = await messageModel.findByIdAndUpdate(
+      {
+        _id: message_id,
+      },
+      {
+        is_deleted: true,
+      },
+      { session, new: true }
+    );
+
+    if (!message) {
+      throw new UserInputError("Message not found!");
+    }
+
+    // Delete all mentions associated with the message
+    await mentionModel.deleteMany({ message_id: message_id }, { session });
+
+    // Update the latest message in the channel model
+    const latestMessage = await messageModel
+      .findOne({
+        conversation_id: message.conversation_id,
+        is_deleted: false,
+      })
+      .session(session)
+      .sort({ _id: -1 })
+      .lean();
+
+    await DirectMessageModel.updateOne(
+      {
+        conversation_id: message.conversation_id,
+      },
+      {
+        latest_message_id: latestMessage?._id || null,
+      },
+      { session, new: true }
+    );
+
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+  } catch (e) {
+    // Abort the transaction
+    await session.abortTransaction();
+    session.endSession();
+  }
+
+  return true;
+};
+
 /**
  * Pin a message in a conversation. And return list of pinned message after pinning
  *
@@ -980,6 +1208,32 @@ const pinMessage = async (message_id: string): Promise<IMessage[]> => {
         message: message,
       },
     });
+  }
+
+  // Get all pinned messages
+  const pinnedMessages = await messageModel.find({
+    conversation_id: message.conversation_id,
+    is_pinned: true,
+  });
+
+  return await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message))
+  );
+};
+
+const pinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
+  const message = await messageModel.findByIdAndUpdate(
+    {
+      _id: message_id,
+    },
+    {
+      is_deleted: false,
+      is_pinned: true,
+    }
+  );
+
+  if (!message) {
+    throw new UserInputError("Message not found!");
   }
 
   // Get all pinned messages
@@ -1043,6 +1297,34 @@ const unpinMessage = async (message_id: string): Promise<IMessage[]> => {
   return pinnedIMessages;
 };
 
+const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
+  const message = await messageModel.findByIdAndUpdate(
+    {
+      _id: message_id,
+    },
+    {
+      is_deleted: false,
+      is_pinned: false,
+    }
+  );
+
+  if (!message) {
+    throw new UserInputError("Message not found in the pinned list!");
+  }
+
+  // Get all pinned messages
+  const pinnedMessages = await messageModel.find({
+    conversation_id: message.conversation_id,
+    is_pinned: true,
+  });
+
+  const pinnedIMessages = await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message))
+  );
+
+  return pinnedIMessages;
+};
+
 // ==========================
 
 const messageAPI: IResolvers = {
@@ -1060,12 +1342,20 @@ const messageAPI: IResolvers = {
   Mutation: {
     createMessage: async (_, { conversation_id, input }) =>
       createMessageTransaction(conversation_id, input),
+    createMessageInDM: async (_, { conversation_id, input }) =>
+      createMessageInDMTransaction(conversation_id, input),
     editMessage: async (_, { message_id, input }) =>
       updateMessageTransaction(message_id, input),
+    editMessageInDM: async (_, { message_id, input }) =>
+      updateMessageInDMTransaction(message_id, input),
     deleteMessage: async (_, { message_id }) =>
       deleteMessageTransaction(message_id),
+    deleteMessageInDM: async (_, { message_id }) =>
+      deleteMessageInDMTransaction(message_id),
     pinMessage: async (_, { message_id }) => pinMessage(message_id),
+    pinMessageInDM: async (_, { message_id }) => pinMessageInDM(message_id),
     unpinMessage: async (_, { message_id }) => unpinMessage(message_id),
+    unpinMessageInDM: async (_, { message_id }) => unpinMessageInDM(message_id),
   },
 };
 
