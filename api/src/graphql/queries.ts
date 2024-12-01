@@ -1165,7 +1165,10 @@ export const directMessageQueries = {
 export const directMessageQueries = {
   GET_DIRECT_MESSAGE: gql`
     query getDirectMessage($user_first_id: ID!, $user_second_id: ID!) {
-      getDirectMessage(user_first_id: $user_first_id, user_second_id: $user_second_id) {
+      getDirectMessage(
+        user_first_id: $user_first_id
+        user_second_id: $user_second_id
+      ) {
         conversation_id
         latest_message {
           id
