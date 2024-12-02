@@ -436,8 +436,7 @@ export const uploadFile = async (
     const fileExtension = filename.split(".").pop();
     const key = `attachments/${serverId}/${channelId}/${uuidv4()}.${fileExtension}`;
 
-    const uploadUrl = await generatePresignedUrl(key, fileType);
-
+    const uploadUrl = await generatePresignedUrl(key, fileType, fileSize);
     res.status(200).json({ uploadUrl, key });
 
     return;
