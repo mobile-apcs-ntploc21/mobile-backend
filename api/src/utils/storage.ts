@@ -11,7 +11,10 @@ import sharp from "sharp";
 import streamifier from "streamifier";
 import config from "../config";
 import { log } from "@/utils/log";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
+import { create } from "domain";
+import { P } from "pino";
+import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types";
 
 // AWS S3 Config
 export const s3 = new S3Client({
@@ -195,17 +198,24 @@ export const compressImage = async (image: any) => {
  * @param {string} fileType - The type of the file
  * @returns {Promise<string>} - The presigned URL
  */
-export const generatePresignedUrl = async (key: string, fileType: string) => {
+export const generatePresignedUrl = async (
+  key: string,
+  fileType: string,
+  fileSize: number
+) => {
   try {
-    const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
+    const params = {
+      Expires: 60,
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
       Key: key,
-      ContentType: fileType,
-    });
+      Conditions: [["content-length-range", fileSize, fileSize]],
+      Fields: {
+        "Content-Type": fileType,
+      },
+    };
 
-    const url = await getSignedUrl(s3, command, {
-      expiresIn: 3600,
-    });
+    // @ts-ignore
+    const url = await createPresignedPost(s3, params);
 
     return url;
   } catch (err: any) {
