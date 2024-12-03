@@ -43,26 +43,6 @@ export const checkMembershipMiddleware = async (
   }
 
   try {
-    const cacheKey = SERVERS.SERVER_LIST.key({ user_id });
-    const cachedServerList = await redisClient.read(cacheKey);
-
-    if (cachedServerList) {
-      const serverList = JSON.parse(cachedServerList);
-      const server = serverList.find((s: any) => s.id === serverId);
-
-      if (!server) {
-        res.status(403).json({
-          status: "fail",
-          message: "You are not a member of this server",
-        });
-        return;
-      }
-
-      res.locals.server_id = serverId;
-      next();
-      return;
-    }
-
     const flag = await graphQLClient().request(
       serverMemberQueries.CHECK_SERVER_MEMBER,
       {
