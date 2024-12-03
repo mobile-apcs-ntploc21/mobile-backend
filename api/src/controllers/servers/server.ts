@@ -31,24 +31,14 @@ const getServerOverview = async (server_id: string) => {
 };
 
 const getServersByUserId = async (userId: string) => {
-  const cachedKey = SERVERS.SERVER_LIST.key({ user_id: userId });
-
-  const cachedData = await redisClient.fetch(
-    cachedKey,
-    async () => {
-      const response = await graphQLClient().request(
-        serverQueries.GET_SERVERS_BY_USER_ID,
-        {
-          user_id: userId,
-        }
-      );
-
-      return response.servers;
-    },
-    SERVERS.SERVER_LIST.TTL
+  const response = await graphQLClient().request(
+    serverQueries.GET_SERVERS_BY_USER_ID,
+    {
+      user_id: userId,
+    }
   );
 
-  return cachedData;
+  return response.servers;
 };
 
 // ============================
