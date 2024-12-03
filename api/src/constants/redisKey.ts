@@ -17,12 +17,14 @@ interface UsersConfig {
 interface ServersConfig {
   SERVER_OVERVIEW: RedisKeyConfig;
   SERVER_MEMBERS: RedisKeyConfig;
-  SERVER_LIST: RedisKeyConfig;
   SERVER_INVITE_CODES: RedisKeyConfig;
   SERVER_ROLES: RedisKeyConfig;
   SERVER_ROLE: RedisKeyConfig;
   USER_ROLES: RedisKeyConfig;
   USER_PERMISSIONS: RedisKeyConfig;
+  SERVER_DEFAULT_ROLES: RedisKeyConfig;
+  SERVER_DEFAULT_PERMISSIONS: RedisKeyConfig;
+  SERVER_ROLE_MEMBERS: RedisKeyConfig;
   SERVER_CONVERSATION: RedisKeyConfig;
   SERVER_EMOJI: RedisKeyConfig;
 }
@@ -88,10 +90,6 @@ export const SERVERS: ServersConfig = {
       `SERVER_MEMBERS_${params?.server_id}`,
     TTL: 60 * 15,
   },
-  SERVER_LIST: {
-    key: (params: { user_id: string }) => `SERVER_LIST_${params?.user_id}`,
-    TTL: 60 * 60 * 1,
-  },
   SERVER_INVITE_CODES: {
     key: (params: { server_id: string }) =>
       `SERVER_INVITE_CODES_${params?.server_id}`,
@@ -114,6 +112,21 @@ export const SERVERS: ServersConfig = {
   USER_PERMISSIONS: {
     key: (params: { user_id: string; server_id: string }) =>
       `USER_PERMISSIONS_${params?.server_id}_${params?.user_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_DEFAULT_ROLES: {
+    key: (params: { server_id: string }) =>
+      `SERVER_DEFAULT_ROLES_${params?.server_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_DEFAULT_PERMISSIONS: {
+    key: (params: { server_id: string }) =>
+      `SERVER_DEFAULT_PERMISSIONS_${params?.server_id}`,
+    TTL: 60 * 10,
+  },
+  SERVER_ROLE_MEMBERS: {
+    key: (params: { server_id: string; role_id: string }) =>
+      `SERVER_ROLE_MEMBERS_${params?.server_id}_${params?.role_id}`,
     TTL: 60 * 10,
   },
   SERVER_CONVERSATION: {
