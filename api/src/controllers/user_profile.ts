@@ -215,6 +215,13 @@ export const updateProfile = async (
       }
     );
 
+    // Invalidate cache
+    const cacheKey =
+      serverId === null
+        ? USERS.USER_PROFILE.key({ user_id: userId })
+        : USERS.SERVER_PROFILE.key({ user_id: userId, server_id: serverId });
+    await redisClient.delete(cacheKey);
+
     res.status(200).json({ ...response });
     return;
   } catch (error) {
