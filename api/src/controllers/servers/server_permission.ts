@@ -121,11 +121,21 @@ export const getDefaultServerRole = async (
   const serverId = res.locals.server_id;
 
   try {
-    const { getDefaultServerRole: defaultRole } = await graphQLClient().request(
-      serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
-      {
-        server_id: serverId,
-      }
+    const cachedKey = SERVERS.SERVER_DEFAULT_ROLES.key({ server_id: serverId });
+    const defaultRole = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getDefaultServerRole: defaultRole } =
+          await graphQLClient().request(
+            serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+            {
+              server_id: serverId,
+            }
+          );
+
+        return defaultRole;
+      },
+      SERVERS.SERVER_DEFAULT_ROLES.TTL
     );
 
     res.json({
@@ -172,6 +182,10 @@ export const createServerRole = async (
         },
       }
     );
+
+    // Invalidate the cache
+    const cachedKey = SERVERS.SERVER_ROLES.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
 
     res.status(201).json({
       id: response.createServerRole.id,
@@ -363,6 +377,13 @@ export const updateDefaultServerRole = async (
       }
     );
 
+    // Invalidate the cache and update
+    const cachedKey = SERVERS.SERVER_DEFAULT_ROLES.key({ server_id: serverId });
+    await redisClient.write(
+      cachedKey,
+      JSON.stringify(response.updateDefaultServerRole)
+    );
+
     res.status(201).json({
       id: response.updateDefaultServerRole.id,
       server_id: response.updateDefaultServerRole.server_id,
@@ -427,11 +448,23 @@ export const getDefaultServerRolePermissions = async (
   const serverId = res.locals.server_id;
 
   try {
-    const { getDefaultServerRole: defaultRole } = await graphQLClient().request(
-      serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
-      {
-        server_id: serverId,
-      }
+    const cachedKey = SERVERS.SERVER_DEFAULT_PERMISSIONS.key({
+      server_id: serverId,
+    });
+    const defaultRole = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getDefaultServerRole: defaultRole } =
+          await graphQLClient().request(
+            serverRoleQueries.GET_DEFAULT_SERVER_ROLE,
+            {
+              server_id: serverId,
+            }
+          );
+
+        return defaultRole;
+      },
+      SERVERS.SERVER_DEFAULT_PERMISSIONS.TTL
     );
 
     let parsedRolePermissions = null;
@@ -818,11 +851,25 @@ export const getServerRoleMembers = async (
   const serverId = res.locals.server_id;
 
   try {
-    const { getUsersAssignedWithRole: members } = await graphQLClient().request(
-      serverRoleQueries.GET_SERVER_ROLE_USERS,
-      {
-        role_id: roleId,
-      }
+    const cachedKey = SERVERS.SERVER_ROLE_MEMBERS.key({
+      server_id: serverId,
+      role_id: roleId,
+    });
+
+    const members = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getUsersAssignedWithRole: members } =
+          await graphQLClient().request(
+            serverRoleQueries.GET_SERVER_ROLE_USERS,
+            {
+              role_id: roleId,
+            }
+          );
+
+        return members;
+      },
+      SERVERS.SERVER_ROLE_MEMBERS.TTL
     );
 
     log.debug(members);
