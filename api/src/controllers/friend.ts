@@ -59,6 +59,14 @@ const deleteRelationship = async (
     user_first_id = user_second_id;
     user_second_id = temp;
   }
+
+  // Invalidate cache
+  const cachedKey = USERS.RELATIONSHIP.key({
+    user_id_1: user_first_id,
+    user_id_2: user_second_id,
+  });
+  await redisClient.delete(cachedKey);
+
   return await graphQLClient().request(DELETE_RELATIONSHIP, {
     user_first_id: user_first_id,
     user_second_id: user_second_id,
@@ -123,6 +131,13 @@ export const addFriend = async (
         type: "PENDING_SECOND_FIRST",
       });
     }
+
+    // Invalidate cache
+    const cachedKey = USERS.RELATIONSHIP.key({
+      user_id_1: user_first_id,
+      user_id_2: user_second_id,
+    });
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({
       message: "Friend request sent.",
@@ -199,6 +214,13 @@ export const acceptFriend = async (
       });
       return;
     }
+
+    // Invalidate cache
+    const cachedKey = USERS.RELATIONSHIP.key({
+      user_id_1: user_first_id,
+      user_id_2: user_second_id,
+    });
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({
       message: "Friend request accepted.",
@@ -465,6 +487,13 @@ export const blockUser = async (
         });
       }
     }
+
+    // Invalidate cache
+    const cachedKey = USERS.RELATIONSHIP.key({
+      user_id_1: user_first_id,
+      user_id_2: user_second_id,
+    });
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({
       message: "User blocked.",
