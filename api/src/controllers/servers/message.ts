@@ -339,7 +339,7 @@ export const createMessage = async (
         attachmentType = "AUDIO";
       }
 
-      const url = `${config.CDN_URL}/${attachment.key}`;
+      const url = `https://${config.CDN_URL}/${attachment.key}`;
       return {
         type: attachmentType,
         size: fileInfo.contentLength,
@@ -436,8 +436,12 @@ export const uploadFile = async (
     const fileExtension = filename.split(".").pop();
     const key = `attachments/${serverId}/${channelId}/${uuidv4()}.${fileExtension}`;
 
-    const uploadUrl = await generatePresignedUrl(key, fileType, fileSize);
-    res.status(200).json({ uploadUrl, key });
+    const { url: uploadUrl, fields } = await generatePresignedUrl(
+      key,
+      fileType,
+      fileSize
+    );
+    res.status(200).json({ uploadUrl, fields, key });
 
     return;
   } catch (error: any) {
