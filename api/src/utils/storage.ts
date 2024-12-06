@@ -215,9 +215,9 @@ export const generatePresignedUrl = async (
     };
 
     // @ts-ignore
-    const url = await createPresignedPost(s3, params);
+    const data = await createPresignedPost(s3, params);
 
-    return url;
+    return data;
   } catch (err: any) {
     log.error(err.message);
     throw new Error(err.message);
