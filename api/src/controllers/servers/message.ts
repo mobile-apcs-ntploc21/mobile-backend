@@ -295,7 +295,7 @@ export const createMessage = async (
     res.status(400).json({ message: "Channel ID is required." });
     return;
   }
-  if (!content) {
+  if (!content && (!attachments || attachments.length === 0)) {
     res.status(400).json({ message: "Content is required." });
     return;
   }
