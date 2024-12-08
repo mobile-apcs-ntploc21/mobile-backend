@@ -46,6 +46,11 @@ export const authMiddleware = async (
   try {
     let token: string | undefined;
 
+    if (res.locals?.uid) {
+      next();
+      return;
+    }
+
     // Check if token is in header
     if (
       req.headers.authorization &&
@@ -72,7 +77,7 @@ export const authMiddleware = async (
 
     // Check cache for token
     const cacheKey = MIDDLEWARE.AUTH_MIDDLEWARE.key({ token });
-    const cachedData = await redisClient.fetch(
+    const user = await redisClient.fetch(
       cacheKey,
       async () => {
         const user = await getUserById(decoded.id);
@@ -81,15 +86,6 @@ export const authMiddleware = async (
       MIDDLEWARE.AUTH_MIDDLEWARE.TTL
     );
 
-    if (cachedData) {
-      // Convert cached data to JSON
-      res.locals.uid = decoded.id;
-      res.locals.token = token;
-      next();
-      return;
-    }
-
-    const user = await getUserById(decoded.id);
     if (!user) {
       res.status(401).json({
         status: "fail",
