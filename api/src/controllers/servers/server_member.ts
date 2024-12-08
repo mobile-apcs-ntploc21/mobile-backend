@@ -3,6 +3,9 @@ import graphQLClient from "../../utils/graphql";
 import { serverMemberQueries, serverQueries } from "../../graphql/queries";
 import { serverMemberMutations } from "../../graphql/mutations";
 
+import redisClient from "@/utils/redisClient";
+import { SERVERS } from "@/constants/redisKey";
+
 export const getServerMembers = async (
   req: Request,
   res: Response,
@@ -12,13 +15,19 @@ export const getServerMembers = async (
   const { limit } = req.query;
 
   try {
-    const { getServerMembers: members } = await graphQLClient().request(
-      serverMemberQueries.GET_SERVER_MEMBERS,
-      {
-        server_id: serverId,
-        limit: Number(limit) || 1000,
-      }
+    const cachedKey = SERVERS.SERVER_MEMBERS.key({ server_id: serverId });
+
+    const cachedData = await redisClient.fetch(
+      cachedKey,
+      () =>
+        graphQLClient().request(serverMemberQueries.GET_SERVER_MEMBERS, {
+          server_id: serverId,
+          limit: Number(limit) || 1000,
+        }),
+      SERVERS.SERVER_MEMBERS.TTL
     );
+
+    const members = cachedData.getServerMembers;
 
     if (members.length === 0) {
       res.json([]);

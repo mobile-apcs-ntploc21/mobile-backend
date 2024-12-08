@@ -14,6 +14,9 @@ import {
 } from "../graphql/mutations";
 import { log } from "@/utils/log";
 
+import redisClient from "@/utils/redisClient";
+import { USERS } from "@/constants/redisKey";
+
 const getRelationshipType = async (
   user_first_id: string,
   user_second_id: string
@@ -23,15 +26,28 @@ const getRelationshipType = async (
     user_first_id = user_second_id;
     user_second_id = temp;
   }
-  const { getRelationshipType: response } = await graphQLClient().request(
-    GET_RELATIONSHIP_TYPE,
-    {
-      user_first_id: user_first_id,
-      user_second_id: user_second_id,
-    }
+
+  const cachedKey = USERS.RELATIONSHIP.key({
+    user_id_1: user_first_id,
+    user_id_2: user_second_id,
+  });
+
+  const cachedData = await redisClient.fetch(
+    cachedKey,
+    async () => {
+      const { getRelationshipType: response } = await graphQLClient().request(
+        GET_RELATIONSHIP_TYPE,
+        {
+          user_first_id: user_first_id,
+          user_second_id: user_second_id,
+        }
+      );
+      return response;
+    },
+    USERS.RELATIONSHIP.TTL
   );
 
-  return response;
+  return cachedData;
 };
 
 const deleteRelationship = async (
@@ -43,6 +59,14 @@ const deleteRelationship = async (
     user_first_id = user_second_id;
     user_second_id = temp;
   }
+
+  // Invalidate cache
+  const cachedKey = USERS.RELATIONSHIP.key({
+    user_id_1: user_first_id,
+    user_id_2: user_second_id,
+  });
+  await redisClient.delete(cachedKey);
+
   return await graphQLClient().request(DELETE_RELATIONSHIP, {
     user_first_id: user_first_id,
     user_second_id: user_second_id,
@@ -107,6 +131,13 @@ export const addFriend = async (
         type: "PENDING_SECOND_FIRST",
       });
     }
+
+    // Invalidate cache
+    const cachedKey = USERS.RELATIONSHIP.key({
+      user_id_1: user_first_id,
+      user_id_2: user_second_id,
+    });
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({
       message: "Friend request sent.",
@@ -183,6 +214,13 @@ export const acceptFriend = async (
       });
       return;
     }
+
+    // Invalidate cache
+    const cachedKey = USERS.RELATIONSHIP.key({
+      user_id_1: user_first_id,
+      user_id_2: user_second_id,
+    });
+    await redisClient.delete(cachedKey);
 
     res.status(200).json({
       message: "Friend request accepted.",
@@ -450,6 +488,13 @@ export const blockUser = async (
       }
     }
 
+    // Invalidate cache
+    const cachedKey = USERS.RELATIONSHIP.key({
+      user_id_1: user_first_id,
+      user_id_2: user_second_id,
+    });
+    await redisClient.delete(cachedKey);
+
     res.status(200).json({
       message: "User blocked.",
     });
@@ -541,15 +586,24 @@ export const getAllFriends = async (
   try {
     const user_id = res.locals.uid;
 
-    const { getAllFriends: response } = await graphQLClient().request(
-      GET_ALL_FRIENDS,
-      {
-        user_id: user_id,
-      }
+    const cachedKey = USERS.FRIEND_LIST.key({ user_id: user_id });
+
+    const cachedData = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getAllFriends: response } = await graphQLClient().request(
+          GET_ALL_FRIENDS,
+          {
+            user_id: user_id,
+          }
+        );
+        return response;
+      },
+      USERS.FRIEND_LIST.TTL
     );
 
     res.status(200).json({
-      friends: response,
+      friends: cachedData,
     });
     return;
   } catch (error: any) {
@@ -625,15 +679,24 @@ export const getBlockedUsers = async (
   try {
     const user_id = res.locals.uid;
 
-    const { getBlockedUsers: response } = await graphQLClient().request(
-      GET_BLOCKED_USERS,
-      {
-        user_id: user_id,
-      }
+    const cachedKey = USERS.BLOCKED_LIST.key({ user_id: user_id });
+
+    const cachedData = await redisClient.fetch(
+      cachedKey,
+      async () => {
+        const { getBlockedUsers: response } = await graphQLClient().request(
+          GET_BLOCKED_USERS,
+          {
+            user_id: user_id,
+          }
+        );
+        return response;
+      },
+      USERS.BLOCKED_LIST.TTL
     );
 
     res.status(200).json({
-      blocked: response,
+      blocked: cachedData,
     });
     return;
   } catch (error: any) {

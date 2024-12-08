@@ -6,15 +6,28 @@ import { serverQueries } from "../../graphql/queries";
 import { serverMutations } from "../../graphql/mutations";
 import { log } from "@/utils/log";
 
+import redisClient from "@/utils/redisClient";
+import { SERVERS } from "@/constants/redisKey";
+
 const getServerOverview = async (server_id: string) => {
-  const response = await graphQLClient().request(
-    serverQueries.GET_SERVER_BY_ID,
-    {
-      server_id,
-    }
+  const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
+
+  const cachedData = await redisClient.fetch(
+    cachedKey,
+    async () => {
+      const response = await graphQLClient().request(
+        serverQueries.GET_SERVER_BY_ID,
+        {
+          server_id,
+        }
+      );
+
+      return response.server;
+    },
+    SERVERS.SERVER_OVERVIEW.TTL
   );
 
-  return response.server;
+  return cachedData;
 };
 
 const getServersByUserId = async (userId: string) => {
@@ -162,6 +175,14 @@ export const updateServer = async (
       }
     );
 
+    // Write new data to cache
+    const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
+    await redisClient.write(
+      cachedKey,
+      JSON.stringify(response.updateServer),
+      SERVERS.SERVER_OVERVIEW.TTL
+    );
+
     res.status(200).json({ ...response.updateServer });
     return;
   } catch (error) {
@@ -204,6 +225,12 @@ export const deleteServer = async (
       }
     );
 
+    // Clear cache for server overview and members
+    let cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
+    cachedKey = SERVERS.SERVER_MEMBERS.key({ server_id: serverId });
+    await redisClient.delete(cachedKey);
+
     res.status(200).json({ message: "Server deleted successfully" });
     return;
   } catch (error) {
@@ -242,6 +269,10 @@ export const transferOwnership = async (
       }
     );
 
+    // Clear cache for server getServerOverview
+    const cachedKey = SERVERS.SERVER_OVERVIEW.key({ server_id });
+    await redisClient.delete(cachedKey);
+
     res.status(200).json({ message: "Ownership transferred successfully" });
     return;
   } catch (error) {
@@ -264,14 +295,24 @@ export const getInviteCode = async (
   }
 
   try {
-    const response = await graphQLClient(user_token).request(
-      serverQueries.GET_INVITE_CODE,
-      {
-        server_id: server_id,
-      }
+    const cacheKey = SERVERS.SERVER_INVITE_CODES.key({ server_id });
+
+    const cachedData = await redisClient.fetch(
+      cacheKey,
+      async () => {
+        const response = await graphQLClient(user_token).request(
+          serverQueries.GET_INVITE_CODE,
+          {
+            server_id: server_id,
+          }
+        );
+
+        return response.getInviteCode;
+      },
+      SERVERS.SERVER_INVITE_CODES.TTL
     );
 
-    res.status(200).json({ ...response.getInviteCode });
+    res.status(200).json({ ...cachedData });
     return;
   } catch (error) {
     next(error);
@@ -321,6 +362,10 @@ export const createInviteCode = async (
       }
     );
 
+    // Clear cache for invite codes
+    const cacheKey = SERVERS.SERVER_INVITE_CODES.key({ server_id });
+    await redisClient.delete(cacheKey);
+
     res.status(201).json({ ...response.createInviteCode });
     return;
   } catch (error) {
@@ -353,6 +398,10 @@ export const deleteInviteCode = async (
         url: url,
       }
     );
+
+    // Clear cache for invite codes
+    const cacheKey = SERVERS.SERVER_INVITE_CODES.key({ server_id });
+    await redisClient.delete(cacheKey);
 
     res.status(200).json({ message: "Invite code deleted successfully" });
     return;

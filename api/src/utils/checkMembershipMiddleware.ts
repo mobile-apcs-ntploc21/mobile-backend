@@ -2,6 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import graphQLClient from "../utils/graphql";
 import { serverMemberQueries } from "../graphql/queries";
 
+import redisClient from "@/utils/redisClient";
+import { SERVERS } from "@/constants/redisKey";
+
 /**
  * @swagger
  * components:

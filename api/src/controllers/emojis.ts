@@ -6,15 +6,25 @@ import { serverEmojiQueries } from "../graphql/queries";
 import { serverEmojiMutations } from "../graphql/mutations";
 import { log } from "@/utils/log";
 
+import redisClient from "@/utils/redisClient";
+import { SERVERS } from "@/constants/redisKey";
+
 const _getServerEmojis = async (server_id: string) => {
-  const response = await graphQLClient().request(
-    serverEmojiQueries.GET_SERVER_EMOJIS,
-    {
-      server_id,
-    }
+  const cacheKey = SERVERS.SERVER_EMOJI.key({ server_id });
+  const cacheData = await redisClient.fetch(
+    cacheKey,
+    async () => {
+      return await graphQLClient().request(
+        serverEmojiQueries.GET_SERVER_EMOJIS,
+        {
+          server_id,
+        }
+      );
+    },
+    SERVERS.SERVER_EMOJI.TTL
   );
 
-  return response.serverEmojis;
+  return cacheData.serverEmojis;
 };
 
 const _getServerEmoji = async (server_id: string, emoji_id: string) => {

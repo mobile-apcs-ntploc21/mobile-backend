@@ -1,6 +1,9 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
+
+import { MIDDLEWARE } from "../constants/redisKey";
 import { GET_USER_BY_ID } from "../graphql/queries";
+import redisClient from "../utils/redisClient";
 import jwt from "jsonwebtoken";
 import config from "../config";
 
@@ -66,6 +69,26 @@ export const authMiddleware = async (
     }
 
     const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
+
+    // Check cache for token
+    const cacheKey = MIDDLEWARE.AUTH_MIDDLEWARE.key({ token });
+    const cachedData = await redisClient.fetch(
+      cacheKey,
+      async () => {
+        const user = await getUserById(decoded.id);
+        return user;
+      },
+      MIDDLEWARE.AUTH_MIDDLEWARE.TTL
+    );
+
+    if (cachedData) {
+      // Convert cached data to JSON
+      res.locals.uid = decoded.id;
+      res.locals.token = token;
+      next();
+      return;
+    }
+
     const user = await getUserById(decoded.id);
     if (!user) {
       res.status(401).json({

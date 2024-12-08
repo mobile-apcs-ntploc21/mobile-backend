@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import redisClient from "../utils/redisClient";
 
 import graphQLClient from "../utils/graphql";
 import { CREATE_USER, UPDATE_REFRESH_TOKEN } from "../graphql/mutations";
@@ -11,6 +12,7 @@ import {
   LOGOUT_USER,
 } from "../graphql/queries";
 import config from "../config";
+import { USERS } from "../constants/redisKey";
 
 // Generate JWT token
 const generateToken = (payload: any) => {
@@ -277,8 +279,25 @@ export const getMe = async (
 ) => {
   try {
     const token = res.locals.token;
-
     const decoded = jwt.verify(token, config.JWT_SECRET) as jwt.JwtPayload;
+
+    const cacheKey = USERS.USER_ACCOUNT.key({ user_id: decoded.id });
+
+    // Check if user data is in cache
+    const cachedData = await redisClient.fetch(
+      cacheKey,
+      async () => {
+        const user = await getUserByEmail(decoded.email);
+        return user;
+      },
+      USERS.USER_ACCOUNT.TTL
+    );
+
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
+
     const user = await getUserByEmail(decoded.email);
 
     if (!user) {
