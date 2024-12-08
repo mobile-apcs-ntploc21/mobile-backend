@@ -10,6 +10,7 @@ type RedisClient = ReturnType<typeof createClient>;
 class Redis {
   private client: RedisClient;
   private url: string;
+  private isReady: boolean = false;
 
   constructor(url: string = REDIS_URL, options: any = {}) {
     this.url = url || REDIS_URL;
@@ -18,11 +19,13 @@ class Redis {
       ...options,
     });
 
-    this.client.on("error", (error) => {
+    /* this.client.on("error", (error) => {
       console.error(error);
-    });
+    }); */
+
     this.client.on("connect", () => {
       console.log(`Connected to Redis via URL ${this.url}`);
+      this.isReady = true;
     });
   }
 
@@ -31,6 +34,7 @@ class Redis {
       await this.client.connect();
     } catch (error) {
       console.error("Cannot connected to Redis:", error);
+      await this.client.disconnect();
     }
   }
 
@@ -40,6 +44,10 @@ class Redis {
    */
   async read(key: string): Promise<any> {
     try {
+      if (!this.isReady) {
+        return null;
+      }
+
       const value = await this.client.get(key);
 
       return value;
@@ -59,6 +67,10 @@ class Redis {
     value: any,
     expires: number = 60 * 60 * 24
   ): Promise<void> {
+    if (!this.isReady) {
+      return;
+    }
+
     // Convert value into string
     let _value: string;
 
