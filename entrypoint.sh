@@ -5,7 +5,7 @@ ENVIRONMENT=${ENVIRONMENT:-production}
 
 # Conditional logic to set the proxy_pass directive
 if [ "$ENVIRONMENT" = "development" ]; then
-  GRAPHQL_FORWARD='proxy_pass http://apollo:4000/graphql;'
+  GRAPHQL_FORWARD='proxy_pass http://orantio-apollo:4000/graphql;'
 else
   GRAPHQL_FORWARD='# GraphQL forwarding disabled in production'
 fi
