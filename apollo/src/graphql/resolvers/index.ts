@@ -25,6 +25,8 @@ import emojisResolver from "./emojis";
 import messageResolver from "./conversations/message";
 import reactionResolver from "./conversations/reaction";
 import lastReadResolver from "./conversations/last_read";
+/// Payment
+import paymentLogResolver from "./payment/paymentlog";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -52,6 +54,8 @@ export const apiResolvers = mergeResolvers([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
+
+  paymentLogResolver.API,
 ]);
 
 export const wsResolvers = mergeResolvers([
