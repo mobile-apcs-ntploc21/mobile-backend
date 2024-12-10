@@ -27,6 +27,8 @@ import reactionResolver from "./conversations/reaction";
 import lastReadResolver from "./conversations/last_read";
 /// Payment
 import paymentLogResolver from "./payment/paymentlog";
+import ordersResolver from "./payment/orders";
+import packageResolver from "./payment/packages";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -55,6 +57,8 @@ export const apiResolvers = mergeResolvers([
   category_role_permission.API,
   category_user_permission.API,
 
+  packageResolver.API,
+  ordersResolver.API,
   paymentLogResolver.API,
 ]);
 
