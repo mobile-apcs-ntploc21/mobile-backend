@@ -19,6 +19,11 @@ declare global {
       AWS_S3_BUCKET_NAME?: string;
       CDN_URL?: string;
 
+      VNPAY_TMNCODE?: string;
+      VNPAY_SECRET_KEY?: string;
+      VNPAY_RETURN_URL?: string;
+      VNPAY_API_URL: string;
+
       GQL_SERVER_URL: string;
     }
   }
