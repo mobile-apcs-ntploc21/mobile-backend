@@ -5,7 +5,7 @@ import {
   HashAlgorithm,
   ProductCode,
   VnpLocale,
-  Bank,
+  VerifyReturnUrl,
   dateFormat as VnpDateFormat,
 } from "vnpay";
 
@@ -104,6 +104,37 @@ export const returnOrder = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  res.status(200).send("Return");
-  return;
+  try {
+    let verify: VerifyReturnUrl;
+
+    const query: any = req.query;
+    verify = vnpay.verifyReturnUrl(query);
+
+    if (!verify.isVerified) {
+      res.status(404).json({
+        message: "Invalid signature",
+        success: false,
+      });
+
+      return;
+    }
+
+    if (!verify.isSuccess) {
+      res.status(404).json({
+        message: "Payment failed",
+        success: false,
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Payment success",
+      success: true,
+    });
+    return;
+  } catch (error) {
+    next(error);
+    return;
+  }
 };
