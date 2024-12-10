@@ -22,6 +22,13 @@ const config = {
   AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME ?? "hello",
   CDN_URL: "cdn.ntploc21.xyz",
 
+  VNPAY_TMNCODE: process.env.VNPAY_TMNCODE ?? "hello",
+  VNPAY_SECRET_KEY: process.env.VNPAY_SECRET_KEY ?? "hello",
+  VNPAY_RETURN_URL: process.env.VNPAY_RETURN_URL ?? "hello",
+  VNPAY_API_URL:
+    process.env.VNPAY_API_URL ??
+    "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+
   GQL_SERVER_URL: process.env.GQL_SERVER_URL ?? "http://apollo:4000",
 };
 
