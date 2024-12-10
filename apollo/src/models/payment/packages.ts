@@ -12,7 +12,9 @@ interface IPackages {
     discount: number; // In percentage
     end_date: Date;
   };
-  features_list: string[];
+
+  duration: number; // In days
+  features_list: any;
 }
 
 const packageSchema = new Schema<IPackages>(
@@ -35,6 +37,7 @@ const packageSchema = new Schema<IPackages>(
         message: "Base price must be greater than 0!",
       },
     },
+
     is_on_sale: {
       type: Boolean,
       default: false,
@@ -51,11 +54,22 @@ const packageSchema = new Schema<IPackages>(
         type: Date,
       },
     },
+
+    duration: {
+      type: Number,
+      required: [true, "Duration is required!"],
+      validate: {
+        validator: (value: number) => value > 0,
+        message: "Duration must be greater than 0!",
+      },
+    },
     features_list: {
-      type: [String],
+      type: Schema.Types.Mixed,
     },
   },
   { timestamps: true }
 );
 
 const Packages = model<IPackages>(ModelNames.Packages, packageSchema);
+
+export default Packages;
