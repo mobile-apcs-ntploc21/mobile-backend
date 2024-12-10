@@ -33,6 +33,8 @@ import reaction from "./conversations/reaction";
 import last_read from "./conversations/last_read";
 /// Payment
 import paymentlog from "./payment/paymentlog";
+import orders from "./payment/orders";
+import packages from "./payment/packages";
 
 const linkedSchema = gql`
   scalar JSON
@@ -81,6 +83,8 @@ export const apiTypeDefs = mergeTypeDefs([
   category_role_permission.API,
   category_user_permission.API,
 
+  packages.API,
+  orders.API,
   paymentlog.API,
 ]);
 
