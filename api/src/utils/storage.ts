@@ -1,6 +1,8 @@
 import { Upload } from "@aws-sdk/lib-storage";
 import {
   DeleteObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
   PutObjectCommandInput,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -9,6 +11,10 @@ import sharp from "sharp";
 import streamifier from "streamifier";
 import config from "../config";
 import { log } from "@/utils/log";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
+import { create } from "domain";
+import { P } from "pino";
+import { Conditions } from "@aws-sdk/s3-presigned-post/dist-types/types";
 
 // AWS S3 Config
 export const s3 = new S3Client({
@@ -184,4 +190,61 @@ export const compressImage = async (image: any) => {
     filename,
     mimetype,
   };
+};
+
+/**
+ * Generate a presigned URL for the file
+ * @param {string} key - The key of the file
+ * @param {string} fileType - The type of the file
+ * @returns {Promise<string>} - The presigned URL
+ */
+export const generatePresignedUrl = async (
+  key: string,
+  fileType: string,
+  fileSize: number
+) => {
+  try {
+    const params = {
+      Expires: 60,
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Key: key,
+      Conditions: [["content-length-range", fileSize, fileSize]],
+      Fields: {
+        "Content-Type": fileType,
+      },
+    };
+
+    // @ts-ignore
+    const data = await createPresignedPost(s3, params);
+
+    return data;
+  } catch (err: any) {
+    log.error(err.message);
+    throw new Error(err.message);
+  }
+};
+
+/**
+ * Get the file information
+ * @param {string} key - The key of the file
+ * @returns {Promise<{ contentType: string, contentLength: number }>} - The file information
+ */
+export const getFileInfo = async (key: string) => {
+  try {
+    const command = new HeadObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    const data = await s3.send(command);
+    const fileInfo = {
+      contentType: data.ContentType,
+      contentLength: data.ContentLength,
+    };
+
+    return fileInfo;
+  } catch (err: any) {
+    log.error(err.message);
+    throw new Error(err.message);
+  }
 };

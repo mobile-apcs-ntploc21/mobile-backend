@@ -2,7 +2,7 @@ server {
   listen 80;
 
   location /subscriptions {
-      proxy_pass http://apollo:4000/subscriptions;
+      proxy_pass http://orantio-apollo:4000/subscriptions;
       proxy_http_version 1.1;
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";
@@ -17,6 +17,6 @@ server {
   }
 
   location / {
-    proxy_pass http://api:4001;
+    proxy_pass http://orantio-api:4001;
   }
 }

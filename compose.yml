@@ -1,6 +1,18 @@
-version: "3"
+version: "3.8"
 services:
-  api:
+  orantio-cache:
+    image: redis:6.2.16
+    container_name: orantio-cache
+    restart: always
+    networks:
+      - orantio
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass password
+    volumes:
+      - cache:/data
+
+  orantio-api:
     container_name: orantio-api
     build:
       context: .
@@ -11,10 +23,15 @@ services:
       - api/config.env.template
     environment:
       - GQL_SERVER_URL=http://orantio-apollo:4000/graphql
+      - REDIS_HOST=orantio-cache
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=password
     ports:
       - "4001:4001"
+    depends_on:
+      - orantio-cache
 
-  apollo:
+  orantio-apollo:
     container_name: orantio-apollo
     build:
       context: .
@@ -26,7 +43,7 @@ services:
     ports:
       - "4000:4000"
 
-  nginx:
+  orantio-nginx:
     container_name: orantio-nginx
     build:
       context: .
@@ -44,11 +61,16 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       [
-        "/wait-for-it.sh api:4001 apollo:4000 -- /docker-entrypoint.d/entrypoint.sh",
+        "/wait-for-it.sh orantio-api:4001 orantio-apollo:4000 -- /docker-entrypoint.d/entrypoint.sh",
       ]
     depends_on:
-      - api
-      - apollo
+      - orantio-api
+      - orantio-apollo
+      - orantio-cache
 
 networks:
   orantio:
+
+volumes:
+  cache:
+    driver: local

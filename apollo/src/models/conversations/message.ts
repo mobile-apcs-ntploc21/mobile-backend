@@ -32,7 +32,13 @@ const messageSchema = new Schema<IMessage>(
     },
     content: {
       type: String,
-      required: [true, "Content is required!"], // Ensure content is always provided.
+      validate: {
+        validator: function (value) {
+          return value !== undefined && value !== null; // Allow empty strings but ensure the content exists
+        },
+        message: "Content is required!",
+      },
+      default: "", // Default content is an empty string.
     },
     replied_message_id: {
       type: Schema.Types.ObjectId,

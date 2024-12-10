@@ -10,27 +10,57 @@ type RedisClient = ReturnType<typeof createClient>;
 class Redis {
   private client: RedisClient;
   private url: string;
+  private isReady: boolean = false;
+  private maxRetries: number;
+  private retryDelay: number;
 
-  constructor(url: string = REDIS_URL, options: any = {}) {
+  constructor(
+    url: string = REDIS_URL,
+    options: any = {},
+    maxRetries: number = 3,
+    retryDelay: number = 1000
+  ) {
     this.url = url || REDIS_URL;
+    this.maxRetries = maxRetries;
+    this.retryDelay = retryDelay;
     this.client = createClient({
       url: this.url,
       ...options,
     });
 
-    this.client.on("error", (error) => {
-      console.error(error);
-    });
     this.client.on("connect", () => {
       console.log(`Connected to Redis via URL ${this.url}`);
+      this.isReady = true;
     });
   }
 
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   public async start(): Promise<void> {
-    try {
-      await this.client.connect();
-    } catch (error) {
-      console.error("Cannot connected to Redis:", error);
+    let attempts = 0;
+
+    while (attempts < this.maxRetries) {
+      try {
+        await this.client.connect();
+        console.log("Connected to Redis");
+      } catch (error) {
+        attempts++;
+
+        if (attempts === this.maxRetries) {
+          console.error(
+            "Exceeded maximum connection attempts to Redis. Falling back to database."
+          );
+          await this.client.disconnect();
+          return;
+        } else {
+          console.error(
+            `Retrying connection to Redis in ${this.retryDelay / 1000} seconds...`
+          );
+          await this.delay(this.retryDelay);
+        }
+      }
     }
   }
 
@@ -40,6 +70,10 @@ class Redis {
    */
   async read(key: string): Promise<any> {
     try {
+      if (!this.isReady) {
+        return null;
+      }
+
       const value = await this.client.get(key);
 
       return value;
@@ -59,6 +93,10 @@ class Redis {
     value: any,
     expires: number = 60 * 60 * 24
   ): Promise<void> {
+    if (!this.isReady) {
+      return;
+    }
+
     // Convert value into string
     let _value: string;
 

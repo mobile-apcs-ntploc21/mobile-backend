@@ -462,6 +462,12 @@ export const serverChannelQueries = {
           content
           replied_message_id
           forwarded_message_id
+          attachments {
+            type
+            url
+            filename
+            size
+          }
 
           mention_users
           mention_roles
@@ -652,6 +658,12 @@ export const messageQueries = {
         content
         replied_message_id
         forwarded_message_id
+        attachments {
+          type
+          url
+          filename
+          size
+        }
 
         mention_users
         mention_roles
@@ -703,6 +715,12 @@ export const messageQueries = {
         content
         replied_message_id
         forwarded_message_id
+        attachments {
+          type
+          url
+          filename
+          size
+        }
 
         mention_users
         mention_roles
@@ -742,6 +760,12 @@ export const messageQueries = {
         content
         replied_message_id
         forwarded_message_id
+        attachments {
+          type
+          url
+          filename
+          size
+        }
 
         mention_users
         mention_roles
@@ -775,6 +799,12 @@ export const messageQueries = {
         content
         replied_message_id
         forwarded_message_id
+        attachments {
+          type
+          url
+          filename
+          size
+        }
 
         mention_users
         mention_roles

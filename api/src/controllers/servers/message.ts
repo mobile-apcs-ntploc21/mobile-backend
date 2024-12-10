@@ -2,6 +2,9 @@ import express from "express";
 import graphQLClient from "../../utils/graphql";
 import { messageQueries } from "../../graphql/queries";
 import { messageMutations } from "../../graphql/mutations";
+import { generatePresignedUrl, getFileInfo } from "@/utils/storage";
+import { v4 as uuidv4 } from "uuid";
+import config from "@/config";
 
 // ==============
 
@@ -145,7 +148,7 @@ export const searchMessages = async (
     content,
     author_id: _author_id,
     mentions: _mentions,
-    has,
+    has: _has,
     in: _inChannel,
     conversationIds,
   } = req.query;
@@ -170,6 +173,7 @@ export const searchMessages = async (
       ? _mentions
       : [_mentions]
     : [];
+  const has = _has ? (Array.isArray(_has) ? _has : [_has]) : [];
 
   if (inChannel.length === 0 && inConversation.length === 0) {
     // TODO: Do a global search for the server
@@ -284,13 +288,14 @@ export const createMessage = async (
   next: express.NextFunction
 ) => {
   const { channelId } = req.params;
-  const { content, repliedMessageId, forwardedMessageId } = req.body;
+  const { content, repliedMessageId, forwardedMessageId, attachments } =
+    req.body;
 
   if (!channelId) {
     res.status(400).json({ message: "Channel ID is required." });
     return;
   }
-  if (!content) {
+  if (!content && (!attachments || attachments.length === 0)) {
     res.status(400).json({ message: "Content is required." });
     return;
   }
@@ -310,6 +315,40 @@ export const createMessage = async (
     return;
   }
 
+  // Transform the attachments
+  const transformedAttachments = await Promise.all(
+    attachments?.map(async (attachment: any) => {
+      if (!attachment.filename || !attachment.key) {
+        res.status(400).json({
+          message: "Attachment file name and key are required.",
+        });
+      }
+
+      const fileInfo = await getFileInfo(attachment.key);
+      if (!fileInfo) {
+        res.status(404).json({ message: "Attachment not found." });
+        return;
+      }
+
+      let attachmentType = "FILE";
+      if (fileInfo.contentType?.includes("image")) {
+        attachmentType = "IMAGE";
+      } else if (fileInfo.contentType?.includes("video")) {
+        attachmentType = "VIDEO";
+      } else if (fileInfo.contentType?.includes("audio")) {
+        attachmentType = "AUDIO";
+      }
+
+      const url = `https://${config.CDN_URL}/${attachment.key}`;
+      return {
+        type: attachmentType,
+        size: fileInfo.contentLength,
+        url: url,
+        filename: attachment.filename,
+      };
+    }) || []
+  );
+
   // Get all user, role, channel, and emoji mentions
   const mention_users = getMatches(content, user_regex, 1);
   const mention_roles = getMatches(content, role_regex, 1);
@@ -322,6 +361,7 @@ export const createMessage = async (
       input: {
         sender_id: res.locals.uid,
         content,
+        attachments: transformedAttachments,
 
         mention_users: mention_users,
         mention_roles: mention_roles,
@@ -338,6 +378,71 @@ export const createMessage = async (
     );
 
     res.status(201).json({ message });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
+export const uploadFile = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { channelId, serverId } = req.params;
+  const { filename, fileType, fileSize } = req.body;
+
+  if (!serverId) {
+    res.status(400).json({ message: "Server ID is required." });
+    return;
+  }
+
+  if (!channelId) {
+    res.status(400).json({ message: "Channel ID is required." });
+    return;
+  }
+
+  if (!filename) {
+    res.status(400).json({ message: "File name are required." });
+    return;
+  }
+
+  if (!fileType) {
+    res.status(400).json({ message: "File type is required." });
+    return;
+  }
+
+  if (!fileSize) {
+    res.status(400).json({ message: "File size is required." });
+    return;
+  }
+
+  if (fileSize > 10485760) {
+    res.status(400).json({ message: "File size must be less than 10MB." });
+    return;
+  }
+
+  const channel = res.locals.channelObject;
+  if (!channel.conversation_id) {
+    res.status(404).json({
+      message:
+        "Channel does not have a conversation. Please delete and create a new channel.",
+    });
+    return;
+  }
+
+  try {
+    const fileExtension = filename.split(".").pop();
+    const key = `attachments/${serverId}/${channelId}/${uuidv4()}.${fileExtension}`;
+
+    const { url: uploadUrl, fields } = await generatePresignedUrl(
+      key,
+      fileType,
+      fileSize
+    );
+    res.status(200).json({ uploadUrl, fields, key });
+
     return;
   } catch (error: any) {
     next(error);

@@ -13,7 +13,9 @@ interface IAttachment {
   message_id: Schema.Types.ObjectId;
   sender_id: Schema.Types.ObjectId;
   attachment_url: string;
-  content_type: string;
+  attachment_type: string;
+  filename: string;
+  size: number;
   last_modified: Date;
 }
 
@@ -33,9 +35,17 @@ const attachmentSchema = new Schema<IAttachment>(
       type: String,
       required: [true, "Attachment URL is required!"],
     },
-    content_type: {
+    attachment_type: {
       type: String,
-      required: [true, "Content Type is required!"],
+      required: [true, "Attachment Type is required!"],
+    },
+    filename: {
+      type: String,
+      required: [true, "Filename is required!"],
+    },
+    size: {
+      type: Number,
+      required: [true, "Size is required!"],
     },
     last_modified: {
       type: Date,
