@@ -8,8 +8,16 @@ import {
   VerifyReturnUrl,
   dateFormat as VnpDateFormat,
 } from "vnpay";
+import { v4 as uuidv4 } from "uuid";
 
 import config from "@/config";
+import graphQLClient from "@/utils/graphql";
+import {
+  ordersQueries,
+  paymentLogQueries,
+  packagesQueries,
+} from "@/graphql/queries";
+import { ordersMutations, paymentLogMutations } from "@/graphql/mutations";
 
 // Initialize VNPay
 // https://vnpay.js.org/create-payment-url
@@ -43,31 +51,45 @@ export const createOrder = async (
     console.log("IP: ", ipAddress);
 
     // Get the input
-    const amount = req.body.amount;
+    const uid = res.locals.uid;
+    const packageId = req.body.packageId;
     const bankCode = req.body.bankCode;
-    const orderInfo = req.body.orderDescription ?? "'";
+    let orderInfo = req.body.orderDescription ?? "";
     const locale = req.body.locale ?? "vn";
 
-    // Validate the input
-    if (amount === null || amount === "" || isNaN(amount)) {
-      res.status(404).json({
-        message: "Invalid amount",
+    // Get the package
+    if (!packageId) {
+      res.status(400).json({
+        message: "Package ID is required",
         success: false,
       });
+
       return;
     }
-    if (orderInfo === null || orderInfo === "") {
+
+    const packageData = await graphQLClient().request(
+      packagesQueries.GET_PACKAGE,
+      {
+        package_id: packageId,
+      }
+    );
+
+    if (packageData.package === null) {
       res.status(404).json({
-        message: "Invalid order info",
+        message: "Package not found",
         success: false,
       });
+
       return;
     }
+
+    const amount = packageData.package.base_price;
+    orderInfo = `${uid} buy package ${packageId} with amount ${amount}`;
 
     // Create the order link
     const date = new Date();
     const expireDate = new Date(date.getTime() + 1 * 15 * 60 * 1000); // 15 minutes
-    const orderId = dateFormat(date, "HHmmss");
+    const orderId = uuidv4();
 
     var params: any = {
       vnp_Amount: amount,
@@ -84,15 +106,39 @@ export const createOrder = async (
       params["vnp_BankCode"] = bankCode;
     }
 
+    // Build the payment URL
     const paymentUrl = vnpay.buildPaymentUrl(params);
-
-    res.status(200).json({
+    const response: any = {
       message: "Success",
       success: true,
       data: {
         paymentUrl,
       },
+    };
+
+    // Create an orders and payment logs
+    const order = await graphQLClient().request(ordersMutations.CREATE_ORDER, {
+      user_id: uid,
+      package_id: packageId,
+      amount: amount,
+      status: "Pending",
+      transaction_id: orderId,
     });
+
+    const paymentLog = await graphQLClient().request(
+      paymentLogMutations.CREATE_PAYMENT_LOG,
+      {
+        user_id: uid,
+        order_id: order.createOrder.id,
+        request: JSON.stringify(params),
+        response: JSON.stringify(response),
+        transaction_id: orderId,
+        log_type: "authorize",
+      }
+    );
+
+    // Return the status and reponse.
+    res.status(200).json(response);
   } catch (error) {
     next(error);
     return;
