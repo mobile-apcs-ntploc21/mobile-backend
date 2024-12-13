@@ -1013,3 +1013,105 @@ export const messageMutations = {
     }
   `,
 };
+
+export const ordersMutations = {
+  CREATE_ORDER: gql`
+    mutation createOrder(
+      $user_id: ID!
+      $package_id: ID!
+      $amount: Int!
+      $status: String!
+      $transaction_id: String!
+    ) {
+      createOrder(
+        user_id: $user_id
+        package_id: $package_id
+        amount: $amount
+        status: $status
+        transaction_id: $transaction_id
+      ) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  UPDATE_ORDER: gql`
+    mutation updateOrder(
+      $order_id: ID!
+      $amount: Int
+      $status: String
+      $transaction_id: String
+    ) {
+      updateOrder(
+        order_id: $order_id
+        amount: $amount
+        status: $status
+        transaction_id: $transaction_id
+      ) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  UPDATE_ORDER_STATUS: gql`
+    mutation updateOrderStatus($order_id: ID!, $status: String!) {
+      updateOrderStatus(order_id: $order_id, status: $status) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  DELETE_ORDER: gql`
+    mutation deleteOrder($order_id: ID!) {
+      deleteOrder(order_id: $order_id)
+    }
+  `,
+};
+
+export const paymentLogMutations = {
+  CREATE_PAYMENT_LOG: gql`
+    mutation createPaymentLog(
+      $user_id: ID!
+      $order_id: ID!
+      $request: String!
+      $response: String!
+      $transaction_id: String!
+      $log_type: LogType!
+      $data: JSON
+    ) {
+      createPaymentLog(
+        user_id: $user_id
+        order_id: $order_id
+        request: $request
+        response: $response
+        transaction_id: $transaction_id
+        log_type: $log_type
+        data: $data
+      ) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+};

@@ -826,3 +826,113 @@ export const messageQueries = {
     }
   `,
 };
+
+export const ordersQueries = {
+  GET_ORDER: gql`
+    query order($order_id: ID!) {
+      order(order_id: $order_id) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  GET_ORDERS: gql`
+    query orders() {
+      orders() {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  GET_ORDERS_BY_USER: gql`
+    query ordersByUser($user_id: ID!) {
+      ordersByUser(user_id: $user_id) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+};
+
+export const paymentLogQueries = {
+  GET_PAYMENT_LOG: gql`
+    query paymentLog($log_id: ID!) {
+      paymentLog(log_id: $log_id) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+  GET_PAYMENT_LOGS: gql`
+    query paymentLogs($user_id: ID!) {
+      paymentLogs(user_id: $user_id) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+};
+
+export const packagesQueries = {
+  GET_PACKAGE: gql`
+    query package($package_id: ID!) {
+      package(id: $package_id) {
+        id
+        name
+        description
+        base_price
+        is_on_sale
+        sale_details {
+          discount
+          end_date
+        }
+        duration
+        features_list
+      }
+    }
+  `,
+  GET_PACKAGES: gql`
+    query packages() {
+      packages() {
+        id
+        name
+        description
+        base_price
+        is_on_sale
+        sale_details {
+          discount
+          end_date
+        }
+        duration
+        features_list
+      }
+    }
+  `,
+};
