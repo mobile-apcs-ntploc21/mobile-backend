@@ -2,6 +2,7 @@ import { createClient } from "redis";
 import fs from "fs/promises";
 import path from "path";
 import config from "../config";
+import { log } from "@/utils/log";
 
 const STORE_PATH = path.join(__dirname, "../../store.json");
 const REDIS_URL = `redis://${config.REDIS_HOST}:${config.REDIS_PORT}`;
@@ -29,7 +30,7 @@ class Redis {
     });
 
     this.client.on("connect", () => {
-      console.log(`Connected to Redis via URL ${this.url}`);
+      log.info(`Connected to Redis via URL ${this.url}`);
       this.isReady = true;
     });
   }
@@ -45,11 +46,12 @@ class Redis {
       try {
         await this.client.connect();
         console.log("Connected to Redis");
+        return;
       } catch (error) {
         attempts++;
 
         if (attempts === this.maxRetries) {
-          console.error(
+          log.error(
             "Exceeded maximum connection attempts to Redis. Falling back to database."
           );
           await this.client.disconnect();
