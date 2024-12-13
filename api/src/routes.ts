@@ -8,6 +8,7 @@ import settingsRouter from "./routes/settings";
 import userRouter from "./routes/user";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
+import cronjobRouter from "./routes/cronjob";
 import { authMiddleware } from "./utils/authMiddleware";
 import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
 import config from "@/config";
@@ -34,12 +35,17 @@ function routing(app: Application) {
     app.use("/api/v1/servers", authMiddleware, serverBansRouter);
   };
 
+  const cronjobRoutes = () => {
+    app.use("/api/v1/cronjob", cronjobRouter);
+  };
+
   const swagger = () => {
     app.use(swaggerRouter);
   };
 
   userRoutes();
   serverRoutes();
+  cronjobRoutes();
   swagger();
 }
 

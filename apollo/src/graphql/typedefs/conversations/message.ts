@@ -91,6 +91,9 @@ const gqlQuery = gql`
 
     # Get all pinned messages in a conversation
     pinnedMessages(conversation_id: ID!): [Message]
+
+    # Get all attachments available in the database
+    getAvailableAttachments: [MessageAttachment]
   }
 `;
 

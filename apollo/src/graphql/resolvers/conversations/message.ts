@@ -1112,6 +1112,10 @@ const messageAPI: IResolvers = {
 
     pinnedMessages: async (_, { conversation_id }) =>
       getPinnedMessages(conversation_id),
+
+    getAvailableAttachments: async (_) => {
+      return await AttachmentModel.find().lean();
+    },
   },
   Mutation: {
     createMessage: async (_, { conversation_id, input }) =>
