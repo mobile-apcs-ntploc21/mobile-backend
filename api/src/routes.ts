@@ -11,6 +11,7 @@ import userStatusRouter from "./routes/user_status";
 import paymentRouter from "@/routes/payment/payments";
 import packageRouter from "@/routes/payment/packages";
 
+import cronjobRouter from "./routes/cronjob";
 import { authMiddleware } from "./utils/authMiddleware";
 import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
 import config from "@/config";
@@ -42,6 +43,10 @@ function routing(app: Application) {
     app.use("/api/v1/packages", authMiddleware, packageRouter);
   };
 
+  const cronjobRoutes = () => {
+    app.use("/api/v1/cronjob", cronjobRouter);
+  };
+
   const swagger = () => {
     app.use(swaggerRouter);
   };
@@ -49,6 +54,7 @@ function routing(app: Application) {
   customRoutes();
   userRoutes();
   serverRoutes();
+  cronjobRoutes();
   swagger();
 }
 
