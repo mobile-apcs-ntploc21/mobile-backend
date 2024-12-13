@@ -1,6 +1,12 @@
 import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
+  enum LogType {
+    authorize
+    IPN
+    redirect
+  }
+
   type PaymentLog {
     id: ID!
     user_id: ID!
@@ -10,7 +16,7 @@ const gqlTypes = gql`
     response: String!
     transaction_id: String!
 
-    log_type: String!
+    log_type: LogType!
     data: JSON
   }
 `;
@@ -28,7 +34,7 @@ const gqlAPI = gql`
       request: String!
       response: String!
       transaction_id: String!
-      log_type: String!
+      log_type: LogType!
       data: JSON
     ): PaymentLog!
   }

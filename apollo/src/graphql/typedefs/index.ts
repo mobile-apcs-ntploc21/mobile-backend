@@ -35,6 +35,7 @@ import last_read from "./conversations/last_read";
 import paymentlog from "./payment/paymentlog";
 import orders from "./payment/orders";
 import packages from "./payment/packages";
+import subscriptions from "./payment/subscriptions";
 
 const linkedSchema = gql`
   scalar JSON
@@ -86,6 +87,7 @@ export const apiTypeDefs = mergeTypeDefs([
   packages.API,
   orders.API,
   paymentlog.API,
+  subscriptions.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([

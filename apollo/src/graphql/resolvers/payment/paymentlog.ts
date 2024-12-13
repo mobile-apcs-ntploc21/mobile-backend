@@ -38,7 +38,7 @@ const createPaymentLog = async (
   log_type: string,
   data: any
 ) => {
-  const logTypes = ["authroize", "IPN", "redirect"];
+  const logTypes = ["authorize", "IPN", "redirect"];
 
   const user = await UserModel.findById(user_id).lean();
 

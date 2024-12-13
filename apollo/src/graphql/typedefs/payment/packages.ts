@@ -47,6 +47,7 @@ const gqlAPI = gql`
       features_list: JSON
     ): Package
     deletePackage(id: ID!): Package
+    deleteAllPackages(confirm: Boolean!): Boolean
   }
 `;
 
