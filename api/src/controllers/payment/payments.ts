@@ -83,18 +83,27 @@ export const createOrder = async (
       return;
     }
 
+    // Create an Order document
     const amount = packageData.package.base_price;
-    orderInfo = `${uid} buy package ${packageId} with amount ${amount}`;
-
-    // Create the order link
     const date = new Date();
     const expireDate = new Date(date.getTime() + 1 * 15 * 60 * 1000); // 15 minutes
-    const orderId = uuidv4();
+    const transactionId = uuidv4();
 
+    const order = await graphQLClient().request(ordersMutations.CREATE_ORDER, {
+      user_id: uid,
+      package_id: packageId,
+      amount: amount,
+      status: "Pending",
+      transaction_id: transactionId,
+    });
+    const orderId = order.createOrder.id;
+    orderInfo = `${uid},${packageId},${orderId},${packageData.package.name},${packageData.package.base_price}`;
+
+    // Create the order link
     var params: any = {
       vnp_Amount: amount,
       vnp_IpAddr: ipAddress,
-      vnp_TxnRef: orderId,
+      vnp_TxnRef: transactionId,
       vnp_OrderInfo: orderInfo,
       vnp_OrderType: ProductCode.Other,
       vnp_Locale: locale ? VnpLocale.VN : VnpLocale.EN,
@@ -116,15 +125,7 @@ export const createOrder = async (
       },
     };
 
-    // Create an orders and payment logs
-    const order = await graphQLClient().request(ordersMutations.CREATE_ORDER, {
-      user_id: uid,
-      package_id: packageId,
-      amount: amount,
-      status: "Pending",
-      transaction_id: orderId,
-    });
-
+    // Create an payment logs
     const paymentLog = await graphQLClient().request(
       paymentLogMutations.CREATE_PAYMENT_LOG,
       {
@@ -132,7 +133,7 @@ export const createOrder = async (
         order_id: order.createOrder.id,
         request: JSON.stringify(params),
         response: JSON.stringify(response),
-        transaction_id: orderId,
+        transaction_id: transactionId,
         log_type: "authorize",
       }
     );
@@ -154,9 +155,36 @@ export const returnOrder = async (
     let verify: VerifyReturnUrl;
 
     const query: any = req.query;
+    const orderInfo: string = query.vnp_OrderInfo;
     verify = vnpay.verifyReturnUrl(query);
 
+    // Get the UID and packageID
+    const [uid, packageId, orderId, packageName, amount] = orderInfo.split(",");
+
+    // Console log
+    console.log(
+      "uid, packageId, packageName, amount: ",
+      uid,
+      packageId,
+      packageName,
+      amount
+    );
+    console.log("orderid: ", orderId);
+
     if (!verify.isVerified) {
+      // Create a payment log
+      const paymentLog = await graphQLClient().request(
+        paymentLogMutations.CREATE_PAYMENT_LOG,
+        {
+          user_id: uid,
+          order_id: orderId,
+          request: JSON.stringify(query),
+          response: JSON.stringify(verify),
+          transaction_id: query.vnp_TxnRef,
+          log_type: "redirect",
+        }
+      );
+
       res.status(404).json({
         message: "Invalid signature",
         success: false,
@@ -166,6 +194,19 @@ export const returnOrder = async (
     }
 
     if (!verify.isSuccess) {
+      // Create a payment log
+      const paymentLog = await graphQLClient().request(
+        paymentLogMutations.CREATE_PAYMENT_LOG,
+        {
+          user_id: uid,
+          order_id: orderId,
+          request: JSON.stringify(query),
+          response: JSON.stringify(verify),
+          transaction_id: query.vnp_TxnRef,
+          log_type: "redirect",
+        }
+      );
+
       res.status(404).json({
         message: "Payment failed",
         success: false,
@@ -173,6 +214,19 @@ export const returnOrder = async (
 
       return;
     }
+
+    // Create a payment log
+    const paymentLog = await graphQLClient().request(
+      paymentLogMutations.CREATE_PAYMENT_LOG,
+      {
+        user_id: uid,
+        order_id: orderId,
+        request: JSON.stringify(query),
+        response: JSON.stringify(verify),
+        transaction_id: query.vnp_TxnRef,
+        log_type: "redirect",
+      }
+    );
 
     res.status(200).json({
       message: "Payment success",
