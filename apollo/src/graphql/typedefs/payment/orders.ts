@@ -35,6 +35,7 @@ const gqlAPI = gql`
       status: String
       transaction_id: String
     ): Order!
+    updateOrderStatus(id: ID!, status: String!): Order!
     deleteOrder(id: ID!): Boolean!
   }
 `;

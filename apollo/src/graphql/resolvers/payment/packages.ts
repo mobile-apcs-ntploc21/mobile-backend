@@ -55,6 +55,13 @@ const createPackage = async (
     );
   }
 
+  if (!is_on_sale) {
+    sale_details = {
+      discount: 0,
+      end_date: null,
+    };
+  }
+
   try {
     const _package = new PackageModel({
       name,
@@ -135,6 +142,19 @@ const deletePackage = async (id: string) => {
   }
 };
 
+const deleteAllPackages = async (confirm: boolean) => {
+  if (!confirm) {
+    throw new ValidationError("Confirmation required to delete all packages!");
+  }
+
+  try {
+    await PackageModel.deleteMany();
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const APIResolver: IResolvers = {
   DateTime,
   Query: {
@@ -187,6 +207,7 @@ const APIResolver: IResolvers = {
         features_list
       ),
     deletePackage: async (_, { id }) => deletePackage(id),
+    deleteAllPackages: async (_, { confirm }) => deleteAllPackages(confirm),
   },
 };
 
