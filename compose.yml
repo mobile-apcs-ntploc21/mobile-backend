@@ -18,10 +18,10 @@ services:
       target: api
     networks:
       - orantio
+#      - elastic
     env_file:
       - api/config.env
     environment:
-      - GQL_SERVER_URL=http://orantio-apollo:4000/graphql
       - REDIS_HOST=orantio-cache
       - REDIS_PORT=6379
       - REDIS_PASSWORD=password
@@ -29,6 +29,8 @@ services:
       - "4001:4001"
     depends_on:
       - orantio-cache
+    volumes:
+      - ./logs/:/logs/
 
   orantio-apollo:
     container_name: orantio-apollo
@@ -38,10 +40,13 @@ services:
     networks:
       - orantio
       - notification
+#      - elastic
     env_file:
       - apollo/config.env
     ports:
       - "4000:4000"
+    volumes:
+      - ./logs/:/logs/
 
   orantio-nginx:
     container_name: orantio-nginx
@@ -80,10 +85,30 @@ services:
       - orantio-apollo
       - orantio-cache
 
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.10.2
+    container_name: filebeat
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./logs/:/logs/
+    environment:
+      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+    depends_on:
+      - orantio-api
+      - orantio-apollo
+    networks:
+      - orantio
+#      - elastic
+
 networks:
   orantio:
   notification:
     external: true
+#  elastic:
+#    external: true
 
 volumes:
   cache:

@@ -1,15 +1,13 @@
 import { LoggerOptions, pino } from "pino";
 import { config } from "@/config";
+import path from "path";
+
+const logFilePath = path.resolve("/logs/apollo.log");
 
 const options: LoggerOptions = {
   level: config.MODE === "development" ? "trace" : "info",
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-      ignore: "pid,hostname",
-    },
-  },
 };
 
-export const log = pino(options);
+const log = pino(options, pino.destination(logFilePath));
+
+export { log };
