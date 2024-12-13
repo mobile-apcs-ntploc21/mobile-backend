@@ -24,6 +24,7 @@
     "apollo-server": "^3.13.0",
     "apollo-server-core": "^3.13.0",
     "apollo-server-express": "^3.13.0",
+    "elastic-apm-node": "^4.8.1",
     "graphql": "^16.9.0",
     "graphql-resolvers": "^0.4.2",
     "graphql-scalars": "^1.23.0",
