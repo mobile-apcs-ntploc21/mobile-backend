@@ -124,22 +124,27 @@ const syncUserSubscription = async (confirm: boolean) => {
   try {
     const users = await UserModel.find().lean();
 
+    const bulkOperations: any = [];
     for (const user of users) {
-      const userSubscription = await UserSubscriptionModel.findOne({
-        user_id: user._id,
+      bulkOperations.push({
+        updateOne: {
+          filter: { user_id: user._id },
+          update: {
+            $setOnInsert: {
+              user_id: user._id,
+              package_id: null,
+              is_active: false,
+              startDate: null,
+              endDate: null,
+            },
+          },
+          upsert: true,
+        },
       });
+    }
 
-      if (!userSubscription) {
-        const newUserSubscription = new UserSubscriptionModel({
-          user_id: user._id,
-          package_id: null,
-          is_active: false,
-          startDate: null,
-          endDate: null,
-        });
-
-        await newUserSubscription.save();
-      }
+    if (bulkOperations.length > 0) {
+      await UserSubscriptionModel.bulkWrite(bulkOperations);
     }
 
     return true;
