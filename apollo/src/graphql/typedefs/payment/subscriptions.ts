@@ -14,14 +14,13 @@ const gqlTypes = gql`
 
 const gqlAPI = gql`
   extend type Query {
-    userSubscriptions: [UserSubscription]
-    userSubscription(id: ID!): UserSubscription
-    userSubscriptionsByUser(user_id: ID!): [UserSubscription]
+    userSubscription(user_id: ID!): UserSubscription
   }
 
   extend type Mutation {
     updateUserSubscription(
       id: ID!
+      package_id: ID
       is_active: Boolean
       startDate: String
       endDate: String
