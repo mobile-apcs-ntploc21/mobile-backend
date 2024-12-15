@@ -38,6 +38,33 @@ const updateUserSubscription = async (
   startDate: string,
   endDate: string
 ) => {
+  const date = new Date();
+
+  // Validate the startDate and endDate if provided
+  if (startDate) {
+    const _startDate = new Date(startDate);
+
+    if (_startDate < date) {
+      throw new ValidationError(
+        "Invalid start date. Check if the date is not before today.!"
+      );
+    }
+  }
+
+  if (endDate) {
+    const _endDate = new Date(endDate);
+
+    if (_endDate < date) {
+      throw new ValidationError(
+        "Invalid end date!. Check if the date is not before today."
+      );
+    }
+  }
+
+  if (is_active && !package_id) {
+    throw new ValidationError("Please provide a package id!");
+  }
+
   try {
     const userSubscription = await UserSubscriptionModel.findByIdAndUpdate(
       id,
