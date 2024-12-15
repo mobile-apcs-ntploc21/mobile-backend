@@ -10,6 +10,7 @@ import { defaultProfile } from "./user_profile";
 import UserSettingsModel from "../../models/userSettings";
 import UserProfileModel from "../../models/user_profile";
 import UserStatusModel from "../../models/user_status";
+import SubscriptionsModel from "@/models/payment/subscriptions";
 import { log } from "@/utils/log";
 
 const createUserTransaction = async (input: any) => {
@@ -48,6 +49,20 @@ const createUserTransaction = async (input: any) => {
       [
         {
           user_id: createdUser.id,
+        },
+      ],
+      opts
+    );
+
+    // Create user subscription
+    await SubscriptionsModel.create(
+      [
+        {
+          user_id: createdUser.id,
+          package_id: null,
+          is_active: false,
+          start_date: null,
+          end_date: null,
         },
       ],
       opts
