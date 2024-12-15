@@ -4,11 +4,11 @@ const gqlTypes = gql`
   type UserSubscription {
     id: ID!
     user_id: ID!
-    package_id: ID!
+    package_id: ID
 
     is_active: Boolean!
-    startDate: String!
-    endDate: String!
+    startDate: String
+    endDate: String
   }
 `;
 
