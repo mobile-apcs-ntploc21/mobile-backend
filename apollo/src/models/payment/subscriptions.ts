@@ -21,7 +21,6 @@ const subscriptionSchema = new Schema<ISubscriptions>(
     package_id: {
       type: Schema.Types.ObjectId,
       ref: ModelNames.Packages,
-      required: [true, "Plan ID is required!"],
     },
     is_active: {
       type: Boolean,
@@ -29,11 +28,9 @@ const subscriptionSchema = new Schema<ISubscriptions>(
     },
     startDate: {
       type: Date,
-      required: [true, "Start date is required!"],
     },
     endDate: {
       type: Date,
-      required: [true, "End date is required!"],
     },
   },
   { timestamps: true }
