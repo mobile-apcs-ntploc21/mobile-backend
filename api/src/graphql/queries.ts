@@ -936,3 +936,31 @@ export const packagesQueries = {
     }
   `,
 };
+
+export const userSubscriptionQueries = {
+  GET_USER_SUBSCRIPTION: gql`
+    query userSubscription($user_id: ID!) {
+      userSubscription(user_id: $user_id) {
+        user_id
+        package_id
+        is_active
+        startDate
+        endDate
+
+        package_ {
+          id
+          name
+          description
+          base_price
+          is_on_sale
+          sale_details {
+            discount
+            end_date
+          }
+          duration
+          features_list
+        }
+      }
+    }
+  `,
+};

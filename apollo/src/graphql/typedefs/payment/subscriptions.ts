@@ -2,9 +2,10 @@ import { gql } from "apollo-server-express";
 
 const gqlTypes = gql`
   type UserSubscription {
-    id: ID!
     user_id: ID!
     package_id: ID
+
+    package_: Package
 
     is_active: Boolean!
     startDate: String
@@ -19,7 +20,7 @@ const gqlAPI = gql`
 
   extend type Mutation {
     updateUserSubscription(
-      id: ID!
+      user_id: ID!
       package_id: ID
       is_active: Boolean
       startDate: String

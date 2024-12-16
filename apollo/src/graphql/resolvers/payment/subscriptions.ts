@@ -18,6 +18,16 @@ const getUserSubscription = async (user_id: string) => {
 
   try {
     const userSubscription = await UserSubscriptionModel.findOne({ user_id });
+    const package_id = userSubscription?.package_id;
+
+    let _package = null;
+    if (package_id) {
+      _package = await PackageModel.findById(package_id);
+
+      if (!_package) {
+        throw new UserInputError("Invalid package id!");
+      }
+    }
 
     if (!userSubscription) {
       throw new UserInputError(
@@ -25,14 +35,17 @@ const getUserSubscription = async (user_id: string) => {
       );
     }
 
-    return userSubscription;
+    return {
+      ...userSubscription.toObject(),
+      package_: _package,
+    };
   } catch (error) {
     throw error;
   }
 };
 
 const updateUserSubscription = async (
-  id: string,
+  user_id: string,
   package_id: string,
   is_active: boolean,
   startDate: string,
@@ -41,15 +54,6 @@ const updateUserSubscription = async (
   const date = new Date();
 
   // Validate the startDate and endDate if provided
-  if (startDate) {
-    const _startDate = new Date(startDate);
-
-    if (_startDate < date) {
-      throw new ValidationError(
-        "Invalid start date. Check if the date is not before today.!"
-      );
-    }
-  }
 
   if (endDate) {
     const _endDate = new Date(endDate);
@@ -66,17 +70,30 @@ const updateUserSubscription = async (
   }
 
   try {
-    const userSubscription = await UserSubscriptionModel.findByIdAndUpdate(
-      id,
-      { is_active, package_id, startDate, endDate },
+    const userSubscription = await UserSubscriptionModel.findOneAndUpdate(
+      { user_id },
+      {
+        package_id,
+        is_active,
+        startDate,
+        endDate,
+      },
       { new: true }
     );
+
+    let _package = null;
+    if (package_id) {
+      _package = await PackageModel.findById(package_id);
+    }
 
     if (!userSubscription) {
       throw new UserInputError("User subscription not found!");
     }
 
-    return userSubscription;
+    return {
+      ...userSubscription.toObject(),
+      package_: _package,
+    };
   } catch (error) {
     throw error;
   }
@@ -137,7 +154,10 @@ const updateUserPackageSubscription = async (
       throw new UserInputError("Failed to update user subscription!");
     }
 
-    return updatedUserSubscription;
+    return {
+      ...updatedUserSubscription.toObject(),
+      package_: _package,
+    };
   } catch (error) {
     throw error;
   }
@@ -189,10 +209,10 @@ const resolvers: IResolvers = {
   Mutation: {
     updateUserSubscription: async (
       _,
-      { id, package_id, is_active, startDate, endDate }
+      { user_id, package_id, is_active, startDate, endDate }
     ) => {
       return await updateUserSubscription(
-        id,
+        user_id,
         package_id,
         is_active,
         startDate,
