@@ -12,6 +12,7 @@ import UserProfileModel from "../../models/user_profile";
 import UserStatusModel from "../../models/user_status";
 import SubscriptionsModel from "@/models/payment/subscriptions";
 import { log } from "@/utils/log";
+import Device from "@models/device";
 
 const createUserTransaction = async (input: any) => {
   const session = await mongoose.startSession();
@@ -123,21 +124,30 @@ const userResolvers: IResolvers = {
       return user;
     }),
 
-    loginUser: combineResolvers(async (_, { email, password }, { models }) => {
-      const user = await UserModel.findOne({ email });
+    loginUser: combineResolvers(
+      async (_, { email, password, device_token }, { models }) => {
+        const user = await UserModel.findOne({ email });
 
-      if (!user) {
-        return null;
+        if (!user) {
+          return null;
+        }
+
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+          return null;
+        }
+
+        clearExpireTokens(user);
+
+        Device.findOneAndUpdate(
+          { user_id: user._id },
+          { $addToSet: { device_tokens: device_token } },
+          { upsert: true, new: true }
+        );
+
+        return user;
       }
-
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        return null;
-      }
-
-      clearExpireTokens(user);
-      return user;
-    }),
+    ),
 
     logoutUser: combineResolvers(
       async (_, { refresh_token, id }, { models }) => {

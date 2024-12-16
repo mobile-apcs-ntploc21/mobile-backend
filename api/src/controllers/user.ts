@@ -153,7 +153,7 @@ export const loginUser = async (
   next: express.NextFunction
 ) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, device_token } = req.body;
 
     if (!email || !password) {
       res.status(400).json({
@@ -163,8 +163,9 @@ export const loginUser = async (
     }
 
     const { loginUser: response } = await graphQLClient().request(LOGIN_USER, {
-      email: email,
-      password: password,
+      email,
+      password,
+      device_token,
     });
 
     if (response == null) {
