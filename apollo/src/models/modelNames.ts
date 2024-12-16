@@ -24,6 +24,7 @@ enum ModelNames {
   Attachment = "attachments",
   LastRead = "last_reads",
   Mention = "mentions",
+  Device = "devices",
 }
 
 export default ModelNames;
