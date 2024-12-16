@@ -1,10 +1,12 @@
 import express from "express";
 import graphQLClient from "../utils/graphql";
+import jwt from "jsonwebtoken";
 
 import { MIDDLEWARE } from "../constants/redisKey";
 import { GET_USER_BY_ID } from "../graphql/queries";
+import { FreePackageFeatures } from "@/constants/features_value";
 import redisClient from "../utils/redisClient";
-import jwt from "jsonwebtoken";
+import { _getUserSubscription } from "@/controllers/payment/subscriptions";
 import config from "../config";
 
 /**
@@ -109,6 +111,14 @@ export const authMiddleware = async (
     // Save user data to res.locals
     res.locals.uid = user.id;
     res.locals.token = token;
+
+    const userSubscription = await _getUserSubscription(user.id);
+    if (userSubscription.is_active) {
+      res.locals.features = JSON.parse(userSubscription.package_.features_list);
+    } else {
+      res.locals.features = FreePackageFeatures;
+    }
+
     next();
   } catch (error) {
     next(error);

@@ -1,6 +1,8 @@
 import express from "express";
 import graphQLClient from "../../utils/graphql";
-import { messageQueries } from "../../graphql/queries";
+
+import { SERVERS } from "@/constants/redisKey";
+import { messageQueries, serverEmojiQueries } from "../../graphql/queries";
 import { messageMutations } from "../../graphql/mutations";
 import { generatePresignedUrl, getFileInfo } from "@/utils/storage";
 import { v4 as uuidv4 } from "uuid";
@@ -290,6 +292,8 @@ export const createMessage = async (
   const { channelId } = req.params;
   const { content, repliedMessageId, forwardedMessageId, attachments } =
     req.body;
+  const user_id = res.locals.uid;
+  const user_features = res.locals.features;
 
   if (!channelId) {
     res.status(400).json({ message: "Channel ID is required." });
@@ -299,7 +303,8 @@ export const createMessage = async (
     res.status(400).json({ message: "Content is required." });
     return;
   }
-  if (content.length > 2000) {
+
+  if (content.length > user_features["nCML"]) {
     res.status(400).json({
       message: "Content must be less than or equal to 2000 characters.",
     });
@@ -359,7 +364,7 @@ export const createMessage = async (
     const requestBody = {
       conversation_id: channel.conversation_id,
       input: {
-        sender_id: res.locals.uid,
+        sender_id: user_id,
         content,
         attachments: transformedAttachments,
 
