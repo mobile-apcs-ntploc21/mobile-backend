@@ -1,5 +1,6 @@
 import { Application } from "express";
 
+import directMessageRouter from "./routes/direct_message";
 import friendRouter from "./routes/friend";
 import serverRouter from "./routes/servers/server";
 import serverEmojiRouter from "./routes/servers/server_emojis";
@@ -34,12 +35,17 @@ function routing(app: Application) {
     app.use("/api/v1/servers", authMiddleware, serverBansRouter);
   };
 
+  const directMessageRoutes = () => {
+    app.use("/api/v1/directMessages", authMiddleware, directMessageRouter);
+  };
+
   const swagger = () => {
     app.use(swaggerRouter);
   };
 
   userRoutes();
   serverRoutes();
+  directMessageRoutes();
   swagger();
 }
 
