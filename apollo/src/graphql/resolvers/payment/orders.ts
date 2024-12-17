@@ -42,6 +42,20 @@ const getOrdersByUser = async (user_id: string) => {
   }
 };
 
+const getOrderByTransaction = async (transaction_id: string) => {
+  try {
+    const order = await OrderModel.findOne({ transaction_id });
+
+    if (!order) {
+      throw new UserInputError("Invalid transaction id!");
+    }
+
+    return order;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const createOrder = async (
   user_id: string,
   package_id: string,
@@ -119,6 +133,25 @@ const updateOrder = async (
   }
 };
 
+const updateOrderStatus = async (id: string, status: string) => {
+  const statuses = ["Pending", "Paid", "Failed", "Chargeback", "Refunded"];
+  if (!statuses.includes(status)) {
+    throw new UserInputError("Invalid status!");
+  }
+
+  try {
+    const order = await OrderModel.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    return order;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const deleteOrder = async (id: string) => {
   try {
     const order = await OrderModel.findByIdAndDelete(id);
@@ -140,6 +173,8 @@ const resolversAPI: IResolvers = {
     orders: async () => await getOrders(),
     order: async (_, { id }) => await getOrder(id),
     ordersByUser: async (_, { user_id }) => await getOrdersByUser(user_id),
+    orderByTransaction: async (_, { transaction_id }) =>
+      await getOrderByTransaction(transaction_id),
   },
 
   Mutation: {
@@ -153,6 +188,8 @@ const resolversAPI: IResolvers = {
       ),
     updateOrder: async (_, args) =>
       await updateOrder(args.id, args.amount, args.status, args.transaction_id),
+    updateOrderStatus: async (_, args) =>
+      await updateOrderStatus(args.id, args.status),
     deleteOrder: async (_, { id }) => await deleteOrder(id),
   },
 };

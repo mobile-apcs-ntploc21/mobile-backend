@@ -12,8 +12,8 @@ const gqlTypes = gql`
     user_id: ID!
     order_id: ID!
 
-    request: String!
-    response: String!
+    request: String
+    response: String
     transaction_id: String!
 
     log_type: LogType!
@@ -31,8 +31,8 @@ const gqlAPI = gql`
     createPaymentLog(
       user_id: ID!
       order_id: ID!
-      request: String!
-      response: String!
+      request: String
+      response: String
       transaction_id: String!
       log_type: LogType!
       data: JSON

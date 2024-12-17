@@ -19,6 +19,7 @@ const gqlAPI = gql`
     orders: [Order]
     order(id: ID!): Order
     ordersByUser(user_id: ID!): [Order]
+    orderByTransaction(transaction_id: String!): Order
   }
 
   extend type Mutation {

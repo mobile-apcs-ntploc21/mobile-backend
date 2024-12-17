@@ -7,6 +7,12 @@ import {
   VnpLocale,
   VerifyReturnUrl,
   dateFormat as VnpDateFormat,
+  VerifyIpnCall,
+  IpnFailChecksum,
+  IpnOrderNotFound,
+  InpOrderAlreadyConfirmed,
+  IpnSuccess,
+  IpnUnknownError,
 } from "vnpay";
 import { v4 as uuidv4 } from "uuid";
 
@@ -15,9 +21,14 @@ import graphQLClient from "@/utils/graphql";
 import {
   ordersQueries,
   paymentLogQueries,
+  userSubscriptionQueries,
   packagesQueries,
 } from "@/graphql/queries";
-import { ordersMutations, paymentLogMutations } from "@/graphql/mutations";
+import {
+  ordersMutations,
+  paymentLogMutations,
+  userSubscritpionMutation,
+} from "@/graphql/mutations";
 
 // Initialize VNPay
 // https://vnpay.js.org/create-payment-url
@@ -30,6 +41,62 @@ const vnpay = new VNPay({
 
   enableLog: true,
 });
+
+const setOrderStatus = async (orderId: string, status: string) => {
+  const statuses = ["Pending", "Paid", "Failed", "Chargeback", "Refunded"];
+
+  if (!statuses.includes(status)) {
+    throw new Error("Invalid status!");
+  }
+
+  const order = await graphQLClient().request(
+    ordersMutations.UPDATE_ORDER_STATUS,
+    {
+      id: orderId,
+      status: status,
+    }
+  );
+
+  return order;
+};
+
+const createPaymentLog = async (
+  userId: string,
+  orderId: string,
+  request: string,
+  response: string,
+  transactionId: string,
+  logType: string
+) => {
+  if (!userId) {
+    throw new Error("User ID is required");
+  }
+
+  if (!orderId) {
+    throw new Error("Order ID is required");
+  }
+
+  const logTypes = ["authorize", "redirect", "IPN"];
+  if (!logTypes.includes(logType)) {
+    throw new Error("Invalid log type");
+  }
+
+  const paymentLog = await graphQLClient().request(
+    paymentLogMutations.CREATE_PAYMENT_LOG,
+    {
+      user_id: userId,
+      order_id: orderId,
+      request: request,
+      response: response,
+      transaction_id: transactionId,
+      log_type: logType,
+    }
+  );
+
+  return paymentLog;
+};
+
+// ===================
 
 export const createOrder = async (
   req: express.Request,
@@ -126,16 +193,13 @@ export const createOrder = async (
     };
 
     // Create an payment logs
-    const paymentLog = await graphQLClient().request(
-      paymentLogMutations.CREATE_PAYMENT_LOG,
-      {
-        user_id: uid,
-        order_id: order.createOrder.id,
-        request: JSON.stringify(params),
-        response: JSON.stringify(response),
-        transaction_id: transactionId,
-        log_type: "authorize",
-      }
+    const paymentLog = await createPaymentLog(
+      uid,
+      orderId,
+      JSON.stringify(params),
+      JSON.stringify(response),
+      transactionId,
+      "authorize"
     );
 
     // Return the status and reponse.
@@ -161,54 +225,27 @@ export const returnOrder = async (
     // Get the UID and packageID
     const [uid, packageId, orderId, packageName, amount] = orderInfo.split(",");
 
-    // Console log
-    console.log(
-      "uid, packageId, packageName, amount: ",
-      uid,
-      packageId,
-      packageName,
-      amount
-    );
-    console.log("orderid: ", orderId);
-
-    if (!verify.isVerified) {
+    if (!verify.isVerified || !verify.isSuccess) {
       // Create a payment log
-      const paymentLog = await graphQLClient().request(
-        paymentLogMutations.CREATE_PAYMENT_LOG,
-        {
-          user_id: uid,
-          order_id: orderId,
-          request: JSON.stringify(query),
-          response: JSON.stringify(verify),
-          transaction_id: query.vnp_TxnRef,
-          log_type: "redirect",
-        }
+      const paymentLog = await createPaymentLog(
+        uid,
+        orderId,
+        JSON.stringify(query),
+        JSON.stringify(verify),
+        query.vnp_TxnRef,
+        "redirect"
       );
 
-      res.status(404).json({
-        message: "Invalid signature",
-        success: false,
-      });
+      // Set failed payment order
+      setOrderStatus(orderId, "Failed");
 
-      return;
-    }
-
-    if (!verify.isSuccess) {
-      // Create a payment log
-      const paymentLog = await graphQLClient().request(
-        paymentLogMutations.CREATE_PAYMENT_LOG,
-        {
-          user_id: uid,
-          order_id: orderId,
-          request: JSON.stringify(query),
-          response: JSON.stringify(verify),
-          transaction_id: query.vnp_TxnRef,
-          log_type: "redirect",
-        }
-      );
+      // Return the status and reponse.
+      const message = verify.isVerified
+        ? "Payment failed"
+        : "Invalid signature";
 
       res.status(404).json({
-        message: "Payment failed",
+        message: message,
         success: false,
       });
 
@@ -216,16 +253,13 @@ export const returnOrder = async (
     }
 
     // Create a payment log
-    const paymentLog = await graphQLClient().request(
-      paymentLogMutations.CREATE_PAYMENT_LOG,
-      {
-        user_id: uid,
-        order_id: orderId,
-        request: JSON.stringify(query),
-        response: JSON.stringify(verify),
-        transaction_id: query.vnp_TxnRef,
-        log_type: "redirect",
-      }
+    const paymentLog = await createPaymentLog(
+      uid,
+      orderId,
+      JSON.stringify(query),
+      JSON.stringify(verify),
+      query.vnp_TxnRef,
+      "redirect"
     );
 
     res.status(200).json({
@@ -235,6 +269,85 @@ export const returnOrder = async (
     return;
   } catch (error) {
     next(error);
+    return;
+  }
+};
+
+export const ipnOrder = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    let verify: VerifyIpnCall;
+
+    const query: any = req.query;
+    const orderInfo: string = query.vnp_OrderInfo;
+    verify = vnpay.verifyIpnCall(query);
+
+    const [uid, packageId, orderId, packageName, amount] = orderInfo.split(",");
+
+    if (!verify.isVerified) {
+      return res.json(IpnFailChecksum);
+    }
+
+    // Find the order in the database
+    const order = await graphQLClient().request(
+      ordersQueries.GET_ORDER_BY_TRANSACTION,
+      {
+        transaction_id: query.vnp_TxnRef,
+      }
+    );
+    console.log("order: ", order);
+
+    // If the order not found in the database
+    if (
+      order.orderByTransaction === null ||
+      order.orderByTransaction.id !== orderId
+    ) {
+      return res.json(IpnOrderNotFound);
+    }
+
+    // If the payment amount does not match
+    if (order.orderByTransaction.amount !== verify.vnp_Amount) {
+      return res.json(IpnFailChecksum);
+    }
+
+    // If the order has been paid before
+    if (order.orderByTransaction.status === "Paid") {
+      return res.json(InpOrderAlreadyConfirmed);
+    }
+
+    console.log("We are here!");
+
+    // Update the order status
+    const updatedOrder = await setOrderStatus(orderId, "Paid");
+
+    // Then update the payment log to tell that the payment is successful
+    const paymentLog = await createPaymentLog(
+      uid,
+      orderId,
+      JSON.stringify(query),
+      JSON.stringify(verify),
+      query.vnp_TxnRef,
+      "IPN"
+    );
+
+    // Mutate the subscription to user
+    const userSubscription = await graphQLClient().request(
+      userSubscritpionMutation.UPDATE_USER_PACKAGE_SUBSCRIPTION,
+      {
+        user_id: uid,
+        package_id: packageId,
+      }
+    );
+
+    res.json(IpnSuccess);
+    return;
+  } catch (error) {
+    console.error(`IPN Verify error (controllers/payment): ${error}`);
+
+    res.json(IpnUnknownError);
     return;
   }
 };
