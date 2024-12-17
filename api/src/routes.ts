@@ -39,17 +39,8 @@ function routing(app: Application) {
     app.use("/api/v1/servers", authMiddleware, serverBansRouter);
   };
 
-  const customRoutes = () => {
-    app.use("/api/v1/payments", paymentRouter);
-    app.use("/api/v1/packages", authMiddleware, packageRouter);
-  };
-
-  const cronjobRoutes = () => {
-    app.use("/api/v1/cronjob", cronjobRouter);
-  };
-
   const directMessageRoutes = () => {
-    app.use("/api/v1/direct-messages", authMiddleware, directMessageRouter);
+    app.use("/api/v1/directMessages", authMiddleware, directMessageRouter);
   };
 
   const swagger = () => {

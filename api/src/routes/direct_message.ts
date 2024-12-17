@@ -2,9 +2,11 @@ import { Router } from "express";
 import {
   getDirectMessage,
   getDirectMessages,
-  createDirectMessage,
-  deleteDirectMessage,
+  uploadFile,
+  getPinnedMessages,
+  createMessage,
 } from "../controllers/direct_message";
+import * as messageCtrl from "../controllers/servers/message";
 
 /**
  * @swagger
@@ -69,7 +71,7 @@ const directMessageRouter = Router();
  *                  message: Direct message not found.
  *
  */
-directMessageRouter.get("/:conversationId", getDirectMessage);
+directMessageRouter.get("/:userId", getDirectMessage);
 
 /**
  * @swagger
@@ -103,7 +105,7 @@ directMessageRouter.get("/:conversationId", getDirectMessage);
  *        '401':
  *          $ref: '#/components/responses/AuthMiddlewareError'
  */
-directMessageRouter.get("/user/:userId", getDirectMessages);
+directMessageRouter.get("/me", getDirectMessages);
 
 /**
  * @swagger
@@ -118,8 +120,10 @@ directMessageRouter.get("/user/:userId", getDirectMessages);
  *            schema:
  *              type: object
  *              properties:
- *                refreshToken:
- *                  type: string
+ *                user_first_id:
+ *                 type: string
+ *                user_second_id:
+ *                 type: string
  *      responses:
  *        201:
  *          description: Successful login
@@ -141,11 +145,11 @@ directMessageRouter.get("/user/:userId", getDirectMessages);
  *              example:
  *                message: Missing User ID(s)
  */
-directMessageRouter.post("/", createDirectMessage);
+// directMessageRouter.post("/", createDirectMessage);
 
 /**
  * @swagger
- * /directMessages/{conversationId}:
+ *  /directMessages/{conversationId}:
  *  delete:
  *    summary: Delete a direct message by conversation ID.
  *    tags: [Direct Messages]
@@ -172,6 +176,18 @@ directMessageRouter.post("/", createDirectMessage);
  *            example:
  *              message: Conversation ID is required.
  */
-directMessageRouter.delete("/:conversationId", deleteDirectMessage);
+// directMessageRouter.delete("/:conversationId", deleteDirectMessage);
+
+directMessageRouter.put("/:messageId", messageCtrl.editMessage);
+directMessageRouter.delete("/:messageId", messageCtrl.deleteMessage);
+directMessageRouter.post("/:userId", createMessage);
+directMessageRouter.post("/upload", uploadFile);
+directMessageRouter.get("/pins", getPinnedMessages);
+directMessageRouter.post("/:messageId/pin", messageCtrl.pinMessage);
+directMessageRouter.delete("/:messageId/pin", messageCtrl.unpinMessage);
+
+directMessageRouter.get("/:messageId/reactions", messageCtrl.getReactions);
+directMessageRouter.post("/:messageId/reactions", messageCtrl.reactMessage);
+directMessageRouter.delete("/:messageId/reactions", messageCtrl.unreactMessage);
 
 export default directMessageRouter;
