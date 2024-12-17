@@ -13,6 +13,9 @@ import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 import ServerRoleModel from "@/models/servers/server_role";
 import AttachmentModel from "@/models/conversations/attachment";
+import { publishMessage } from "@/rabbitmq";
+import { config } from "@/config";
+import serverModel from "@models/servers/server";
 
 // ==========================
 interface IMessageReaction {
@@ -484,7 +487,6 @@ const getMessages = async (
  */
 const searchMessages = async (
   query: ISearchQuery,
-
   offset: number,
   limit: number
 ): Promise<IMessage[]> => {
@@ -754,6 +756,18 @@ const createMessageTransaction = async (
 
     // If the current message from a server
     if (channel) {
+      const sender = await UserProfileModel.findOne({
+        user_id: sender_id,
+      });
+      const server = await serverModel.findById(channel.server_id);
+
+      if (sender && server)
+        publishMessage(config.MESSAGE_QUEUE, {
+          topic: channel.server_id.toString(),
+          title: `${server.name} #${channel.name}`,
+          message: `${sender.username}: ${message.content}`,
+        });
+
       publishEvent(ServerEvents.messageAdded, {
         server_id: channel.server_id,
         type: ServerEvents.messageAdded,
