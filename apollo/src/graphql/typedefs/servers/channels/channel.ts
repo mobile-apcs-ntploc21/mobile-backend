@@ -65,6 +65,9 @@ const gqlAPI = gql`
 
     # Sync channel with conversation
     syncChannel(server_id: ID): Boolean
+
+    # Sync channel and topic in FCM
+    syncFCM: Boolean
   }
 `;
 
