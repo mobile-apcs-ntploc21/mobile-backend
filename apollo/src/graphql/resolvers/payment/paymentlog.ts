@@ -56,6 +56,17 @@ const createPaymentLog = async (
     throw new UserInputError("Invalid log type!");
   }
 
+  // Checking for duplicate logs
+  const paymentLog = await PaymentLogModel.findOne({
+    transaction_id,
+    log_type,
+  });
+
+  // If log already exists, return it
+  if (paymentLog) {
+    return paymentLog;
+  }
+
   try {
     const log = new PaymentLogModel({
       user_id,
