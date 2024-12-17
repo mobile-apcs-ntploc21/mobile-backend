@@ -4,7 +4,6 @@ import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { log } from "@/utils/log";
 import graphQLClient from "@/utils/graphql";
 import { messageQueries } from "@/graphql/queries";
-import { count } from "console";
 
 export const handlePremiumExpiration = async () => {
   console.log("Handling premium expiration...");
@@ -31,6 +30,7 @@ export const cleanupAttachment = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
+  log.info("[Cronjob] Cleanup attachments: Started cleaning up attachments");
   const getOldKeys = async (folder: string = "", hours: number = 0) => {
     try {
       const data = await s3.send(
@@ -62,23 +62,29 @@ export const cleanupAttachment = async (
     res
       .status(200)
       .json("[Cronjob] Cleanup attachments: No attachments to clean up");
+    log.info("[Cronjob] Cleanup attachments: No attachments to clean up");
     return;
   }
 
+  let count = 0;
   try {
     // Get attachments available in the database
-    const availableAttachments = await graphQLClient().request(
+    const response = await graphQLClient().request(
       messageQueries.GET_AVAILABLE_ATTACHMENTS
     );
-    const availableKeys = availableAttachments.map((attachment: any) =>
-      attachment.attachment_url.split("/").pop()
-    );
+    const availableAttachments = response.availableAttachments;
+    console.log();
+    const availableKeys = availableAttachments.map((attachment: any) => {
+      const match = attachment.url.match(/attachments\/.*/);
+      return match ? match[0] : null;
+    });
+    console.log(availableKeys);
 
-    let count = 0;
     for (const key of allKeys) {
       if (!availableKeys.includes(key)) {
         count++;
-        deleteFromS3(key);
+        log.info(`[Cronjob] Cleanup attachments: Deleting ${key}`);
+        // deleteFromS3(key);
       }
     }
   } catch (err: any) {
@@ -89,6 +95,10 @@ export const cleanupAttachment = async (
   res.status(200).json({
     message: `[Cronjob] Clean up attachments: ${count} Attachments cleaned up successfully`,
   });
+
+  log.info(
+    `[Cronjob] Clean up attachments: ${count} Attachments cleaned up successfully`
+  );
 
   return;
 };

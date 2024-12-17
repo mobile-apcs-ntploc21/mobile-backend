@@ -93,7 +93,7 @@ const gqlQuery = gql`
     pinnedMessages(conversation_id: ID!): [Message]
 
     # Get all attachments available in the database
-    getAvailableAttachments: [MessageAttachment]
+    availableAttachments: [MessageAttachment]
   }
 `;
 
