@@ -110,18 +110,17 @@ const updateUserPackageSubscription = async (
   }
 
   try {
-    const _package = await PackageModel.findById(package_id).lean();
-
-    if (!_package) {
-      throw new UserInputError("Invalid package id!");
-    }
-
     // Set active to false if package_id is not provided
     if (!package_id || package_id === undefined) {
       const updatedUserSubscription =
         await UserSubscriptionModel.findByIdAndUpdate(
           userSubscription._id,
-          { is_active: false },
+          {
+            is_active: false,
+            startDate: null,
+            endDate: null,
+            package_id: null,
+          },
           { new: true }
         );
 
@@ -132,11 +131,33 @@ const updateUserPackageSubscription = async (
       return updatedUserSubscription;
     }
 
-    const startDate = new Date();
-    const endDate = new Date();
+    // Find the package by id and check if the package exists
+    const _package = await PackageModel.findById(package_id).lean();
+    if (!_package) {
+      throw new UserInputError("Invalid package id!");
+    }
 
-    // Duration is in day: 30 = 30 days
-    endDate.setDate(startDate.getDate() + _package.duration);
+    let startDate = new Date();
+    let endDate = new Date();
+
+    if (userSubscription.is_active) {
+      // Extend the end date if the user subscription is active
+
+      startDate = new Date(userSubscription.startDate);
+      endDate = new Date(userSubscription.endDate);
+
+      endDate.setDate(endDate.getDate() + _package.duration);
+    } else {
+      // Set the start date and end date if the user subscription is inactive
+
+      startDate = new Date();
+      endDate = new Date();
+      endDate.setDate(startDate.getDate() + _package.duration);
+    }
+
+    // Console log the start and end date
+    console.log("Start Date: ", startDate);
+    console.log("End Date: ", endDate);
 
     const updatedUserSubscription =
       await UserSubscriptionModel.findByIdAndUpdate(

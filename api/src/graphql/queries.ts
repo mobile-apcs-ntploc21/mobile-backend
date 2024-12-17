@@ -867,6 +867,19 @@ export const ordersQueries = {
       }
     }
   `,
+  GET_ORDER_BY_TRANSACTION: gql`
+    query orderByTransaction($transaction_id: String!) {
+      orderByTransaction(transaction_id: $transaction_id) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
 };
 
 export const paymentLogQueries = {
