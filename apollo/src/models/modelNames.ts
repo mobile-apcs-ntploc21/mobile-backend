@@ -24,6 +24,8 @@ enum ModelNames {
   Attachment = "attachments",
   LastRead = "last_reads",
   Mention = "mentions",
+  Device = "devices",
+  FirebaseTopic = "firebase_topics",
 }
 
 export default ModelNames;

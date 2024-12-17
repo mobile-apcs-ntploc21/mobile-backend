@@ -34,8 +34,8 @@ export const GET_USER_BY_USERNAME = gql`
 `;
 
 export const LOGIN_USER = gql`
-  query loginUser($email: String!, $password: String!) {
-    loginUser(email: $email, password: $password) {
+  query loginUser($email: String!, $password: String!, $device_token: String!) {
+    loginUser(email: $email, password: $password, device_token: $device_token) {
       id
       username
       email

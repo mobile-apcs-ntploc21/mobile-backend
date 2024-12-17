@@ -17,7 +17,7 @@ export default gql`
     users: [User!]
     isLoggedIn: Boolean!
 
-    loginUser(email: String!, password: String!): User
+    loginUser(email: String!, password: String!, device_token: String!): User
     logoutUser(refresh_token: String, id: ID!): Boolean
     getUserById(id: ID!): User
     getUserByEmail(email: String!): User
