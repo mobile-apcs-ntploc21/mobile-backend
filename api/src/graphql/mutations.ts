@@ -1048,7 +1048,7 @@ export const ordersMutations = {
       $transaction_id: String
     ) {
       updateOrder(
-        order_id: $order_id
+        id: $order_id
         amount: $amount
         status: $status
         transaction_id: $transaction_id
@@ -1064,8 +1064,8 @@ export const ordersMutations = {
     }
   `,
   UPDATE_ORDER_STATUS: gql`
-    mutation updateOrderStatus($order_id: ID!, $status: String!) {
-      updateOrderStatus(order_id: $order_id, status: $status) {
+    mutation updateOrderStatus($id: ID!, $status: String!) {
+      updateOrderStatus(id: $id, status: $status) {
         id
         user_id
         package_id
@@ -1088,8 +1088,8 @@ export const paymentLogMutations = {
     mutation createPaymentLog(
       $user_id: ID!
       $order_id: ID!
-      $request: String!
-      $response: String!
+      $request: String
+      $response: String
       $transaction_id: String!
       $log_type: LogType!
       $data: JSON
@@ -1113,5 +1113,49 @@ export const paymentLogMutations = {
         data
       }
     }
+  `,
+};
+
+export const userSubscritpionMutation = {
+  UPDATE_USER_PACKAGE_SUBSCRIPTION: gql`
+    mutation updateUserPackageSubscription($user_id: ID!, $package_id: ID!) {
+      updateUserPackageSubscription(
+        user_id: $user_id
+        package_id: $package_id
+      ) {
+        user_id
+        package_id
+
+        is_active
+        startDate
+        endDate
+      }
+    }
+  `,
+
+  UPDATE_USER_SUBSCRIPTION: gql`
+    mutation updateUserSubscription(
+      $user_id: ID!
+      $package_id: ID
+      is_active: Boolean
+      startDate: String
+      endDate: String
+  ) {
+    updateUserSubscription(
+      user_id: $user_id
+      package_id: $package_id
+      is_active: $is_active
+      startDate: $startDate
+      endDate: $endDate
+    ) {
+      user_id
+      package_id
+
+      is_active
+      startDate
+      endDate
+    }
+  }
+
   `,
 };

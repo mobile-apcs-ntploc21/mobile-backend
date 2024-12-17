@@ -44,7 +44,7 @@ const paymentLogSchema = new Schema<IPaymentLog>(
     log_type: {
       type: String,
       enum: {
-        values: ["authorize", "ipn", "redirect"],
+        values: ["authorize", "IPN", "redirect"],
         message: "{VALUE} is not supported!",
       },
       required: [true, "Log type is required!"],

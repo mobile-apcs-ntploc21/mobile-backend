@@ -28,7 +28,7 @@ const gqlAPI = gql`
     ): UserSubscription!
     updateUserPackageSubscription(
       user_id: ID!
-      package_id: ID!
+      package_id: ID
     ): UserSubscription!
 
     syncUserSubscription(confirm: Boolean!): Boolean!
