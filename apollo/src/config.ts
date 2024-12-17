@@ -15,6 +15,10 @@ const config = {
   PING_INTERVAL: process.env.PING_INTERVAL
     ? parseInt(process.env.PING_INTERVAL)
     : 30000,
+  RABBIT_MQ_URL: process.env.RABBIT_MQ_URL ?? "amqp://localhost",
+  RABBIT_MQ_EXCHANGE: process.env.RABBIT_MQ_EXCHANGE ?? "message",
+  MESSAGE_QUEUE: "notification",
+  TOPIC_QUEUE: "topic",
 };
 
 config.GRAPHQL_ENDPOINT = `http://${config.HOST}:${config.PORT}${config.GRAPHQL_ROUTE}`;

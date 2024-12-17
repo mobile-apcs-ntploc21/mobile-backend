@@ -124,7 +124,7 @@ const userResolvers: IResolvers = {
 
         clearExpireTokens(user);
 
-        Device.findOneAndUpdate(
+        await Device.findOneAndUpdate(
           { user_id: user._id },
           { $addToSet: { device_tokens: device_token } },
           { upsert: true, new: true }
