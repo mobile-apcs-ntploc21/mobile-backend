@@ -827,9 +827,9 @@ export const messageQueries = {
   `,
 
   GET_AVAILABLE_ATTACHMENTS: gql`
-    query getAvailableAttachments {
-      getAvailableAttachments {
-        attachment_url
+    query availableAttachments {
+      availableAttachments {
+        url
       }
     }
   `,
