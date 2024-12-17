@@ -14,6 +14,9 @@ declare global {
       MAX_RATE_LIMIT: string;
       MAX_RATE_LIMIT_TIME: string;
       PING_INTERVAL: string;
+
+      RABBIT_MQ_URL: string;
+      RABBIT_MQ_EXCHANGE: string;
     }
   }
 }

@@ -15,6 +15,8 @@ import ServerRoleModel from "@models/servers/server_role";
 import { castToIMessage, fetchExtraFields } from "../../conversations/message";
 import { defaultChannelRole } from "@resolvers/servers/channels/channel_role_permission";
 import { publishEvent, ServerEvents } from "../../../pubsub/pubsub";
+import ServerMemberModel from "@models/servers/server_member";
+import FirebaseTopic from "@models/firebase_topic";
 
 const POSITION_CONST = 1 << 20; // This is the constant used to calculate the position of the channel
 const POSITION_GAP = 10; // This is the minimum gap between the position of the channels
@@ -507,6 +509,30 @@ const channelAPI: IResolvers = {
 
         return true;
       } catch (error) {
+        return false;
+      }
+    },
+    syncFCM: async () => {
+      try {
+        const servers = await ServerModel.find({});
+        servers.forEach(async (server) => {
+          const members = await ServerMemberModel.find({
+            "_id.server_id": server._id,
+          });
+
+          await FirebaseTopic.create(
+            [
+              {
+                topic: server._id,
+                user_ids: members.map((m) => m._id.user_id),
+              },
+            ],
+            { new: true }
+          );
+        });
+        return true;
+      } catch (e) {
+        console.log(e);
         return false;
       }
     },

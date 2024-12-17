@@ -19,6 +19,8 @@
     "@graphql-tools/merge": "^9.0.4",
     "@graphql-tools/schema": "^10.0.4",
     "@graphql-tools/utils": "^10.3.2",
+    "@types/amqplib": "^0.10.6",
+    "amqplib": "^0.10.5",
     "apollo-server": "^3.13.0",
     "apollo-server-core": "^3.13.0",
     "apollo-server-express": "^3.13.0",

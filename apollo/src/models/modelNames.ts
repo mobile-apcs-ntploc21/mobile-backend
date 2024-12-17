@@ -31,6 +31,8 @@ enum ModelNames {
   Packages = "packages",
   Subscriptions = "subscriptions",
   PaymentLog = "payment_logs",
+  Device = "devices",
+  FirebaseTopic = "firebase_topics",
 }
 
 export default ModelNames;
