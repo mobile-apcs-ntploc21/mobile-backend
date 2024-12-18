@@ -1018,3 +1018,149 @@ export const messageMutations = {
     }
   `,
 };
+
+export const ordersMutations = {
+  CREATE_ORDER: gql`
+    mutation createOrder(
+      $user_id: ID!
+      $package_id: ID!
+      $amount: Int!
+      $status: String!
+      $transaction_id: String!
+    ) {
+      createOrder(
+        user_id: $user_id
+        package_id: $package_id
+        amount: $amount
+        status: $status
+        transaction_id: $transaction_id
+      ) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  UPDATE_ORDER: gql`
+    mutation updateOrder(
+      $order_id: ID!
+      $amount: Int
+      $status: String
+      $transaction_id: String
+    ) {
+      updateOrder(
+        id: $order_id
+        amount: $amount
+        status: $status
+        transaction_id: $transaction_id
+      ) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  UPDATE_ORDER_STATUS: gql`
+    mutation updateOrderStatus($id: ID!, $status: String!) {
+      updateOrderStatus(id: $id, status: $status) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  DELETE_ORDER: gql`
+    mutation deleteOrder($order_id: ID!) {
+      deleteOrder(order_id: $order_id)
+    }
+  `,
+};
+
+export const paymentLogMutations = {
+  CREATE_PAYMENT_LOG: gql`
+    mutation createPaymentLog(
+      $user_id: ID!
+      $order_id: ID!
+      $request: String
+      $response: String
+      $transaction_id: String!
+      $log_type: LogType!
+      $data: JSON
+    ) {
+      createPaymentLog(
+        user_id: $user_id
+        order_id: $order_id
+        request: $request
+        response: $response
+        transaction_id: $transaction_id
+        log_type: $log_type
+        data: $data
+      ) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+};
+
+export const userSubscritpionMutation = {
+  UPDATE_USER_PACKAGE_SUBSCRIPTION: gql`
+    mutation updateUserPackageSubscription($user_id: ID!, $package_id: ID!) {
+      updateUserPackageSubscription(
+        user_id: $user_id
+        package_id: $package_id
+      ) {
+        user_id
+        package_id
+
+        is_active
+        startDate
+        endDate
+      }
+    }
+  `,
+
+  UPDATE_USER_SUBSCRIPTION: gql`
+    mutation updateUserSubscription(
+      $user_id: ID!
+      $package_id: ID
+      is_active: Boolean
+      startDate: String
+      endDate: String
+  ) {
+    updateUserSubscription(
+      user_id: $user_id
+      package_id: $package_id
+      is_active: $is_active
+      startDate: $startDate
+      endDate: $endDate
+    ) {
+      user_id
+      package_id
+
+      is_active
+      startDate
+      endDate
+    }
+  }
+
+  `,
+};

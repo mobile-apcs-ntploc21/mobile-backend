@@ -24,6 +24,12 @@ enum ModelNames {
   Attachment = "attachments",
   LastRead = "last_reads",
   Mention = "mentions",
+
+  // Payment
+  Orders = "orders",
+  Packages = "packages",
+  Subscriptions = "subscriptions",
+  PaymentLog = "payment_logs",
 }
 
 export default ModelNames;

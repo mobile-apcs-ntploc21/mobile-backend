@@ -45,6 +45,7 @@ class Redis {
       try {
         await this.client.connect();
         console.log("Connected to Redis");
+        return;
       } catch (error) {
         attempts++;
 

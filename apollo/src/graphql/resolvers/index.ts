@@ -25,6 +25,11 @@ import emojisResolver from "./emojis";
 import messageResolver from "./conversations/message";
 import reactionResolver from "./conversations/reaction";
 import lastReadResolver from "./conversations/last_read";
+/// Payment
+import paymentLogResolver from "./payment/paymentlog";
+import ordersResolver from "./payment/orders";
+import packageResolver from "./payment/packages";
+import subscriptionsResolver from "./payment/subscriptions";
 import cronjobResolver from "./cronjob";
 
 // Merge all resolvers: Add more in the future if needed
@@ -53,6 +58,11 @@ export const apiResolvers = mergeResolvers([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
+
+  packageResolver.API,
+  ordersResolver.API,
+  paymentLogResolver.API,
+  subscriptionsResolver.API,
 
   cronjobResolver,
 ]);
