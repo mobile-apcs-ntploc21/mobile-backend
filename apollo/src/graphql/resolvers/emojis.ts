@@ -3,7 +3,6 @@ import { IResolvers } from "@graphql-tools/utils";
 import { UserInputError, ValidationError } from "apollo-server";
 import fs from "fs";
 
-import ServerEmojiModel from "@/models/servers/serverEmoji";
 import ServerModel from "@/models/servers/server";
 import ServerMemberModel from "@/models/servers/server_member";
 import EmojiModel from "@/models/emojis";
@@ -110,7 +109,7 @@ const deleteEmojiTransaction = async (emoji_id: string): Promise<any> => {
 
   try {
     // Check if the emoji has been deleted
-    const emoji = await ServerEmojiModel.findById(emoji_id).session(session);
+    const emoji = await EmojiModel.findById(emoji_id).session(session);
     if (!emoji) {
       throw new UserInputError("Emoji not found.");
     }
@@ -158,7 +157,7 @@ const hardDeleteEmojiTransaction = async (emoji_id: string) => {
 
   try {
     // Search the emoji and delete
-    const emojiObj = await ServerEmojiModel.findByIdAndDelete(emoji_id);
+    const emojiObj = await EmojiModel.findByIdAndDelete(emoji_id);
 
     if (!emojiObj) {
       throw new UserInputError("Emoji not found on the database.");
@@ -492,7 +491,7 @@ const emojisAPI: IResolvers = {
     syncServerEmojis: async (_, { confirm }) => {
       if (confirm) {
         // Get all the server emojis
-        const serverEmojis = await ServerEmojiModel.find();
+        const serverEmojis = await EmojiModel.find();
 
         // Create object list to store the emojis and save it to the database
         const emojiObjects = [];

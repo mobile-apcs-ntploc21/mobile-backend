@@ -30,6 +30,7 @@ import paymentLogResolver from "./payment/paymentlog";
 import ordersResolver from "./payment/orders";
 import packageResolver from "./payment/packages";
 import subscriptionsResolver from "./payment/subscriptions";
+import cronjobResolver from "./cronjob";
 
 // Merge all resolvers: Add more in the future if needed
 // e.g [userResolver, postResolver, channelResolver]
@@ -62,6 +63,8 @@ export const apiResolvers = mergeResolvers([
   ordersResolver.API,
   paymentLogResolver.API,
   subscriptionsResolver.API,
+
+  cronjobResolver,
 ]);
 
 export const wsResolvers = mergeResolvers([
