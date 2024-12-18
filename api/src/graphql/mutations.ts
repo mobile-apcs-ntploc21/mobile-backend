@@ -277,7 +277,7 @@ export const serverMemberMutations = {
 
 export const serverEmojiMutations = {
   CREATE_SERVER_EMOJI: gql`
-    mutation createServerEmoji($input: CreateServerEmojiInput!) {
+    mutation createServerEmoji($input: CreateEmojiInput!) {
       createServerEmoji(input: $input) {
         id
         name
@@ -1162,5 +1162,15 @@ export const userSubscritpionMutation = {
     }
   }
 
+  `,
+};
+
+export const cronjobMutations = {
+  CLEANUP_SUBSCRIPTIONS: gql`
+    mutation cleanupSubscriptions {
+      cleanupSubscriptions {
+        user_id
+      }
+    }
   `,
 };

@@ -4,10 +4,32 @@ import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { log } from "@/utils/log";
 import graphQLClient from "@/utils/graphql";
 import { cronjobQueries } from "@/graphql/queries";
+import { cronjobMutations } from "@/graphql/mutations";
 import { serverEmojiMutations } from "@/graphql/mutations";
 
-export const handlePremiumExpiration = async () => {
-  console.log("Handling premium expiration...");
+export const handlePremiumExpiration = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  log.info(
+    "[Cronjob] Cleanup subscriptions: Started cleaning up subscriptions"
+  );
+
+  const response = await graphQLClient().request(
+    cronjobMutations.CLEANUP_SUBSCRIPTIONS
+  );
+
+  console.log(response.cleanupSubscriptions);
+
+  log.info(
+    `[Cronjob] Cleanup subscriptions: Cleaned up ${response.cleanupSubscriptions.length} subscriptions`
+  );
+
+  res.status(200).json({
+    message: "Subscriptions cleaned up successfully",
+    count: response.cleanupSubscriptions.length,
+  });
   return;
 };
 
@@ -36,10 +58,6 @@ export const cleanupEmoji = async (
 ) => {
   log.info("[Cronjob] Cleanup emojis: Started cleaning up emojis");
 
-  deleteFromS3(
-    "emojis/c1cdb54823931173b4b697ff6cc3ecd0_605701445890838819.png"
-  );
-
   const deletedEmojis = await graphQLClient().request(
     cronjobQueries.GET_DELETED_EMOJIS
   );
@@ -47,6 +65,8 @@ export const cleanupEmoji = async (
   for (const emoji of deletedEmojis.deletedEmojis) {
     log.info(`[Cronjob] Cleanup emojis: Deleting ${emoji.id}`);
     const emojiPath = emoji.image_url.match(/emojis\/.*/);
+    console.log(emojiPath);
+
     if (emojiPath) {
       deleteFromS3(emojiPath[0]);
     }
