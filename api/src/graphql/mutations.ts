@@ -301,6 +301,11 @@ export const serverEmojiMutations = {
       deleteServerEmoji(emoji_id: $emoji_id)
     }
   `,
+  HARD_DELETE_SERVER_EMOJI: gql`
+    mutation hardDeleteServerEmoji($emoji_id: ID!) {
+      hardDeleteServerEmoji(emoji_id: $emoji_id)
+    }
+  `,
 };
 
 // Channels (and its Permission) Mutation

@@ -36,6 +36,8 @@ import paymentlog from "./payment/paymentlog";
 import orders from "./payment/orders";
 import packages from "./payment/packages";
 import subscriptions from "./payment/subscriptions";
+/// Cronjob
+import cronjob from "./cronjob";
 
 const linkedSchema = gql`
   scalar JSON
@@ -88,6 +90,8 @@ export const apiTypeDefs = mergeTypeDefs([
   orders.API,
   paymentlog.API,
   subscriptions.API,
+
+  cronjob.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
