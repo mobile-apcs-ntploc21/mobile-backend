@@ -539,11 +539,17 @@ export const deleteMessage = async (
     res.status(404).json({ message: "Message not found." });
     return;
   }
+
   if (message.sender_id !== res.locals.uid) {
-    res.status(403).json({
-      message: "You do not have permission to delete this message.",
-    });
-    return;
+    // Get the user role in the channel
+    const permissions = res.locals.userChannelPermissions;
+
+    if (!permissions || permissions?.MANAGE_MESSAGE !== "ALLOWED") {
+      res.status(403).json({
+        message: "You do not have permission to delete this message.",
+      });
+      return;
+    }
   }
 
   try {
