@@ -145,70 +145,8 @@ export const getDirectMessages = async (
   }
 };
 
-// export const createDirectMessage = async (
-//   req: express.Request,
-//   res: express.Response,
-//   next: express.NextFunction
-// ) => {
-//   let { user_first_id, user_second_id } = req.body;
-
-//   if (!user_first_id || !user_second_id) {
-//     res.status(400).json({ error: "User IDs are required!" });
-//     return;
-//   }
-
-//   if (user_first_id > user_second_id) {
-//     const temp = user_first_id;
-//     user_first_id = user_second_id;
-//     user_second_id = temp;
-//   }
-
-//   try {
-//     const response = await graphQLClient().request(
-//       directMessageMutations.CREATE_DIRECT_MESSAGE,
-//       {
-//         user_first_id,
-//         user_second_id,
-//       }
-//     );
-
-//     res.status(201).json(response.createDirectMessage);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// export const deleteDirectMessage = async (
-//   req: express.Request,
-//   res: express.Response,
-//   next: express.NextFunction
-// ) => {
-//   const { conversationId } = req.params;
-
-//   if (!conversationId) {
-//     res.status(400).json({ error: "Conversation ID is required!" });
-//     return;
-//   }
-
-//   try {
-//     await graphQLClient().request(
-//       directMessageMutations.DELETE_DIRECT_MESSAGE,
-//       {
-//         conversation_id: conversationId,
-//       }
-//     );
-
-//     res.status(204).end();
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-// ==============
-
 const user_regex = /<@!?([a-f0-9]{24})>/g;
 const role_regex = /<@&([a-f0-9]{24})>/g;
-const channel_regex = /<#([a-f0-9]{24})>/g;
 const emoji_regex = /<:(.*?):([a-f0-9]{24})>/g;
 
 function getMatches(string: string, regex: RegExp, index: number) {
@@ -278,6 +216,169 @@ export const getMessage = async (
     res.status(200).json({ message });
   } catch (error: any) {
     next(error);
+  }
+};
+
+export const editMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+  const { content } = req.body;
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+
+  // Get the message and check if the user is the sender or they have permission to edit
+  const message = await _getMessage(message_id).catch(() => null);
+  if (!message) {
+    res.status(404).json({ message: "Message not found." });
+    return;
+  }
+
+  if (message.sender_id !== res.locals.uid) {
+    res.status(403).json({
+      message: "You do not have permission to edit this message.",
+    });
+    return;
+  }
+
+  if (!content) {
+    res.status(400).json({ message: "Content is required." });
+    return;
+  }
+
+  // Get all user, role, channel, and emoji mentions
+  const mention_users = getMatches(content, user_regex, 1);
+  const mention_roles = getMatches(content, role_regex, 1);
+  const emojis = getMatches(content, emoji_regex, 2);
+
+  try {
+    const requestBody = {
+      message_id,
+      input: {
+        content,
+        mention_users: mention_users,
+        mention_roles: mention_roles,
+        emojis: emojis,
+      },
+    };
+
+    const { editMessage: message } = await graphQLClient().request(
+      messageMutations.UPDATE_MESSAGE,
+      requestBody
+    );
+
+    res.status(200).json({ message });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
+export const deleteMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+
+  // Get the message and check if the user is the sender or they have permission to edit
+  const message = await _getMessage(message_id).catch(() => null);
+  if (!message) {
+    res.status(404).json({ message: "Message not found." });
+    return;
+  }
+  if (message.sender_id !== res.locals.uid) {
+    res.status(403).json({
+      message: "You do not have permission to delete this message.",
+    });
+    return;
+  }
+
+  try {
+    const { deleteMessage: deleted } = await graphQLClient().request(
+      messageMutations.DELETE_MESSAGE,
+      {
+        message_id,
+      }
+    );
+
+    res.status(200).json({ deleted });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
+export const readMessages = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  let user_first_id = res.locals.uid;
+  let user_second_id = req.params?.userId as string;
+  const { message_id } = req.body;
+
+  const conversation = await _getDirectMessage(user_first_id, user_second_id);
+  if (!conversation.conversation_id) {
+    res.status(404).json({
+      message:
+        "Channel does not have a conversation. Please delete and create a new channel.",
+    });
+    return;
+  }
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+
+  if (user_first_id > user_second_id) {
+    const temp = user_first_id;
+    user_first_id = user_second_id;
+    user_second_id = temp;
+  }
+
+  try {
+    const requestBody = {
+      input: {
+        user_id: user_first_id,
+        conversation_id: conversation.conversation_id,
+        message_id: message_id,
+      },
+    };
+
+    const response = await graphQLClient().request(
+      messageMutations.READ_MESSAGE,
+      requestBody
+    );
+
+    if (!response) {
+      res.status(404).json({
+        message: "Error reading messages.",
+      });
+      return;
+    }
+
+    res.status(204).send();
+    return;
+  } catch (error: any) {
+    console.error("Error reading messages: ", error.message);
+    res.status(500).json({
+      message: "Error reading messages.",
+    });
+    return;
   }
 };
 
@@ -498,7 +599,6 @@ export const createMessage = async (
   // Get all user, role, channel, and emoji mentions
   const mention_users = getMatches(content, user_regex, 1);
   const mention_roles = getMatches(content, role_regex, 1);
-  const mention_channels = getMatches(content, channel_regex, 1);
   const emojis = getMatches(content, emoji_regex, 2);
 
   try {
@@ -511,7 +611,6 @@ export const createMessage = async (
 
         mention_users: mention_users,
         mention_roles: mention_roles,
-        mention_channels: mention_channels,
         emojis: emojis,
 
         replied_message_id: repliedMessageId || null,
