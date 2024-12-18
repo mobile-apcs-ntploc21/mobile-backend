@@ -5,6 +5,10 @@ const gqlAPI = gql`
     deletedEmojis: [Emoji]
     availableAttachments: [MessageAttachment]
   }
+
+  extend type Mutation {
+    cleanupSubscriptions: [UserSubscription]
+  }
 `;
 
 const API = [gqlAPI];
