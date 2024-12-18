@@ -588,16 +588,6 @@ const getPinnedMessages = async (
   return await Promise.all(messages.map((message) => castToIMessage(message)));
 };
 
-const getAvailableAttachments = async (): Promise<IAttachment[]> => {
-  const attachments = await AttachmentModel.find().lean();
-  return attachments.map((attachment) => ({
-    type: attachment.attachment_type as AttachmentType,
-    url: attachment.attachment_url,
-    filename: attachment.filename,
-    size: attachment.size,
-  }));
-};
-
 /**
  * Transaction for creating a message in a conversation
  *
@@ -1122,8 +1112,6 @@ const messageAPI: IResolvers = {
 
     pinnedMessages: async (_, { conversation_id }) =>
       getPinnedMessages(conversation_id),
-
-    availableAttachments: async (_) => getAvailableAttachments(),
   },
   Mutation: {
     createMessage: async (_, { conversation_id, input }) =>
