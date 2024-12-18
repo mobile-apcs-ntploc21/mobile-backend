@@ -31,6 +31,8 @@ import emojis from "./emojis";
 import message from "./conversations/message";
 import reaction from "./conversations/reaction";
 import last_read from "./conversations/last_read";
+/// Cronjob
+import cronjob from "./cronjob";
 
 const linkedSchema = gql`
   scalar JSON
@@ -78,6 +80,8 @@ export const apiTypeDefs = mergeTypeDefs([
   channel_user_permission.API,
   category_role_permission.API,
   category_user_permission.API,
+
+  cronjob.API,
 ]);
 
 export const wsTypeDefs = mergeTypeDefs([
