@@ -40,7 +40,7 @@ function routing(app: Application) {
   };
 
   const directMessageRoutes = () => {
-    app.use("/api/v1/directMessages", authMiddleware, directMessageRouter);
+    app.use("/api/v1/direct-messages", authMiddleware, directMessageRouter);
   };
 
   const swagger = () => {
