@@ -496,7 +496,6 @@ export const editMessage = async (
       message_id,
       input: {
         content,
-
         mention_users: mention_users,
         mention_roles: mention_roles,
         mention_channels: mention_channels,
@@ -535,6 +534,7 @@ export const deleteMessage = async (
     res.status(404).json({ message: "Message not found." });
     return;
   }
+
   if (message.sender_id !== res.locals.uid) {
     // Get the user role in the channel
     const permissions = res.locals.userChannelPermissions;
