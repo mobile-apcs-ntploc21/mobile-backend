@@ -48,7 +48,7 @@ const createEmojiTransaction = async (
     );
 
     // Check if the server has reached the emoji limit
-    if (serverObj.totalEmojis ?? 0 >= SERVER_MAX_EMOJI) {
+    if ((serverObj.totalEmojis ?? 0) >= SERVER_MAX_EMOJI) {
       throw new ValidationError(
         "Server with given server_id has reached maximum nubmer of emojis allowed."
       );
@@ -446,7 +446,7 @@ const emojisAPI: IResolvers = {
     // This function will soft delete emoji. E.g. mark the emoji's is_deleted field to true and you cannot fetch this emoji anymore.
     deleteServerEmoji: async (_, { emoji_id }) => {
       try {
-        const result = deleteEmojiTransaction(emoji_id);
+        const result = await deleteEmojiTransaction(emoji_id);
 
         // Publish event to the websocket server
         publishEvent(ServerEvents.serverUpdated, {
@@ -459,7 +459,7 @@ const emojisAPI: IResolvers = {
           },
         });
 
-        return result;
+        return true;
       } catch (error: any) {
         throw new Error(error);
       }
