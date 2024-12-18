@@ -76,7 +76,7 @@ export const getDirectMessage = async (
   }
 
   try {
-    const directMessage = await _getDirectMessage(
+    let directMessage = await _getDirectMessage(
       user_first_id,
       user_second_id
     ).catch(() => null);
