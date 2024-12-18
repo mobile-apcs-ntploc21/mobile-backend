@@ -501,7 +501,6 @@ export const editMessage = async (
       message_id,
       input: {
         content,
-
         mention_users: mention_users,
         mention_roles: mention_roles,
         mention_channels: mention_channels,
@@ -541,15 +540,10 @@ export const deleteMessage = async (
     return;
   }
   if (message.sender_id !== res.locals.uid) {
-    // Get the user role in the channel
-    const permissions = res.locals.userChannelPermissions;
-
-    if (!permissions || permissions?.MANAGE_MESSAGE !== "ALLOWED") {
-      res.status(403).json({
-        message: "You do not have permission to delete this message.",
-      });
-      return;
-    }
+    res.status(403).json({
+      message: "You do not have permission to delete this message.",
+    });
+    return;
   }
 
   try {
