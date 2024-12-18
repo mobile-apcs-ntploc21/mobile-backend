@@ -60,8 +60,16 @@ export const getDirectMessage = async (
   let { user_first_id } = res.locals.uid;
   let user_second_id = req.params?.userId as string;
 
+  const { limit } = req.query;
+  const { before, after, around } = req.query;
+
   if (!user_first_id || !user_second_id) {
     res.status(400).json({ error: "User IDs are required!" });
+    return;
+  }
+
+  if (limit && isNaN(parseInt(limit as string))) {
+    res.status(400).json({ message: "Limit must be a number." });
     return;
   }
 
@@ -72,30 +80,46 @@ export const getDirectMessage = async (
   }
 
   try {
-    const directMessage = await _getDirectMessage(
+    let directMessage = await _getDirectMessage(
       user_first_id,
       user_second_id
     ).catch(() => null);
 
     if (!directMessage) {
-      const newDirectMessage = await _createDirectMessage(
+      directMessage = await _createDirectMessage(
         user_first_id,
         user_second_id
       ).catch(() => null);
 
-      if (!newDirectMessage) {
+      if (!directMessage) {
         res.status(500).json({
-          message:
-            "Conversation does not exist, failed to create direct message.",
+          message: "Conversation does not exist, failed to get direct message.",
         });
         return;
       }
+    }
 
-      res.status(200).json(newDirectMessage);
+    const requestBody = {
+      conversation_id: directMessage.conversation_id,
+      limit: parseInt(limit as string) || 50,
+      before: before,
+      after: after,
+      around: around,
+    };
+
+    const { messages } = await graphQLClient().request(
+      messageQueries.GET_MESSAGES,
+      requestBody
+    );
+
+    if (!messages) {
+      // Return empty array if no messages found
+      res.status(200).json({ messages: [] });
       return;
     }
 
-    res.status(200).json(directMessage);
+    res.status(200).json({ messages });
+    return;
   } catch (error) {
     next(error);
   }
@@ -345,10 +369,26 @@ export const getPinnedMessages = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const conversation = await _getDirectMessage(
-    res.locals.uid,
-    req.params.userId
-  );
+  let user_first_id = res.locals.uid;
+  let user_second_id = req.params?.userId as string;
+
+  if (!user_first_id || !user_second_id) {
+    res.status(400).json({ message: "User IDs are required." });
+    return;
+  }
+
+  if (user_first_id === user_second_id) {
+    res.status(400).json({ message: "User IDs must be different." });
+    return;
+  }
+
+  if (user_first_id > user_second_id) {
+    const temp = user_first_id;
+    user_first_id = user_second_id;
+    user_second_id = temp;
+  }
+
+  const conversation = await _getDirectMessage(user_first_id, user_second_id);
 
   if (!conversation) {
     res.status(404).json({ message: "Conversation not found." });
