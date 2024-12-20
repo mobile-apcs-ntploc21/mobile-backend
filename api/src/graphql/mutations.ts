@@ -1234,26 +1234,149 @@ export const directMessageMutations = {
         user_first_id: $user_first_id
         user_second_id: $user_second_id
       ) {
+
+  CREATE_MESSAGE_IN_DM: gql`
+    mutation createMessageInDM(
+      $conversation_id: ID!
+      $input: AddDirectMessageInput!
+    ) {
+      createMessageInDM(conversation_id: $conversation_id, input: $input) {
+        id
         conversation_id
-        latest_message {
-          id
-          conversation_id
-          sender_id
-          author {
-            user_id
-            username
-            display_name
-            avatar_url
-          }
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
         }
-        has_new_message
-        number_of_unread_mentions
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+
+        is_deleted
+        is_pinned
+        createdAt
       }
     }
   `,
-  DELETE_DIRECT_MESSAGE: gql`
-    mutation deleteDirectMessage($conversation_id: ID!) {
-      deleteDirectMessage(conversation_id: $conversation_id)
+  EDIT_MESSAGE_IN_DM: gql`
+    mutation editMessageInDM(
+      $message_id: ID!
+      $input: EditDirectMessageInput!
+    ) {
+      editMessageInDM(message_id: $message_id, input: $input) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+
+        is_modified
+      }
+    }
+  `,
+  DELETE_MESSAGE_IN_DM: gql`
+    mutation deleteMessageInDM($message_id: ID!) {
+      deleteMessageInDM(message_id: $message_id)
+    }
+  `,
+  PIN_MESSAGE_IN_DM: gql`
+    mutation pinMessageInDM($message_id: ID!) {
+      pinMessageInDM(message_id: $message_id) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+  UNPIN_MESSAGE_IN_DM: gql`
+    mutation unpinMessageInDM($message_id: ID!) {
+      unpinMessageInDM(message_id: $message_id) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+  UNREACT_MESSAGE_IN_DM: gql`
+    mutation unreactMessageInDM($message_id: ID!, $input: ReactMessageInput!) {
+      unreactMessageInDM(message_id: $message_id, input: $input) {
+        message_id
+        sender_id
+        emoji_id
+      }
     }
   `,
 };
