@@ -9,8 +9,11 @@ import MessageModel from "@/models/conversations/message";
 
 const directMessageAPI: IResolvers = {
   Query: {
-    getDirectMessage: async (_, { conversation_id }) => {
-      const result: any = await DirectMessageModel.findOne({ conversation_id });
+    getDirectMessage: async (_, { user_first_id, user_second_id }) => {
+      const result: any = await DirectMessageModel.findOne({
+        "_id.user_first_id": user_first_id,
+        "_id.user_second_id": user_second_id,
+      });
       if (!result) return null;
       result.latest_message = await MessageModel.findById(
         result.latest_message_id
