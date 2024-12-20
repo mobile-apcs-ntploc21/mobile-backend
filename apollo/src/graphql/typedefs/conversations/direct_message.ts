@@ -21,7 +21,7 @@ const gqlTypes = [
 
 const gqlAPI = gql`
   extend type Query {
-    getDirectMessage(conversation_id: ID!): DirectMessage
+    getDirectMessage(user_first_id: ID!, user_second_id: ID!): DirectMessage
     getDirectMessages(user_id: ID!): [DirectMessage]
   }
 
