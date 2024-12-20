@@ -76,7 +76,7 @@ export const getDirectMessage = async (
   }
 
   try {
-    let directMessage = await _getDirectMessage(
+    const directMessage = await _getDirectMessage(
       user_first_id,
       user_second_id
     ).catch(() => null);
@@ -860,6 +860,12 @@ export const unreactMessage = async (
   }
   if (!emoji_id) {
     res.status(400).json({ message: "Emoji is required." });
+    return;
+  }
+
+  const conversation = await _getDirectMessage(res.locals.uid, user_id);
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found." });
     return;
   }
 
