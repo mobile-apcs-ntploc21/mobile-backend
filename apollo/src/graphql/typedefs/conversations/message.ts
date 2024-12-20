@@ -135,6 +135,7 @@ const gqlMutation = gql`
   input AddDirectMessageInput {
     sender_id: ID!
     content: String!
+    attachments: [MessageAttachmentInput]!
 
     mention_users: [ID]!
     emojis: [ID]!
