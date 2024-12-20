@@ -3,7 +3,7 @@ import express from "express";
 import graphQLClient from "@/utils/graphql";
 import { directMessageQueries } from "@/graphql/queries";
 import { messageQueries } from "@/graphql/queries";
-import { messageMutations } from "@/graphql/mutations";
+import { directMessageMutations, messageMutations } from "@/graphql/mutations";
 import { generatePresignedUrl, getFileInfo } from "@/utils/storage";
 import { v4 as uuidv4 } from "uuid";
 import config from "@/config";
@@ -25,7 +25,7 @@ const _getDirectMessage = async (
 
   if (!result) {
     response = await graphQLClient().request(
-      messageMutations.CREATE_MESSAGE_IN_DM,
+      directMessageMutations.CREATE_DIRECT_MESSAGE,
       {
         user_first_id,
         user_second_id,
@@ -252,7 +252,7 @@ export const editMessage = async (
       },
     };
 
-    const { editMessage: message } = await graphQLClient().request(
+    const { editMessageInDM: message } = await graphQLClient().request(
       messageMutations.EDIT_MESSAGE_IN_DM,
       requestBody
     );
@@ -291,7 +291,7 @@ export const deleteMessage = async (
   }
 
   try {
-    const { deleteMessage: deleted } = await graphQLClient().request(
+    const { deleteMessageInDM: deleted } = await graphQLClient().request(
       messageMutations.DELETE_MESSAGE_IN_DM,
       {
         message_id,
@@ -463,7 +463,7 @@ export const pinMessage = async (
   }
 
   try {
-    const { pinMessage: pinned } = await graphQLClient().request(
+    const { pinMessageInDM: pinned } = await graphQLClient().request(
       messageMutations.PIN_MESSAGE_IN_DM,
       {
         message_id,
@@ -491,7 +491,7 @@ export const unpinMessage = async (
   }
 
   try {
-    const { unpinMessage: unpinned } = await graphQLClient().request(
+    const { unpinMessageInDM: unpinned } = await graphQLClient().request(
       messageMutations.UNPIN_MESSAGE_IN_DM,
       {
         message_id,
@@ -656,12 +656,12 @@ export const createMessage = async (
         forwarded_message_id: forwardedMessageId || null,
       },
     };
-    const { createMessage: message } = await graphQLClient().request(
+    const response = await graphQLClient().request(
       messageMutations.CREATE_MESSAGE_IN_DM,
       requestBody
     );
 
-    res.status(201).json({ message });
+    res.status(201).json(response.createMessageInDM);
     return;
   } catch (error: any) {
     next(error);
@@ -796,7 +796,7 @@ export const unreactMessage = async (
   }
 
   try {
-    const { unreactMessage: reactions } = await graphQLClient().request(
+    const { unreactMessageInDM: reactions } = await graphQLClient().request(
       messageMutations.UNREACT_MESSAGE_IN_DM,
       {
         message_id,
