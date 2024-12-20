@@ -1189,11 +1189,20 @@ export const directMessageMutations = {
         user_first_id: $user_first_id
         user_second_id: $user_second_id
       ) {
-        _id {
-          user_first_id
-          user_second_id
-        }
         conversation_id
+        latest_message {
+          id
+          conversation_id
+          sender_id
+          author {
+            user_id
+            username
+            display_name
+            avatar_url
+          }
+        }
+        has_new_message
+        number_of_unread_mentions
       }
     }
   `,
