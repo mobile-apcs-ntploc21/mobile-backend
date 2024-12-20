@@ -2,18 +2,38 @@ import express from "express";
 
 import graphQLClient from "@/utils/graphql";
 import { directMessageQueries } from "@/graphql/queries";
-import { directMessageMutations } from "@/graphql/mutations";
+import { messageQueries } from "@/graphql/queries";
+import { messageMutations } from "@/graphql/mutations";
+import { generatePresignedUrl, getFileInfo } from "@/utils/storage";
+import { v4 as uuidv4 } from "uuid";
+import config from "@/config";
+
 import { log } from "@/utils/log";
 
-const _getDirectMessage = async (conversationId: string) => {
-  const response = await graphQLClient().request(
+const _getDirectMessage = async (
+  user_first_id: string,
+  user_second_id: string
+) => {
+  let response = await graphQLClient().request(
     directMessageQueries.GET_DIRECT_MESSAGE,
     {
       conversation_id: conversationId,
     }
   );
+  let result = response.getDirectMessage;
 
-  return response.directMessage;
+  if (!result) {
+    response = await graphQLClient().request(
+      messageMutations.CREATE_MESSAGE_IN_DM,
+      {
+        user_first_id,
+        user_second_id,
+      }
+    );
+    result = response.createDirectMessage;
+  }
+
+  return result;
 };
 
 const _getDirectMessages = async (userId: string) => {
@@ -24,7 +44,7 @@ const _getDirectMessages = async (userId: string) => {
     }
   );
 
-  return response.directMessages;
+  return response.getDirectMessages;
 };
 
 export const getDirectMessage = async (
@@ -32,7 +52,8 @@ export const getDirectMessage = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { conversationId } = req.params;
+  let user_first_id = res.locals.uid;
+  let user_second_id = req.params?.userId as string;
 
   const { limit } = req.query;
   const { before, after, around } = req.query;
@@ -54,23 +75,14 @@ export const getDirectMessage = async (
   }
 
   try {
-    let directMessage = await _getDirectMessage(
+    const directMessage = await _getDirectMessage(
       user_first_id,
       user_second_id
     ).catch(() => null);
 
     if (!directMessage) {
-      directMessage = await _createDirectMessage(
-        user_first_id,
-        user_second_id
-      ).catch(() => null);
-
-      if (!directMessage) {
-        res.status(500).json({
-          message: "Conversation does not exist, failed to get direct message.",
-        });
-        return;
-      }
+      res.status(404).json({ message: "Conversation not found." });
+      return;
     }
 
     const requestBody = {
@@ -221,7 +233,6 @@ export const editMessage = async (
 
   // Get all user, role, channel, and emoji mentions
   const mention_users = getMatches(content, user_regex, 1);
-  const mention_roles = getMatches(content, role_regex, 1);
   const emojis = getMatches(content, emoji_regex, 2);
 
   try {
@@ -230,13 +241,12 @@ export const editMessage = async (
       input: {
         content,
         mention_users: mention_users,
-        mention_roles: mention_roles,
         emojis: emojis,
       },
     };
 
     const { editMessage: message } = await graphQLClient().request(
-      messageMutations.UPDATE_MESSAGE,
+      messageMutations.EDIT_MESSAGE_IN_DM,
       requestBody
     );
 
@@ -275,7 +285,7 @@ export const deleteMessage = async (
 
   try {
     const { deleteMessage: deleted } = await graphQLClient().request(
-      messageMutations.DELETE_MESSAGE,
+      messageMutations.DELETE_MESSAGE_IN_DM,
       {
         message_id,
       }
@@ -433,6 +443,62 @@ export const searchMessages = async (
   }
 };
 
+export const pinMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+
+  try {
+    const { pinMessage: pinned } = await graphQLClient().request(
+      messageMutations.PIN_MESSAGE_IN_DM,
+      {
+        message_id,
+      }
+    );
+
+    res.status(200).json({ pinned });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
+export const unpinMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+
+  try {
+    const { unpinMessage: unpinned } = await graphQLClient().request(
+      messageMutations.UNPIN_MESSAGE_IN_DM,
+      {
+        message_id,
+      }
+    );
+
+    res.status(200).json({ unpinned });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
 export const getPinnedMessages = async (
   req: express.Request,
   res: express.Response,
@@ -558,7 +624,6 @@ export const deleteDirectMessage = async (
 
   // Get all user, role, channel, and emoji mentions
   const mention_users = getMatches(content, user_regex, 1);
-  const mention_roles = getMatches(content, role_regex, 1);
   const emojis = getMatches(content, emoji_regex, 2);
 
   try {
@@ -570,7 +635,6 @@ export const deleteDirectMessage = async (
         attachments: transformedAttachments,
 
         mention_users: mention_users,
-        mention_roles: mention_roles,
         emojis: emojis,
 
         replied_message_id: repliedMessageId || null,
@@ -578,7 +642,7 @@ export const deleteDirectMessage = async (
       },
     };
     const { createMessage: message } = await graphQLClient().request(
-      messageMutations.CREATE_MESSAGE,
+      messageMutations.CREATE_MESSAGE_IN_DM,
       requestBody
     );
 
@@ -655,5 +719,43 @@ export const uploadFile = async (
     res.status(204).end();
   } catch (error) {
     next(error);
+    return;
+  }
+};
+
+export const unreactMessage = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { messageId: message_id } = req.params;
+  const { emoji_id } = req.body;
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+  if (!emoji_id) {
+    res.status(400).json({ message: "Emoji is required." });
+    return;
+  }
+
+  try {
+    const { unreactMessage: reactions } = await graphQLClient().request(
+      messageMutations.UNREACT_MESSAGE_IN_DM,
+      {
+        message_id,
+        input: {
+          sender_id: res.locals.uid,
+          emoji: emoji_id,
+        },
+      }
+    );
+
+    res.status(200).json({ reactions });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
   }
 };
