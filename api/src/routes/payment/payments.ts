@@ -67,6 +67,7 @@ paymentRouter.post("/create-order", authMiddleware, paymentCtrl.createOrder);
 paymentRouter.get("/return", paymentCtrl.returnOrder);
 
 // IPN URL
+// @ts-ignore
 paymentRouter.get("/ipn", paymentCtrl.ipnOrder);
 
 /**
