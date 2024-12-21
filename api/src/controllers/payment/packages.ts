@@ -32,7 +32,9 @@ export const getPackages = async (
         return null;
       });
 
-    res.status(200).json(packages);
+    res.status(200).json({
+      packages: packages,
+    });
   } catch (error) {
     next(error);
   }

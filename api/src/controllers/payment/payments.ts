@@ -115,10 +115,8 @@ export const createOrder = async (
       ipAddress = ipAddress[0];
     }
 
-    console.log("IP: ", ipAddress);
-
     // Get the input
-    const uid = res.locals.uid;
+    const uid = req.body.uid ?? res.locals.uid;
     const packageId = req.body.packageId;
     const bankCode = req.body.bankCode;
     let orderInfo = req.body.orderDescription ?? "";
@@ -151,7 +149,7 @@ export const createOrder = async (
     }
 
     // Create an Order document
-    const amount = packageData.package.base_price;
+    const amount = Number(req.body.amount) ?? packageData.package.base_price;
     const date = new Date();
     const expireDate = new Date(date.getTime() + 1 * 15 * 60 * 1000); // 15 minutes
     const transactionId = uuidv4();
@@ -368,7 +366,9 @@ export const getOrders = async (
       }
     );
 
-    res.status(200).json(orders.ordersByUser);
+    res.status(200).json({
+      orders: orders.ordersByUser,
+    });
   } catch (error) {
     next(error);
   }
