@@ -45,6 +45,7 @@ const gqlAPI = gql`
       sale_details: JSON
       duration: Int
       features_list: JSON
+      is_hidden: Boolean
     ): Package
     deletePackage(id: ID!): Package
     deleteAllPackages(confirm: Boolean!): Boolean
