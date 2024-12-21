@@ -8,7 +8,9 @@ import PackageModel from "@/models/payment/packages";
 
 const getPackages = async () => {
   try {
-    const packages = await PackageModel.find();
+    // Retrieve all packages with is_hidden set to false
+    const packages = await PackageModel.find({ is_hidden: false });
+
     return packages;
   } catch (error) {
     throw error;
@@ -88,7 +90,8 @@ const updatePackage = async (
   is_on_sale: boolean,
   sale_details: any,
   duration: number,
-  features_list: any
+  features_list: any,
+  is_hidden: boolean
 ) => {
   if (is_on_sale && !sale_details) {
     throw new ValidationError("Sale details required for on sale packages!");
@@ -118,6 +121,7 @@ const updatePackage = async (
         sale_details,
         duration,
         features_list,
+        is_hidden,
       },
       { new: true }
     );
@@ -194,6 +198,7 @@ const APIResolver: IResolvers = {
         sale_details,
         duration,
         features_list,
+        is_hidden,
       }
     ) =>
       updatePackage(
@@ -204,7 +209,8 @@ const APIResolver: IResolvers = {
         is_on_sale,
         sale_details,
         duration,
-        features_list
+        features_list,
+        is_hidden
       ),
     deletePackage: async (_, { id }) => deletePackage(id),
     deleteAllPackages: async (_, { confirm }) => deleteAllPackages(confirm),

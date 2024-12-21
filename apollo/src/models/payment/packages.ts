@@ -15,6 +15,7 @@ interface IPackages {
 
   duration: number; // In days
   features_list: any;
+  is_hidden?: boolean;
 }
 
 const packageSchema = new Schema<IPackages>(
@@ -65,6 +66,10 @@ const packageSchema = new Schema<IPackages>(
     },
     features_list: {
       type: Schema.Types.Mixed,
+    },
+    is_hidden: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
