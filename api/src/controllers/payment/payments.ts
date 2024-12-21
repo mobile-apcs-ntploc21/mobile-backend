@@ -165,7 +165,7 @@ export const createOrder = async (
     orderInfo = `${uid},${packageId},${orderId},${packageData.package.name},${packageData.package.base_price}`;
 
     // Create the order link
-    var params: any = {
+    let params: any = {
       vnp_Amount: amount,
       vnp_IpAddr: ipAddress,
       vnp_TxnRef: transactionId,
