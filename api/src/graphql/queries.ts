@@ -932,8 +932,8 @@ export const packagesQueries = {
     }
   `,
   GET_PACKAGES: gql`
-    query packages() {
-      packages() {
+    query Packages {
+      packages {
         id
         name
         description
