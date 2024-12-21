@@ -351,3 +351,25 @@ export const ipnOrder = async (
     return;
   }
 };
+
+// Get orders of the user
+export const getOrders = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    const uid = res.locals.uid;
+
+    const orders = await graphQLClient().request(
+      ordersQueries.GET_ORDERS_BY_USER,
+      {
+        user_id: uid,
+      }
+    );
+
+    res.status(200).json(orders.ordersByUser);
+  } catch (error) {
+    next(error);
+  }
+};

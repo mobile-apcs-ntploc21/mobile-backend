@@ -22,7 +22,7 @@ export const getUserSubscription = async (
   next: express.NextFunction
 ) => {
   try {
-    let { user_id } = req.params;
+    let { id: user_id } = req.params;
 
     if (!user_id || user_id === undefined) {
       user_id = res.locals?.uid;

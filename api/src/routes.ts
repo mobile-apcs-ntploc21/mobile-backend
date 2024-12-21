@@ -9,6 +9,7 @@ import userRouter from "./routes/user";
 import userProfileRouter from "./routes/user_profile";
 import userStatusRouter from "./routes/user_status";
 import paymentRouter from "@/routes/payment/payments";
+import packageRouter from "@/routes/payment/packages";
 
 import { authMiddleware } from "./utils/authMiddleware";
 import { checkMembershipMiddleware } from "./utils/checkMembershipMiddleware";
@@ -38,6 +39,7 @@ function routing(app: Application) {
 
   const customRoutes = () => {
     app.use("/api/v1/payments", paymentRouter);
+    app.use("/api/v1/packages", authMiddleware, packageRouter);
   };
 
   const swagger = () => {

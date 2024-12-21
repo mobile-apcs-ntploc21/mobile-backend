@@ -7,7 +7,11 @@ import {
   logoutUser,
 } from "../controllers/user";
 import { authMiddleware } from "../utils/authMiddleware";
+import subscriptionRouter from "./payment/subscriptions";
+
 const userRouter = Router();
+
+userRouter.use("/subscriptions", subscriptionRouter);
 
 /**
  * @swagger
