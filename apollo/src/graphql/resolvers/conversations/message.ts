@@ -540,6 +540,9 @@ const searchMessages = async (
     messageQuery._id = { $in: mentions.map((mention) => mention.message_id) };
   }
 
+  console.log("Query", query);
+  console.log("has:", has);
+
   // 5. Filter by attachment
   if (has && has.length > 0) {
     const attachments = await AttachmentModel.find({
@@ -1404,6 +1407,9 @@ const messageAPI: IResolvers = {
       getMessages(conversation_id, limit, before, after, around),
 
     searchMessages: async (_, { query, offset, limit }) =>
+      searchMessages(query, offset, limit),
+
+    searchDirectMessages: async (_, { query, offset, limit }) =>
       searchMessages(query, offset, limit),
 
     pinnedMessages: async (_, { conversation_id }) =>

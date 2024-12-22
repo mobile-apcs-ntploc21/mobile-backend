@@ -825,6 +825,48 @@ export const messageQueries = {
       }
     }
   `,
+
+  SEARCH_DIRECT_MESSAGES: gql`
+    query searchDirectMessages(
+      $query: DirectMessageSearchQuery!
+      $offset: Int
+      $limit: Int
+    ) {
+      searchDirectMessages(query: $query, offset: $offset, limit: $limit) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+        attachments {
+          type
+          url
+          filename
+          size
+        }
+
+        mention_users
+        emojis
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        is_modified
+        createdAt
+      }
+    }
+  `,
 };
 
 export const cronjobQueries = {
