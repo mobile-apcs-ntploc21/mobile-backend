@@ -11,6 +11,8 @@ import {
   unpinMessage,
   readMessages,
   unreactMessage,
+  searchMessages,
+  getMessage,
 } from "../controllers/direct_message";
 import * as messageCtrl from "../controllers/servers/message";
 
@@ -28,6 +30,9 @@ directMessageRouter.post("/:userId/upload", uploadFile);
 
 directMessageRouter.post("/:userId/read", readMessages);
 directMessageRouter.get("/:userId/pins", getPinnedMessages);
+directMessageRouter.get("/:userId/messages/search", searchMessages);
+directMessageRouter.get("/:userId/messages/:messageId", getMessage);
+
 directMessageRouter.post("/:messageId/pin", pinMessage);
 directMessageRouter.delete("/:messageId/pin", unpinMessage);
 
