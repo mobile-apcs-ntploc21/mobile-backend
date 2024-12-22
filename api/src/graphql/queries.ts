@@ -825,4 +825,100 @@ export const messageQueries = {
       }
     }
   `,
+
+  SEARCH_DIRECT_MESSAGES: gql`
+    query searchDirectMessages(
+      $query: DirectMessageSearchQuery!
+      $offset: Int
+      $limit: Int
+    ) {
+      searchDirectMessages(query: $query, offset: $offset, limit: $limit) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+        attachments {
+          type
+          url
+          filename
+          size
+        }
+
+        mention_users
+        emojis
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        is_modified
+        createdAt
+      }
+    }
+  `,
+};
+
+export const directMessageQueries = {
+  GET_DIRECT_MESSAGE: gql`
+    query getDirectMessage($user_first_id: ID!, $user_second_id: ID!) {
+      getDirectMessage(
+        user_first_id: $user_first_id
+        user_second_id: $user_second_id
+      ) {
+        conversation_id
+        latest_message {
+          id
+          conversation_id
+          sender_id
+          author {
+            user_id
+            username
+            display_name
+            avatar_url
+          }
+        }
+        has_new_message
+        number_of_unread_mentions
+      }
+    }
+  `,
+  GET_DIRECT_MESSAGES: gql`
+    query getDirectMessages($user_id: ID!) {
+      getDirectMessages(user_id: $user_id) {
+        direct_message {
+          conversation_id
+          latest_message {
+            id
+            conversation_id
+            sender_id
+            author {
+              user_id
+              username
+              display_name
+              avatar_url
+            }
+          }
+          has_new_message
+          number_of_unread_mentions
+        }
+        other_user {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+      }
+    }
+  `,
 };

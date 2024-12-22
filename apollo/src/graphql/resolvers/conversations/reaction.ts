@@ -9,6 +9,7 @@ import messageModel from "@models/conversations/message";
 import userModel from "@models/user";
 import channelModel from "@models/servers/channels/channel";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
+import { log } from "@/utils/log";
 
 // ===========================
 
@@ -142,6 +143,89 @@ const reactMessage = async (
   return reactions;
 };
 
+const reactMessageInDM = async (
+  message_id: string,
+  input: { sender_id: string; emoji: string }
+) => {
+  let channel = null;
+
+  // Start a session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Check if message exists
+    const message = await messageModel
+      .findById(message_id)
+      .session(session)
+      .lean();
+    if (!message) {
+      throw new UserInputError("Message not found!");
+    }
+
+    // Check if user exists
+    const user = await userModel
+      .findById(input.sender_id)
+      .session(session)
+      .lean();
+    if (!user) {
+      throw new UserInputError("User not found!");
+    }
+
+    // Check if emoji exists
+    const emoji = await EmojiModel.findById(input.emoji)
+      .session(session)
+      .lean();
+    if (!emoji) {
+      throw new UserInputError("Emoji not found!");
+    }
+
+    // Check if the reaction already exists
+    const existingReaction = await reactionModel.findOne({
+      message_id: message_id,
+      sender_id: input.sender_id,
+      emoji_id: input.emoji,
+    });
+    if (existingReaction) {
+      throw new UserInputError("Reaction already exists!");
+    }
+
+    // Create a reaction document
+    const [reaction] = await reactionModel.create(
+      [
+        {
+          message_id: message_id,
+          sender_id: input.sender_id,
+          emoji_id: input.emoji,
+        },
+      ],
+      { session, new: true }
+    );
+
+    // Commit the session
+    await session.commitTransaction();
+    session.endSession();
+  } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
+    throw e;
+  }
+
+  // Return a list of reactions
+  const reactions = await reactionModel
+    .find({
+      message_id: message_id,
+    })
+    .lean();
+
+  // Publish reaction event
+
+  // @ts-ignore
+  reactions.forEach((reaction) => (reaction.id = reaction._id));
+
+  return reactions;
+};
+
 const unreactMessage = async (
   message_id: string,
   input: { sender_id: string; emoji: string }
@@ -214,6 +298,57 @@ const unreactMessage = async (
   return reactions;
 };
 
+const unreactMessageInDM = async (
+  message_id: string,
+  input: { sender_id: string; emoji: string }
+) => {
+  // Start a session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Check if message exists
+    const message = await messageModel.findById(message_id).session(session);
+    if (!message) {
+      throw new UserInputError("Message not found!");
+    }
+
+    // Check if user exists
+    const user = await userModel.findById(input.sender_id).session(session);
+    if (!user) {
+      throw new UserInputError("User not found!");
+    }
+
+    // Delete the reaction
+    await reactionModel.deleteOne(
+      {
+        message_id: message_id,
+        sender_id: input.sender_id,
+        emoji_id: input.emoji,
+      },
+      { session }
+    );
+
+    // Commit the session
+    await session.commitTransaction();
+    session.endSession();
+  } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
+    throw e;
+  }
+
+  // Return a list of reactions
+  const reactions = await reactionModel
+    .find({
+      message_id: message_id,
+    })
+    .lean();
+
+  // Publish reaction event (unreact)
+  return reactions;
+};
+
 // ===========================
 
 const reactionAPI: IResolvers = {
@@ -223,8 +358,12 @@ const reactionAPI: IResolvers = {
   Mutation: {
     reactMessage: async (_, { message_id, input }) =>
       reactMessage(message_id, input),
+    reactMessageInDM: async (_, { message_id, input }) =>
+      reactMessageInDM(message_id, input),
     unreactMessage: async (_, { message_id, input }) =>
       unreactMessage(message_id, input),
+    unreactMessageInDM: async (_, { message_id, input }) =>
+      unreactMessageInDM(message_id, input),
   },
 };
 
