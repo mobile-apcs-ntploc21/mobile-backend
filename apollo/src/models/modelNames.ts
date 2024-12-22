@@ -24,6 +24,7 @@ enum ModelNames {
   Attachment = "attachments",
   LastRead = "last_reads",
   Mention = "mentions",
+  ExpireDate = "expire_dates",
 
   // Payment
   Orders = "orders",

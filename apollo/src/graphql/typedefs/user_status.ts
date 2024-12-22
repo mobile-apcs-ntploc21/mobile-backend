@@ -31,7 +31,11 @@ const gqlApollo = gql`
   extend type Mutation {
     syncUsers: String
     updateStatusType(user_id: ID!, type: CustomStatus!): UserStatus
-    updateStatusText(user_id: ID!, status_text: String!): UserStatus
+    updateStatusText(
+      user_id: ID!
+      status_text: String!
+      expire_date: String
+    ): UserStatus
   }
 `;
 

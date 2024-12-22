@@ -119,7 +119,7 @@ export const updateStatusText = async (
 ) => {
   try {
     const { uid: user_id } = res.locals;
-    const { status_text } = req.body;
+    const { status_text, expire_date } = req.body;
 
     const cacheKey = USERS.USER_STATUS.key({ user_id });
 
@@ -129,6 +129,7 @@ export const updateStatusText = async (
       {
         user_id,
         status_text,
+        expire_date,
       }
     );
 
