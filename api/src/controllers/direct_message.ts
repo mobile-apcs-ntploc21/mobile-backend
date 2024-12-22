@@ -402,6 +402,8 @@ export const searchMessages = async (
     user_second_id = temp;
   }
 
+  const conversation = await _getDirectMessage(user_first_id, user_second_id);
+
   const author_id = _author_id
     ? Array.isArray(_author_id)
       ? _author_id
@@ -417,6 +419,7 @@ export const searchMessages = async (
   try {
     const requestBody = {
       query: {
+        inConversation: conversation.conversation_id,
         text: content,
         from: author_id,
         mention: mentions,
@@ -426,8 +429,8 @@ export const searchMessages = async (
       limit: parseInt(limit as string) || 25,
     };
 
-    const { searchMessages: messages } = await graphQLClient().request(
-      messageQueries.SEARCH_MESSAGES,
+    const { searchDirectMessages: messages } = await graphQLClient().request(
+      messageQueries.SEARCH_DIRECT_MESSAGES,
       requestBody
     );
 
