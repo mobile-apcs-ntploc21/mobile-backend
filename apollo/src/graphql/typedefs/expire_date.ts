@@ -7,7 +7,7 @@ const gqlTypes = gql`
   }
 
   type ExpireDate {
-    type: String!
+    object_type: String!
     object: ExpirableObject!
   }
 `;
@@ -19,10 +19,12 @@ const gqlAPI = gql`
 
   extend type Mutation {
     setExpireDate(
-      type: String!
+      object_type: String!
       object_id: ID!
       expire_date: String!
     ): ExpireDate
+
+    resolveExpired: [ExpireDate]
   }
 `;
 

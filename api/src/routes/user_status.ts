@@ -185,6 +185,8 @@ userStatusRouter.post("/status/type", updateStatusType);
  *                    type: string
  *                  status_text:
  *                    type: string
+ *                  expires_at:
+ *                    type: string
  *       401:
  *         $ref: '#/components/responses/AuthMiddlewareError'
  */
