@@ -163,10 +163,19 @@ export const userStatusMutations = {
     }
   `,
   UPDATE_USER_STATUS_TEXT: gql`
-    mutation updateStatusText($user_id: ID!, $status_text: String!) {
-      updateStatusText(user_id: $user_id, status_text: $status_text) {
+    mutation updateStatusText(
+      $user_id: ID!
+      $status_text: String!
+      $expire_date: String
+    ) {
+      updateStatusText(
+        user_id: $user_id
+        status_text: $status_text
+        expire_date: $expire_date
+      ) {
         user_id
         status_text
+        expire_date
       }
     }
   `,

@@ -11,6 +11,7 @@ import {
 import { publishEvent, ServerEvents } from "../pubsub/pubsub";
 import { log } from "@/utils/log";
 import ServerMemberModel from "@/models/servers/server_member";
+import ExpireDateModel from "@/models/expire_date";
 
 export const userStatusResolvers_API: IResolvers = {
   DateTime,
@@ -107,12 +108,32 @@ export const userStatusResolvers_API: IResolvers = {
         return null;
       }
     },
-    updateStatusText: async (_, { user_id, status_text }) => {
+    updateStatusText: async (_, { user_id, status_text, expire_date }) => {
       try {
         const res = await UserStatusModel.findOneAndUpdate(
           { user_id },
           { $set: { status_text } },
           { new: true }
+        );
+
+        const object_id = res?._id;
+
+        const expireDate = await ExpireDateModel.findOneAndUpdate(
+          {
+            type: "status_text",
+            "object.object_id": object_id,
+          },
+          {
+            type: "status_text",
+            object: {
+              object_id: object_id,
+              expire_date: expire_date ? new Date(expire_date) : null,
+            },
+          },
+          {
+            new: true,
+            upsert: true,
+          }
         );
 
         // Update the status of the user in all servers
