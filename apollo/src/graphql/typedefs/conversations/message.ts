@@ -54,7 +54,7 @@ const gqlQuery = gql`
     text: String
     from: [ID]
     mention: [ID]
-    has: AttachmentType
+    has: [AttachmentType]
   }
 
   input SearchQuery {
@@ -92,6 +92,13 @@ const gqlQuery = gql`
     # has: Get messages that have attachments (IMAGE, VIDEO, FILE)
     searchMessages(
       query: SearchQuery!
+
+      offset: Int = 0
+      limit: Int! = 30
+    ): [Message]
+
+    searchDirectMessages(
+      query: DirectMessageSearchQuery!
 
       offset: Int = 0
       limit: Int! = 30
