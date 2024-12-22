@@ -30,6 +30,11 @@ import paymentLogResolver from "./payment/paymentlog";
 import ordersResolver from "./payment/orders";
 import packageResolver from "./payment/packages";
 import subscriptionsResolver from "./payment/subscriptions";
+
+/// Expire Date
+import expireDateResolver from "./expire_date";
+
+/// Cronjob
 import cronjobResolver from "./cronjob";
 
 // Merge all resolvers: Add more in the future if needed
@@ -64,6 +69,7 @@ export const apiResolvers = mergeResolvers([
   paymentLogResolver.API,
   subscriptionsResolver.API,
 
+  expireDateResolver,
   cronjobResolver,
 ]);
 

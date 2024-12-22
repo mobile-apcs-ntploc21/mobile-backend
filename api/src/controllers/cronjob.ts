@@ -6,6 +6,7 @@ import graphQLClient from "@/utils/graphql";
 import { cronjobQueries } from "@/graphql/queries";
 import { cronjobMutations } from "@/graphql/mutations";
 import { serverEmojiMutations } from "@/graphql/mutations";
+import { expireDateMutations } from "@/graphql/mutations";
 
 export const handlePremiumExpiration = async (
   req: express.Request,
@@ -19,8 +20,6 @@ export const handlePremiumExpiration = async (
   const response = await graphQLClient().request(
     cronjobMutations.CLEANUP_SUBSCRIPTIONS
   );
-
-  console.log(response.cleanupSubscriptions);
 
   log.info(
     `[Cronjob] Cleanup subscriptions: Cleaned up ${response.cleanupSubscriptions.length} subscriptions`
@@ -38,7 +37,39 @@ export const handleUserStatusExpiration = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  console.log("Cleaning up server...");
+  log.info("[Cronjob] Cleanup user status: Started cleaning up user status");
+
+  try {
+    const response = await graphQLClient().request(
+      expireDateMutations.RESOLVE_EXPIRED
+    );
+
+    console.log(response);
+
+    log.info(
+      `[Cronjob] Cleanup user status: Cleaned up ${response.resolveExpired.length} user statuses`
+    );
+
+    res.status(200).json({
+      message: "User statuses cleaned up successfully",
+      count: response.resolveExpired.length,
+    });
+    log.info(
+      `[Cronjob] Cleanup user status: Cleaned up ${response.resolveExpired.length} user statuses`
+    );
+    res.status(200).json({
+      message: "User statuses cleaned up successfully",
+      count: response.resolveExpired.length,
+    });
+    return;
+  } catch (err: any) {
+    res.status(500).json({
+      message: err.message,
+    });
+    log.error(err.message);
+    next(err);
+  }
+
   return;
 };
 

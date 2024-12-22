@@ -19,9 +19,10 @@ type ResolveFunction = (object_id: string) => Promise<void>;
 
 const FunctionMap: Record<ExpirableType, ResolveFunction> = {
   [ExpirableType.STATUS_TEXT]: cleanupStatusText,
+  // Add more as needed
 };
 
-export const expireDateResolvers_API: IResolvers = {
+export const expireDateResolver: IResolvers = {
   Query: {
     expireDate: async (_, { object_id }) => {
       try {
@@ -36,13 +37,62 @@ export const expireDateResolvers_API: IResolvers = {
     },
   },
   Mutation: {
+    setExpireDate: async (_, { object_type, object_id, expire_date }) => {
+      if (
+        !Object.values(ExpirableType).includes(object_type as ExpirableType)
+      ) {
+        throw new UserInputError("Invalid object type");
+      }
+
+      if (new Date(expire_date) < new Date()) {
+        throw new ValidationError("Expire date must be in the future");
+      }
+
+      try {
+        const res = await ExpireDateModel.findOneAndUpdate(
+          {
+            object_type,
+            "object.object_id": object_id,
+          },
+          {
+            $set: {
+              object_type,
+              object: {
+                object_id,
+                expire_date: new Date(expire_date),
+              },
+            },
+          },
+          {
+            new: true,
+            upsert: true,
+          }
+        );
+
+        return res;
+      } catch (error: any) {
+        throw new Error(error);
+      }
+    },
     resolveExpired: async (_) => {
       const now = new Date();
+      console.log("resolveExpired at resolver");
 
       try {
         const res = await ExpireDateModel.find({
-          "object.expire_date": { $lte: now },
+          "object.expire_date": { $lte: now, $ne: null },
         });
+
+        const resolve = await ExpireDateModel.updateMany(
+          {
+            "object.expire_date": { $lte: now, $ne: null },
+          },
+          {
+            $set: {
+              "object.expire_date": null,
+            },
+          }
+        );
 
         if (!res) {
           return null;
@@ -65,3 +115,5 @@ export const expireDateResolvers_API: IResolvers = {
     },
   },
 };
+
+export default expireDateResolver;

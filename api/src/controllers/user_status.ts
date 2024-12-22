@@ -119,17 +119,18 @@ export const updateStatusText = async (
 ) => {
   try {
     const { uid: user_id } = res.locals;
-    const { status_text, expire_date } = req.body;
+    const { status_text, expire_at } = req.body;
 
     const cacheKey = USERS.USER_STATUS.key({ user_id });
 
     // Update the database first
+    console.log("updateStatusText at controller");
     const { updateStatusText: response } = await graphQLClient().request(
       userStatusMutations.UPDATE_USER_STATUS_TEXT,
       {
         user_id,
         status_text,
-        expire_date,
+        expire_date: expire_at,
       }
     );
 

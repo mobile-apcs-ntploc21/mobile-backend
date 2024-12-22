@@ -175,7 +175,6 @@ export const userStatusMutations = {
       ) {
         user_id
         status_text
-        expire_date
       }
     }
   `,
@@ -1171,6 +1170,40 @@ export const userSubscritpionMutation = {
     }
   }
 
+  `,
+};
+
+export const expireDateMutations = {
+  SET_EXPIRE_DATE: gql`
+    mutation setExpireDate(
+      $object_type: String!
+      $object_id: ID!
+      $expire_date: String!
+    ) {
+      setExpireDate(
+        object_type: $object_type
+        object_id: $object_id
+        expire_date: $expire_date
+      ) {
+        object_type
+        object {
+          object_id
+          expire_date
+        }
+      }
+    }
+  `,
+
+  RESOLVE_EXPIRED: gql`
+    mutation resolveExpired {
+      resolveExpired {
+        object_type
+        object {
+          object_id
+          expire_date
+        }
+      }
+    }
   `,
 };
 

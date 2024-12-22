@@ -36,6 +36,8 @@ import paymentlog from "./payment/paymentlog";
 import orders from "./payment/orders";
 import packages from "./payment/packages";
 import subscriptions from "./payment/subscriptions";
+/// ExpireDate
+import expireDate from "./expire_date";
 /// Cronjob
 import cronjob from "./cronjob";
 
@@ -90,6 +92,8 @@ export const apiTypeDefs = mergeTypeDefs([
   orders.API,
   paymentlog.API,
   subscriptions.API,
+
+  expireDate.API,
 
   cronjob.API,
 ]);
