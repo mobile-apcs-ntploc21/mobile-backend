@@ -826,19 +826,6 @@ export const messageQueries = {
     }
   `,
 
-  GET_REACTIONS_IN_DM: gql`
-    query reactionsInDM($message_id: ID!, $conversation_id: ID!) {
-      reactionsInDM(
-        message_id: $message_id
-        conversation_id: $conversation_id
-      ) {
-        message_id
-        sender_id
-        emoji_id
-      }
-    }
-  `,
-
   SEARCH_DIRECT_MESSAGES: gql`
     query searchDirectMessages(
       $query: DirectMessageSearchQuery!
@@ -877,116 +864,6 @@ export const messageQueries = {
 
         is_modified
         createdAt
-      }
-    }
-  `,
-};
-
-export const directMessageQueries = {
-  GET_DIRECT_MESSAGE: gql`
-    query getDirectMessage($user_first_id: ID!, $user_second_id: ID!) {
-      getDirectMessage(
-        user_first_id: $user_first_id
-        user_second_id: $user_second_id
-      ) {
-        conversation_id
-        latest_message {
-          id
-          conversation_id
-          sender_id
-          author {
-            user_id
-            username
-            display_name
-            avatar_url
-          }
-
-          content
-          replied_message_id
-          forwarded_message_id
-          attachments {
-            type
-            url
-            filename
-            size
-          }
-
-          mention_users
-
-          emojis
-          reactions {
-            emoji_id
-            count
-            reactors
-          }
-          replied_message {
-            id
-            sender_id
-            content
-            is_deleted
-          }
-
-          is_modified
-          createdAt
-        }
-        has_new_message
-        number_of_unread_mentions
-      }
-    }
-  `,
-  GET_DIRECT_MESSAGES: gql`
-    query getDirectMessages($user_id: ID!) {
-      getDirectMessages(user_id: $user_id) {
-        direct_message {
-          conversation_id
-          latest_message {
-            id
-            conversation_id
-            sender_id
-            author {
-              user_id
-              username
-              display_name
-              avatar_url
-            }
-
-            content
-            replied_message_id
-            forwarded_message_id
-            attachments {
-              type
-              url
-              filename
-              size
-            }
-
-            mention_users
-
-            emojis
-            reactions {
-              emoji_id
-              count
-              reactors
-            }
-            replied_message {
-              id
-              sender_id
-              content
-              is_deleted
-            }
-
-            is_modified
-            createdAt
-          }
-          has_new_message
-          number_of_unread_mentions
-        }
-        other_user {
-          user_id
-          username
-          display_name
-          avatar_url
-        }
       }
     }
   `,

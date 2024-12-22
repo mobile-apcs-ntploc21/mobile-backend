@@ -54,7 +54,7 @@ const gqlQuery = gql`
     text: String
     from: [ID]
     mention: [ID]
-    has: AttachmentType
+    has: [AttachmentType]
   }
 
   input SearchQuery {
