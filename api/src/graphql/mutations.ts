@@ -175,7 +175,6 @@ export const userStatusMutations = {
       ) {
         user_id
         status_text
-        expire_date
       }
     }
   `,
