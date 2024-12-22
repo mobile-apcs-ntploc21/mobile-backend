@@ -16,13 +16,18 @@ const gqlTypes = [
       has_new_message: Boolean
       number_of_unread_mentions: Int
     }
+
+    type DirectMessageResponse {
+      direct_message: DirectMessage
+      other_user: UserProfileLite
+    }
   `,
 ];
 
 const gqlAPI = gql`
   extend type Query {
     getDirectMessage(user_first_id: ID!, user_second_id: ID!): DirectMessage
-    getDirectMessages(user_id: ID!): [DirectMessage]
+    getDirectMessages(user_id: ID!): [DirectMessageResponse]
   }
 
   extend type Mutation {
