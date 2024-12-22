@@ -3,9 +3,17 @@ import { IResolvers } from "@graphql-tools/utils";
 
 import ConversationModel from "@/models/conversations/conversation";
 import UserModel from "@/models/user";
+import UserProfileModel from "@/models/user_profile";
 import DirectMessageModel from "@/models/conversations/direct_message";
 import { log } from "@/utils/log";
 import MessageModel from "@/models/conversations/message";
+
+interface IProfile {
+  user_id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string;
+}
 
 const directMessageAPI: IResolvers = {
   Query: {
@@ -21,17 +29,65 @@ const directMessageAPI: IResolvers = {
       return result;
     },
     getDirectMessages: async (_, { user_id }) => {
-      const result = await DirectMessageModel.find({
+      const directMessageResult = await DirectMessageModel.find({
         $or: [
           { "_id.user_first_id": user_id },
           { "_id.user_second_id": user_id },
         ],
       });
-      console.log("result:", result);
-      for (const dm of result) {
+      for (const dm of directMessageResult) {
         // @ts-ignore
         dm.latest_message = await MessageModel.findById(dm.latest_message_id);
+        // @ts-ignore
+        console.log(dm.latest_message);
+        // @ts-ignore
+        if (!dm.latest_message) continue;
+        // @ts-ignore
+        console.log(dm.latest_message.sender_id);
+        const sender = await UserProfileModel.findOne({
+          // @ts-ignore
+          user_id: dm.latest_message.sender_id,
+        });
+        // @ts-ignore
+        dm.latest_message.author = sender;
       }
+
+      const result = await Promise.all(
+        directMessageResult.map(async (dm) => {
+          const otherUserId =
+            String(dm._id.user_first_id) === user_id
+              ? String(dm._id.user_second_id)
+              : String(dm._id.user_first_id);
+
+          const otherUser = await UserProfileModel.findOne({
+            user_id: otherUserId,
+            server_id: null,
+          }).lean();
+
+          if (!otherUser) {
+            log.info(`User with id ${otherUserId} not found`);
+            return null;
+          }
+
+          const otherUserMap = new Map<string, IProfile>();
+          otherUserMap.set(String(otherUser.user_id), {
+            user_id: String(otherUser.user_id),
+            username: otherUser.username,
+            display_name: otherUser.display_name || otherUser.username,
+            avatar_url: otherUser.avatar_url || "",
+          });
+
+          // console.log(otherUserMap);
+
+          return {
+            direct_message: dm,
+            other_user: otherUserMap.get(String(otherUser.user_id)),
+          };
+        })
+      );
+
+      console.log(result);
+
       return result;
     },
   },
