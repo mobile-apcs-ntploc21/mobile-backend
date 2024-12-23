@@ -5,6 +5,7 @@ import ConversationModel from "@/models/conversations/conversation";
 import UserModel from "@/models/user";
 import UserProfileModel from "@/models/user_profile";
 import DirectMessageModel from "@/models/conversations/direct_message";
+import LastReadModel from "@/models/conversations/last_read";
 import { log } from "@/utils/log";
 import MessageModel from "@/models/conversations/message";
 
@@ -37,19 +38,53 @@ const directMessageAPI: IResolvers = {
           { "_id.user_second_id": user_id },
         ],
       });
+
+      const conversationIds = directMessageResult.map(
+        (dm) => dm.conversation_id
+      );
+
       for (const dm of directMessageResult) {
         const latestMessage = await MessageModel.findById(dm.latest_message_id);
-      
+
         if (!latestMessage) {
           // @ts-ignore
           dm.latest_message = null;
           continue;
         }
 
-        const extraFields = await fetchExtraFields([latestMessage]);
-        
+        const [extraFields] = await fetchExtraFields([latestMessage]);
+
         // @ts-ignore
-        dm.latest_message = latestMessage ? castToIMessage(latestMessage, extraFields) : null;
+        dm.latest_message = latestMessage
+          ? await castToIMessage(latestMessage, extraFields)
+          : null;
+      }
+
+      const lastestMessages = await MessageModel.find({
+        conversation_id: { $in: conversationIds },
+      }).sort({ createdAt: -1 });
+
+      const lastestMessageMap = lastestMessages.reduce((acc, msg) => {
+        // @ts-ignore
+        acc[msg.conversation_id] = msg;
+        return acc;
+      }, {});
+
+      // Initialize the last read data
+      let lastReadMessageMap = {};
+      if (user_id && user_id !== null) {
+        // Fetch the last read information for the user on these channels
+        const lastReads = await LastReadModel.find({
+          "_id.conversation_id": { $in: conversationIds },
+          "_id.user_id": user_id,
+        }).lean();
+
+        // Create a map of conversation_id to date of last read
+        lastReadMessageMap = await lastReads.reduce((acc, lr) => {
+          // @ts-ignore
+          acc[lr._id.conversation_id.toString()] = lr.updatedAt;
+          return acc;
+        }, {});
       }
 
       const result = await Promise.all(
@@ -58,6 +93,10 @@ const directMessageAPI: IResolvers = {
             String(dm._id.user_first_id) === user_id
               ? String(dm._id.user_second_id)
               : String(dm._id.user_first_id);
+
+          const conversation_id = (dm.conversation_id || "").toString();
+          // @ts-ignore
+          const lastReadMessage = lastReadMessageMap[conversation_id] || 0;
 
           const otherUser = await UserProfileModel.findOne({
             user_id: otherUserId,
@@ -77,6 +116,20 @@ const directMessageAPI: IResolvers = {
             avatar_url: otherUser.avatar_url || "",
           });
 
+          dm.number_of_unread_mentions = 0;
+          // @ts-ignore
+          if (user_id && dm.latest_message) {
+            const unreadMentions = await MessageModel.countDocuments({
+              conversation_id: conversation_id,
+              user_id: user_id,
+              createdAt: { $gt: lastReadMessage },
+            });
+
+            dm.number_of_unread_mentions = unreadMentions;
+          }
+
+          dm.has_new_message = dm.number_of_unread_mentions > 0;
+
           return {
             direct_message: dm,
             other_user: otherUserMap.get(String(otherUser.user_id)),
@@ -85,7 +138,6 @@ const directMessageAPI: IResolvers = {
       );
 
       const filteredResult = result.filter((r) => r !== null);
-      console.log(filteredResult);
 
       return filteredResult;
     },
