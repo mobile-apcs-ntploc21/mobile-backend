@@ -3,7 +3,7 @@ import { gql } from "apollo-server-express";
 const gqlTypes = gql`
   type ExpirableObject {
     object_id: ID!
-    expire_date: String!
+    expire_date: String
   }
 
   type ExpireDate {

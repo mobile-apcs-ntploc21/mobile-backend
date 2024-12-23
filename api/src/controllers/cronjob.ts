@@ -44,19 +44,10 @@ export const handleUserStatusExpiration = async (
       expireDateMutations.RESOLVE_EXPIRED
     );
 
-    console.log(response);
-
     log.info(
       `[Cronjob] Cleanup user status: Cleaned up ${response.resolveExpired.length} user statuses`
     );
 
-    res.status(200).json({
-      message: "User statuses cleaned up successfully",
-      count: response.resolveExpired.length,
-    });
-    log.info(
-      `[Cronjob] Cleanup user status: Cleaned up ${response.resolveExpired.length} user statuses`
-    );
     res.status(200).json({
       message: "User statuses cleaned up successfully",
       count: response.resolveExpired.length,
@@ -79,6 +70,9 @@ export const handleInviteCodeExpiration = async (
   next: express.NextFunction
 ) => {
   log.info("[Cronjob] Cleanup invite codes: Started cleaning up invite codes");
+  res.status(200).json({
+    message: "Invite codes cleaned up successfully",
+  });
   return;
 };
 
@@ -89,35 +83,42 @@ export const cleanupEmoji = async (
 ) => {
   log.info("[Cronjob] Cleanup emojis: Started cleaning up emojis");
 
-  const deletedEmojis = await graphQLClient().request(
-    cronjobQueries.GET_DELETED_EMOJIS
-  );
+  try {
+    const deletedEmojis = await graphQLClient().request(
+      cronjobQueries.GET_DELETED_EMOJIS
+    );
 
-  for (const emoji of deletedEmojis.deletedEmojis) {
-    log.info(`[Cronjob] Cleanup emojis: Deleting ${emoji.id}`);
-    const emojiPath = emoji.image_url.match(/emojis\/.*/);
-    console.log(emojiPath);
+    for (const emoji of deletedEmojis.deletedEmojis) {
+      log.info(`[Cronjob] Cleanup emojis: Deleting ${emoji.id}`);
+      const emojiPath = emoji.image_url.match(/emojis\/.*/);
 
-    if (emojiPath) {
-      deleteFromS3(emojiPath[0]);
+      if (emojiPath) {
+        await deleteFromS3(emojiPath[0]);
+      }
+
+      // await graphQLClient().request(
+      //   serverEmojiMutations.HARD_DELETE_SERVER_EMOJI,
+      //   {
+      //     emoji_id: emoji.id,
+      //   }
+      // );
     }
 
-    await graphQLClient().request(
-      serverEmojiMutations.HARD_DELETE_SERVER_EMOJI,
-      {
-        emoji_id: emoji.id,
-      }
+    log.info(
+      `[Cronjob] Cleanup emojis: Deleted ${deletedEmojis.deletedEmojis.length} emojis`
     );
+
+    res.status(200).json({
+      message: "Deleted emojis cleaned up successfully",
+      deletedEmojis: deletedEmojis.deletedEmojis,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      message: err.message,
+    });
+    log.error(err.message);
+    next(err);
   }
-
-  log.info(
-    `[Cronjob] Cleanup emojis: Deleted ${deletedEmojis.deletedEmojis.length} emojis`
-  );
-
-  res.status(200).json({
-    message: "Deleted emojis cleaned up successfully",
-    deletedEmojis: deletedEmojis.deletedEmojis,
-  });
   return;
 };
 
@@ -178,7 +179,7 @@ export const cleanupAttachment = async (
       if (!availableKeys.includes(key)) {
         count++;
         log.info(`[Cronjob] Cleanup attachments: Deleting ${key}`);
-        deleteFromS3(key);
+        await deleteFromS3(key);
       }
     }
   } catch (err: any) {
