@@ -12,6 +12,7 @@ const gqlType = gql`
 const gqlQuery = gql`
   extend type Query {
     reactions(message_id: ID!): [Reaction]
+    reactionsInDM(message_id: ID!, conversation_id: ID!): [Reaction]
   }
 `;
 
@@ -23,9 +24,17 @@ const gqlMutation = gql`
 
   extend type Mutation {
     reactMessage(message_id: ID!, input: ReactMessageInput!): [Reaction]
-    reactMessageInDM(message_id: ID!, input: ReactMessageInput!): [Reaction]
+    reactMessageInDM(
+      message_id: ID!
+      conversation_id: ID!
+      input: ReactMessageInput!
+    ): [Reaction]
     unreactMessage(message_id: ID!, input: ReactMessageInput!): [Reaction]
-    unreactMessageInDM(message_id: ID!, input: ReactMessageInput!): [Reaction]
+    unreactMessageInDM(
+      message_id: ID!
+      conversation_id: ID!
+      input: ReactMessageInput!
+    ): [Reaction]
   }
 `;
 

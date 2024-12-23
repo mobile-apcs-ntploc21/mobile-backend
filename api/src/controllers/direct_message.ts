@@ -164,16 +164,20 @@ const _getMessage = async (message_id: string): Promise<any> => {
   }
 };
 
-const _getReactions = async (message_id: string): Promise<any> => {
+const _getReactions = async (
+  message_id: string,
+  conversation_id: string
+): Promise<any> => {
   if (!message_id) {
     throw new Error("Message ID is required.");
   }
 
   try {
     const { reactions } = await graphQLClient().request(
-      messageQueries.GET_REACTIONS,
+      messageQueries.GET_REACTIONS_IN_DM,
       {
         message_id,
+        conversation_id,
       }
     );
 
@@ -465,11 +469,22 @@ export const pinMessage = async (
     return;
   }
 
+  const conversation = await _getDirectMessage(
+    res.locals.uid,
+    req.params.userId as string
+  );
+
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found." });
+    return;
+  }
+
   try {
     const { pinMessageInDM: pinned } = await graphQLClient().request(
       messageMutations.PIN_MESSAGE_IN_DM,
       {
         message_id,
+        conversation_id: conversation.conversation_id,
       }
     );
 
@@ -493,11 +508,22 @@ export const unpinMessage = async (
     return;
   }
 
+  const conversation = await _getDirectMessage(
+    res.locals.uid,
+    req.params.userId as string
+  );
+
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found." });
+    return;
+  }
+
   try {
     const { unpinMessageInDM: unpinned } = await graphQLClient().request(
       messageMutations.UNPIN_MESSAGE_IN_DM,
       {
         message_id,
+        conversation_id: conversation.conversation_id,
       }
     );
 
@@ -744,12 +770,44 @@ export const uploadFile = async (
   }
 };
 
+export const getReactions = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { userId: user_id, messageId: message_id } = req.params;
+
+  if (!message_id) {
+    res.status(400).json({ message: "Message ID is required." });
+    return;
+  }
+
+  const conversation = await _getDirectMessage(res.locals.uid, user_id);
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found." });
+    return;
+  }
+
+  try {
+    const reactions = await _getReactions(
+      message_id,
+      conversation.conversation_id
+    );
+
+    res.status(200).json({ reactions });
+    return;
+  } catch (error: any) {
+    next(error);
+    return;
+  }
+};
+
 export const reactMessage = async (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { messageId: message_id } = req.params;
+  const { userId: user_id, messageId: message_id } = req.params;
   const { emoji_id } = req.body;
 
   if (!message_id) {
@@ -761,11 +819,18 @@ export const reactMessage = async (
     return;
   }
 
+  const conversation = await _getDirectMessage(res.locals.uid, user_id);
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found." });
+    return;
+  }
+
   try {
     const { reactMessage: reactions } = await graphQLClient().request(
-      messageMutations.REACT_MESSAGE,
+      messageMutations.REACT_MESSAGE_IN_DM,
       {
         message_id,
+        conversation_id: conversation.conversation_id,
         input: {
           sender_id: res.locals.uid,
           emoji: emoji_id,
@@ -786,7 +851,7 @@ export const unreactMessage = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { messageId: message_id } = req.params;
+  const { userId: user_id, messageId: message_id } = req.params;
   const { emoji_id } = req.body;
 
   if (!message_id) {
@@ -798,11 +863,18 @@ export const unreactMessage = async (
     return;
   }
 
+  const conversation = await _getDirectMessage(res.locals.uid, user_id);
+  if (!conversation) {
+    res.status(404).json({ message: "Conversation not found." });
+    return;
+  }
+
   try {
     const { unreactMessageInDM: reactions } = await graphQLClient().request(
       messageMutations.UNREACT_MESSAGE_IN_DM,
       {
         message_id,
+        conversation_id: conversation.conversation_id,
         input: {
           sender_id: res.locals.uid,
           emoji: emoji_id,
