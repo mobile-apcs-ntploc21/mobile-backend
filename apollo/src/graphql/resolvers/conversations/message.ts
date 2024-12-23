@@ -1296,14 +1296,18 @@ const pinMessage = async (message_id: string): Promise<IMessage[]> => {
   );
 };
 
-const pinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
-  const message = await messageModel.findByIdAndUpdate(
+const pinMessageInDM = async (
+  message_id: string,
+  conversation_id: string
+): Promise<IMessage[]> => {
+  const message = await messageModel.findOneAndUpdate(
     {
       _id: message_id,
+      conversation_id: conversation_id,
     },
     {
-      is_deleted: false,
       is_pinned: true,
+      is_deleted: false,
     }
   );
 
@@ -1315,6 +1319,7 @@ const pinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
   const pinnedMessages = await messageModel.find({
     conversation_id: message.conversation_id,
     is_pinned: true,
+    is_deleted: false,
   });
 
   const [extraFields] = await fetchExtraFields(pinnedMessages);
@@ -1374,10 +1379,14 @@ const unpinMessage = async (message_id: string): Promise<IMessage[]> => {
   return pinnedIMessages;
 };
 
-const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
-  const message = await messageModel.findByIdAndUpdate(
+const unpinMessageInDM = async (
+  message_id: string,
+  conversation_id: string
+): Promise<IMessage[]> => {
+  const message = await messageModel.findOneAndUpdate(
     {
       _id: message_id,
+      conversation_id: conversation_id,
     },
     {
       is_deleted: false,
@@ -1434,9 +1443,11 @@ const messageAPI: IResolvers = {
     deleteMessageInDM: async (_, { message_id }) =>
       deleteMessageInDMTransaction(message_id),
     pinMessage: async (_, { message_id }) => pinMessage(message_id),
-    pinMessageInDM: async (_, { message_id }) => pinMessageInDM(message_id),
+    pinMessageInDM: async (_, { message_id, conversation_id }) =>
+      pinMessageInDM(message_id, conversation_id),
     unpinMessage: async (_, { message_id }) => unpinMessage(message_id),
-    unpinMessageInDM: async (_, { message_id }) => unpinMessageInDM(message_id),
+    unpinMessageInDM: async (_, { message_id, conversation_id }) =>
+      unpinMessageInDM(message_id, conversation_id),
   },
 };
 

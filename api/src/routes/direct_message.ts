@@ -10,6 +10,8 @@ import {
   pinMessage,
   unpinMessage,
   readMessages,
+  getReactions,
+  reactMessage,
   unreactMessage,
   searchMessages,
   getMessage,
@@ -32,11 +34,11 @@ directMessageRouter.get("/:userId/pins", getPinnedMessages);
 directMessageRouter.get("/:userId/messages/search", searchMessages);
 directMessageRouter.get("/:userId/messages/:messageId", getMessage);
 
-directMessageRouter.post("/:messageId/pin", pinMessage);
-directMessageRouter.delete("/:messageId/pin", unpinMessage);
+directMessageRouter.post("/:userId/:messageId/pin", pinMessage);
+directMessageRouter.delete("/:userId/:messageId/pin", unpinMessage);
 
-directMessageRouter.get("/:messageId/reactions", messageCtrl.getReactions);
-directMessageRouter.post("/:messageId/reactions", messageCtrl.reactMessage);
-directMessageRouter.delete("/:messageId/reactions", unreactMessage);
+directMessageRouter.get("/:userId/:messageId/reactions", getReactions);
+directMessageRouter.post("/:userId/:messageId/reactions", reactMessage);
+directMessageRouter.delete("/:userId/:messageId/reactions", unreactMessage);
 
 export default directMessageRouter;
