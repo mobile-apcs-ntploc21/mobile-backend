@@ -37,6 +37,7 @@ services:
       target: apollo
     networks:
       - orantio
+      - notification
     env_file:
       - apollo/config.env.template
     ports:
@@ -81,6 +82,8 @@ services:
 
 networks:
   orantio:
+  notification:
+    external: true
 
 volumes:
   cache:
