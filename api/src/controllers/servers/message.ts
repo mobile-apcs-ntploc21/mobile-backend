@@ -150,7 +150,7 @@ export const searchMessages = async (
     content,
     author_id: _author_id,
     mentions: _mentions,
-    has,
+    has: _has,
     in: _inChannel,
     conversationIds,
   } = req.query;
@@ -175,6 +175,7 @@ export const searchMessages = async (
       ? _mentions
       : [_mentions]
     : [];
+  const has = _has ? (Array.isArray(_has) ? _has : [_has]) : [];
 
   if (inChannel.length === 0 && inConversation.length === 0) {
     // TODO: Do a global search for the server
