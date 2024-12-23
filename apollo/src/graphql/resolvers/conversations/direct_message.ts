@@ -8,6 +8,8 @@ import DirectMessageModel from "@/models/conversations/direct_message";
 import { log } from "@/utils/log";
 import MessageModel from "@/models/conversations/message";
 
+import { fetchExtraFields, castToIMessage } from "./message";
+
 interface IProfile {
   user_id: string;
   username: string;
@@ -36,20 +38,18 @@ const directMessageAPI: IResolvers = {
         ],
       });
       for (const dm of directMessageResult) {
-        // @ts-ignore
-        dm.latest_message = await MessageModel.findById(dm.latest_message_id);
-        // @ts-ignore
-        console.log(dm.latest_message);
-        // @ts-ignore
-        if (!dm.latest_message) continue;
-        // @ts-ignore
-        console.log(dm.latest_message.sender_id);
-        const sender = await UserProfileModel.findOne({
+        const latestMessage = await MessageModel.findById(dm.latest_message_id);
+      
+        if (!latestMessage) {
           // @ts-ignore
-          user_id: dm.latest_message.sender_id,
-        });
+          dm.latest_message = null;
+          continue;
+        }
+
+        const extraFields = await fetchExtraFields([latestMessage]);
+        
         // @ts-ignore
-        dm.latest_message.author = sender;
+        dm.latest_message = latestMessage ? castToIMessage(latestMessage, extraFields) : null;
       }
 
       const result = await Promise.all(
@@ -77,8 +77,6 @@ const directMessageAPI: IResolvers = {
             avatar_url: otherUser.avatar_url || "",
           });
 
-          // console.log(otherUserMap);
-
           return {
             direct_message: dm,
             other_user: otherUserMap.get(String(otherUser.user_id)),
@@ -86,9 +84,10 @@ const directMessageAPI: IResolvers = {
         })
       );
 
-      console.log(result);
+      const filteredResult = result.filter((r) => r !== null);
+      console.log(filteredResult);
 
-      return result;
+      return filteredResult;
     },
   },
   Mutation: {
