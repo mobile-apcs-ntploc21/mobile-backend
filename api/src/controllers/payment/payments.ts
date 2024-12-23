@@ -149,7 +149,7 @@ export const createOrder = async (
     }
 
     // Create an Order document
-    const amount = Number(req.body.amount) ?? packageData.package.base_price;
+    const amount = packageData.package.base_price;
     const date = new Date();
     const expireDate = new Date(date.getTime() + 1 * 15 * 60 * 1000); // 15 minutes
     const transactionId = uuidv4();
