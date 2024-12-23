@@ -846,25 +846,6 @@ export const cronjobQueries = {
   `,
 };
 
-export const cronjobQueries = {
-  GET_AVAILABLE_ATTACHMENTS: gql`
-    query availableAttachments {
-      availableAttachments {
-        url
-      }
-    }
-  `,
-  GET_DELETED_EMOJIS: gql`
-    query deletedEmojis {
-      deletedEmojis {
-        id
-        name
-        image_url
-      }
-    }
-  `,
-};
-
 export const ordersQueries = {
   GET_ORDER: gql`
     query order($order_id: ID!) {

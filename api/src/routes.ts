@@ -52,9 +52,9 @@ function routing(app: Application) {
   };
 
   customRoutes();
+  cronjobRoutes();
   userRoutes();
   serverRoutes();
-  cronjobRoutes();
   swagger();
 }
 

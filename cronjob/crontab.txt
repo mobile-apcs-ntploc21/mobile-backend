@@ -1,5 +1,0 @@
-0 * * * * /cronjob/jobs/premium-expiration.py   >> /cronjob/logs/premium-expiration.log 2>&1
-0 0 * * * /cronjob/jobs/emoji-cleanup.py    >> /cronjob/logs/emoji-cleanup.log 2>&1
-0 0 * * * /cronjob/jobs/attachment-cleanup.py >> /cronjob/logs/attachment-cleanup.log 2>&1
-* * * * * /cronjob/jobs/user-status-expiration.py   >> /cronjob/logs/user-status-expiration.log 2>&1
-* * * * * /cronjob/jobs/invite-code-expiration.py   >> /cronjob/logs/invite-code-expiration.log 2>&1
