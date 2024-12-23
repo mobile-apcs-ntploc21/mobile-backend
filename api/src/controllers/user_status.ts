@@ -28,7 +28,7 @@ export const getCurrentUserStatus = async (
       USERS.USER_STATUS.TTL
     );
 
-    res.status(200).json(cachedData);
+    res.status(200).json(cachedData.getUserStatus);
   } catch (error) {
     next(error);
   }
@@ -56,7 +56,7 @@ export const getUserStatus = async (
       USERS.USER_STATUS.TTL
     );
 
-    res.status(200).json(cachedData);
+    res.status(200).json(cachedData.getUserStatus);
   } catch (error) {
     next(error);
   }
