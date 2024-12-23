@@ -178,11 +178,11 @@ const gqlMutation = gql`
 
     # Pin a message
     pinMessage(message_id: ID!): [Message]
-    pinMessageInDM(message_id: ID!): [Message]
+    pinMessageInDM(message_id: ID!, conversation_id: ID!): [Message]
 
     # Unpin a message
     unpinMessage(message_id: ID!): [Message]
-    unpinMessageInDM(message_id: ID!): [Message]
+    unpinMessageInDM(message_id: ID!, conversation_id: ID!): [Message]
   }
 `;
 

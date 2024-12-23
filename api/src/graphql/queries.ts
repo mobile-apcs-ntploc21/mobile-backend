@@ -826,6 +826,19 @@ export const messageQueries = {
     }
   `,
 
+  GET_REACTIONS_IN_DM: gql`
+    query reactionsInDM($message_id: ID!, $conversation_id: ID!) {
+      reactionsInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+      ) {
+        message_id
+        sender_id
+        emoji_id
+      }
+    }
+  `,
+
   SEARCH_DIRECT_MESSAGES: gql`
     query searchDirectMessages(
       $query: DirectMessageSearchQuery!
