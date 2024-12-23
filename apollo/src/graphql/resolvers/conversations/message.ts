@@ -594,7 +594,11 @@ const getPinnedMessages = async (
     })
     .lean();
 
-  return await Promise.all(messages.map((message) => castToIMessage(message)));
+  const [extraFields] = await fetchExtraFields(messages);
+
+  return await Promise.all(
+    messages.map((message) => castToIMessage(message, extraFields))
+  );
 };
 
 /**
