@@ -2815,6 +2815,9 @@
                     },
                     "status_text": {
                       "type": "string"
+                    },
+                    "expires_at": {
+                      "type": "string"
                     }
                   }
                 }
