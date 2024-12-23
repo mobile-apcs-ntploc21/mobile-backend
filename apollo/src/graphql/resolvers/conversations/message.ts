@@ -341,6 +341,8 @@ export const castToIMessage = async (
     }
   }
 
+  console.log("extra author: ", extra.author);
+
   // Return the message
   return {
     id: String(message._id || message.id),
