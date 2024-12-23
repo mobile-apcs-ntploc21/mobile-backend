@@ -26,3 +26,15 @@ ARG MODE=production
 ENV MODE=$MODE
 EXPOSE 4000
 CMD [ "npm", "start" ]
+
+FROM ubuntu:latest AS cronjob
+RUN apt-get update && \
+    apt-get -y install python3 python3-pip python3-requests cron && \
+    ln -s /usr/bin/python3 /usr/bin/python
+COPY cronjob /cronjob
+RUN crontab /cronjob/crontab
+RUN rm -rf /etc/crontabs/root
+RUN mkdir -p /cronjob/logs
+RUN touch /var/log/cron.log
+RUN chmod +x /cronjob/jobs/*.py
+CMD ["sh", "-c", "cron && tail -f /var/log/cron.log"]
