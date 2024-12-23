@@ -24,9 +24,17 @@ const gqlMutation = gql`
 
   extend type Mutation {
     reactMessage(message_id: ID!, input: ReactMessageInput!): [Reaction]
-    reactMessageInDM(message_id: ID!, input: ReactMessageInput!): [Reaction]
+    reactMessageInDM(
+      message_id: ID!
+      conversation_id: ID!
+      input: ReactMessageInput!
+    ): [Reaction]
     unreactMessage(message_id: ID!, input: ReactMessageInput!): [Reaction]
-    unreactMessageInDM(message_id: ID!, input: ReactMessageInput!): [Reaction]
+    unreactMessageInDM(
+      message_id: ID!
+      conversation_id: ID!
+      input: ReactMessageInput!
+    ): [Reaction]
   }
 `;
 

@@ -1124,8 +1124,11 @@ export const messageMutations = {
     }
   `,
   PIN_MESSAGE_IN_DM: gql`
-    mutation pinMessageInDM($message_id: ID!) {
-      pinMessageInDM(message_id: $message_id) {
+    mutation pinMessageInDM($message_id: ID!, $conversation_id: ID!) {
+      pinMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+      ) {
         id
         conversation_id
         sender_id
@@ -1148,8 +1151,11 @@ export const messageMutations = {
     }
   `,
   UNPIN_MESSAGE_IN_DM: gql`
-    mutation unpinMessageInDM($message_id: ID!) {
-      unpinMessageInDM(message_id: $message_id) {
+    mutation unpinMessageInDM($message_id: ID!, $conversation_id: ID!) {
+      unpinMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+      ) {
         id
         conversation_id
         sender_id
@@ -1171,9 +1177,34 @@ export const messageMutations = {
       }
     }
   `,
+  REACT_MESSAGE_IN_DM: gql`
+    mutation reactMessageInDM(
+      $message_id: ID!
+      $conversation_id: ID!
+      $input: ReactMessageInput!
+    ) {
+      reactMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+        input: $input
+      ) {
+        message_id
+        sender_id
+        emoji_id
+      }
+    }
+  `,
   UNREACT_MESSAGE_IN_DM: gql`
-    mutation unreactMessageInDM($message_id: ID!, $input: ReactMessageInput!) {
-      unreactMessageInDM(message_id: $message_id, input: $input) {
+    mutation unreactMessageInDM(
+      $message_id: ID!
+      $conversation_id: ID!
+      $input: ReactMessageInput!
+    ) {
+      unreactMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+        input: $input
+      ) {
         message_id
         sender_id
         emoji_id
