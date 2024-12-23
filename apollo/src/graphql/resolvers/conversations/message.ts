@@ -739,7 +739,6 @@ const createMessageTransaction = async (
 
     const [extraFields] = await fetchExtraFields([message]);
     const messageData = await castToIMessage(message, extraFields);
-    console.log(messageData);
 
     // Check if the message is a reply then publish the event of mention to that user
     if (replied_message_id) {
@@ -1277,8 +1276,9 @@ const pinMessage = async (message_id: string): Promise<IMessage[]> => {
     is_pinned: true,
   });
 
+  const [extraFields] = await fetchExtraFields(pinnedMessages);
   return await Promise.all(
-    pinnedMessages.map((message) => castToIMessage(message))
+    pinnedMessages.map((message) => castToIMessage(message, extraFields))
   );
 };
 
@@ -1303,8 +1303,9 @@ const pinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
     is_pinned: true,
   });
 
+  const [extraFields] = await fetchExtraFields(pinnedMessages);
   return await Promise.all(
-    pinnedMessages.map((message) => castToIMessage(message))
+    pinnedMessages.map((message) => castToIMessage(message, extraFields))
   );
 };
 
@@ -1351,8 +1352,9 @@ const unpinMessage = async (message_id: string): Promise<IMessage[]> => {
     is_pinned: true,
   });
 
+  const [extraFields] = await fetchExtraFields(pinnedMessages);
   const pinnedIMessages = await Promise.all(
-    pinnedMessages.map((message) => castToIMessage(message))
+    pinnedMessages.map((message) => castToIMessage(message, extraFields))
   );
 
   return pinnedIMessages;
@@ -1379,8 +1381,9 @@ const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
     is_pinned: true,
   });
 
+  const [extraFields] = await fetchExtraFields(pinnedMessages);
   const pinnedIMessages = await Promise.all(
-    pinnedMessages.map((message) => castToIMessage(message))
+    pinnedMessages.map((message) => castToIMessage(message, extraFields))
   );
 
   return pinnedIMessages;
