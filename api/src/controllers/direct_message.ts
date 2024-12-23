@@ -317,10 +317,10 @@ export const readMessages = async (
     return;
   }
 
-  if (!message_id) {
-    res.status(400).json({ message: "Message ID is required." });
-    return;
-  }
+  // if (!message_id) {
+  //   res.status(400).json({ message: "Message ID is required." });
+  //   return;
+  // }
 
   if (user_first_id > user_second_id) {
     const temp = user_first_id;
