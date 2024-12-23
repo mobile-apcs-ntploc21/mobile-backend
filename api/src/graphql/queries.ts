@@ -1171,44 +1171,43 @@ export const directMessageQueries = {
       ) {
         conversation_id
         latest_message {
-            id
-            conversation_id
-            sender_id
-            author {
-              user_id
-              username
-              display_name
-              avatar_url
-            }
-
-            content
-            replied_message_id
-            forwarded_message_id
-            attachments {
-              type
-              url
-              filename
-              size
-            }
-
-            mention_users
-            
-            emojis
-            reactions {
-              emoji_id
-              count
-              reactors
-            }
-            replied_message {
-              id
-              sender_id
-              content
-              is_deleted
-            }
-
-            is_modified
-            createdAt
+          id
+          conversation_id
+          sender_id
+          author {
+            user_id
+            username
+            display_name
+            avatar_url
           }
+
+          content
+          replied_message_id
+          forwarded_message_id
+          attachments {
+            type
+            url
+            filename
+            size
+          }
+
+          mention_users
+
+          emojis
+          reactions {
+            emoji_id
+            count
+            reactors
+          }
+          replied_message {
+            id
+            sender_id
+            content
+            is_deleted
+          }
+
+          is_modified
+          createdAt
         }
         has_new_message
         number_of_unread_mentions
