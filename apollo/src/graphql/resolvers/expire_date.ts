@@ -76,7 +76,6 @@ export const expireDateResolver: IResolvers = {
     },
     resolveExpired: async (_) => {
       const now = new Date();
-      console.log("resolveExpired at resolver");
 
       try {
         const res = await ExpireDateModel.find({
