@@ -1367,6 +1367,7 @@ const pinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
   const message = await messageModel.findByIdAndUpdate(
     {
       _id: message_id,
+      conversation_id: conversation_id,
     },
     {
       is_deleted: false,
@@ -1531,6 +1532,7 @@ const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
   const message = await messageModel.findByIdAndUpdate(
     {
       _id: message_id,
+      conversation_id: conversation_id,
     },
     {
       is_deleted: false,
@@ -1546,6 +1548,93 @@ const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
   const pinnedMessages = await messageModel.find({
     conversation_id: message.conversation_id,
     is_pinned: true,
+  });
+
+  directMessagePubSub.publish(ServerEvents.messagePinRemoved, {
+    // @ts-ignore
+    server_id: channel.server_id,
+    type: ServerEvents.messagePinRemoved,
+    data: {
+      conversation_id: message.conversation_id,
+      message_id: message._id,
+    },
+  });
+
+  const [extraFields] = await fetchExtraFields(pinnedMessages);
+  const pinnedIMessages = await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message, extraFields))
+  );
+
+  return pinnedIMessages;
+};
+
+const unpinMessageInDM = async (
+  message_id: string,
+  conversation_id: string
+): Promise<IMessage[]> => {
+  const message = await messageModel.findOneAndUpdate(
+    {
+      _id: message_id,
+      conversation_id: conversation_id,
+    },
+    {
+      is_deleted: false,
+      is_pinned: false,
+    }
+  );
+
+  if (!message) {
+    throw new UserInputError("Message not found in the pinned list!");
+  }
+
+  // Get all pinned messages
+  const pinnedMessages = await messageModel.find({
+    conversation_id: message.conversation_id,
+    is_pinned: true,
+  });
+
+  const [extraFields] = await fetchExtraFields(pinnedMessages);
+  const pinnedIMessages = await Promise.all(
+    pinnedMessages.map((message) => castToIMessage(message, extraFields))
+  );
+
+  return pinnedIMessages;
+};
+
+const unpinMessageInDM = async (
+  message_id: string,
+  conversation_id: string,
+  directMessagePubSub: PubSub
+): Promise<IMessage[]> => {
+  const message = await messageModel.findOneAndUpdate(
+    {
+      _id: message_id,
+      conversation_id: conversation_id,
+    },
+    {
+      is_deleted: false,
+      is_pinned: false,
+    }
+  );
+
+  if (!message) {
+    throw new UserInputError("Message not found in the pinned list!");
+  }
+
+  // Get all pinned messages
+  const pinnedMessages = await messageModel.find({
+    conversation_id: message.conversation_id,
+    is_pinned: true,
+  });
+
+  directMessagePubSub.publish(ServerEvents.messagePinRemoved, {
+    // @ts-ignore
+    server_id: channel.server_id,
+    type: ServerEvents.messagePinRemoved,
+    data: {
+      conversation_id: message.conversation_id,
+      message_id: message._id,
+    },
   });
 
   const [extraFields] = await fetchExtraFields(pinnedMessages);
