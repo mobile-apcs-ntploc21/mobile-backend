@@ -869,11 +869,6 @@ export const unreactMessage = async (
     return;
   }
 
-  const conversation = await _getDirectMessage(res.locals.uid, user_id);
-  if (!conversation) {
-    res.status(404).json({ message: "Conversation not found." });
-    return;
-  }
 
   try {
     const { unreactMessageInDM: reactions } = await graphQLClient().request(
