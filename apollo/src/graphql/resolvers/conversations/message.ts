@@ -1570,7 +1570,8 @@ const unpinMessageInDM = async (message_id: string): Promise<IMessage[]> => {
 
 const unpinMessageInDM = async (
   message_id: string,
-  conversation_id: string
+  conversation_id: string,
+  directMessagePubSub: PubSub
 ): Promise<IMessage[]> => {
   const message = await messageModel.findOneAndUpdate(
     {
