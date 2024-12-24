@@ -942,18 +942,6 @@ const createMessageInDMTransaction = async (
         message: messageData,
       },
     });
-
-    // Publish mention event for users
-    directMessagePubSub.publish(ServerEvents.messageMentionedUser, {
-      conversation_id,
-      user_id: mention_users,
-      forceUser: true,
-      type: ServerEvents.messageMentionedUser,
-      data: {
-        conversation_id,
-        message_id: message._id,
-      },
-    });
     return messageData;
   } catch (error) {
     // Abort the transaction
