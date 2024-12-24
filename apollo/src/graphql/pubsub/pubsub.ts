@@ -2,6 +2,7 @@
 import { PubSub } from "graphql-subscriptions";
 
 const pubsub = new PubSub();
+export const directMessagePubSub = new PubSub();
 
 export enum UserEvents {
   serverAdded = "SERVER_ADDED",
