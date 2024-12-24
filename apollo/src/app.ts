@@ -15,6 +15,7 @@ import { apiTypeDefs, wsTypeDefs } from "./graphql/typedefs";
 import { apiResolvers, wsResolvers } from "./graphql/resolvers";
 import { getUserIdByToken } from "./utils/auth";
 import { log } from "@/utils/log";
+import { directMessagePubSub } from "./graphql/pubsub/pubsub";
 
 const startApp = async () => {
   const app = express();
@@ -50,10 +51,10 @@ const startApp = async () => {
         if (!token) return { req, res, user_id: null };
 
         const user_id = await getUserIdByToken(token.split(" ")[1]);
-        return { req, res, user_id };
+        return { req, res, user_id, directMessagePubSub };
       } catch (error) {
         log.debug(error);
-        return { req, res, user_id: null };
+        return { req, res, user_id: null, directMessagePubSub };
       }
     },
   });
