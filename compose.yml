@@ -6,7 +6,7 @@ services:
     networks:
       - orantio
     ports:
-      - '6379:6379'
+      - "6379:6379"
     command: redis-server --save 20 1 --loglevel warning --requirepass password
     volumes:
       - cache:/data
@@ -19,7 +19,7 @@ services:
     networks:
       - orantio
     env_file:
-      - api/config.env.template
+      - api/config.env
     environment:
       - GQL_SERVER_URL=http://orantio-apollo:4000/graphql
       - REDIS_HOST=orantio-cache
@@ -39,7 +39,7 @@ services:
       - orantio
       - notification
     env_file:
-      - apollo/config.env.template
+      - apollo/config.env
     ports:
       - "4000:4000"
 
@@ -67,7 +67,7 @@ services:
       - orantio-api
       - orantio-apollo
       - orantio-cache
-  
+
   orantio-cronjob:
     container_name: orantio-cronjob
     build:
