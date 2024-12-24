@@ -37,8 +37,16 @@ const gqlAPI = gql`
 `;
 
 const gqlWs = gql`
+  scalar JSON
+
+  type DirectMessageUpdate {
+    conversation_id: ID!
+    type: String!
+    data: JSON
+  }
+
   extend type Subscription {
-    directMessageUpdated(conversation_id: ID!): DirectMessage
+    directMessageUpdated(conversation_id: ID!): DirectMessageUpdate
   }
 `;
 

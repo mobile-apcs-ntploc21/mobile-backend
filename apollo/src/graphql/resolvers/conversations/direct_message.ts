@@ -10,6 +10,8 @@ import { log } from "@/utils/log";
 import MessageModel from "@/models/conversations/message";
 
 import { fetchExtraFields, castToIMessage } from "./message";
+import { withFilter } from "graphql-subscriptions";
+import { ServerEvents } from "@/graphql/pubsub/pubsub";
 
 interface IProfile {
   user_id: string;
@@ -195,15 +197,24 @@ const directMessageAPI: IResolvers = {
 const directMessageWs: IResolvers = {
   Subscription: {
     directMessageUpdated: {
-      subscribe: async (_, { conversation_id }, { directMessagePubSub }) => {
-        console.log(
-          "directMessageUpdated",
-          conversation_id,
-          directMessagePubSub
-        );
-        return directMessagePubSub.asyncIterator(
-          `DIRECT_MESSAGE_UPDATED_${conversation_id}`
-        );
+      resolve: (payload) => ({
+        ...payload,
+        conversation_id: payload?.conversation_id || null,
+      }),
+      async subscribe(rootValue, args, context) {
+        return withFilter(
+          () => {
+            return context.directMessagePubSub.getAsyncIterator(
+              Object.values(ServerEvents)
+            );
+          },
+          async (payload, variables, context) => {
+            // Payload data (i.e., the data that the server sends)
+            const conversation_id = String(payload?.conversation_id) || null;
+            const v_conversation_id = variables.conversation_id;
+            return conversation_id === v_conversation_id;
+          }
+        )(rootValue, args, context);
       },
     },
   },
