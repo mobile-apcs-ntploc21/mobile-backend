@@ -11,6 +11,7 @@ import { getUserIdByToken } from "./utils/auth";
 import { userComeBack, userLeave, userSendPong } from "./utils/user_status";
 import { CloseCode } from "graphql-ws";
 import { log } from "@/utils/log";
+import { directMessagePubSub } from "./graphql/pubsub/pubsub";
 
 const startWsServer = (server: http.Server) => {
   const wss = new WebSocketServer({ server, path: config.WEBSOCKET_ROUTE });
@@ -72,6 +73,7 @@ const startWsServer = (server: http.Server) => {
   return useServer(
     {
       schema,
+      context: () => ({ directMessagePubSub }),
       onConnect: async (ctx) => {
         // Simplified token extraction logic
         const rawHeaderToken = ctx?.extra?.request?.rawHeaders.find((header) =>

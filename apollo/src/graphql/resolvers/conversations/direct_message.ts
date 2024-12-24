@@ -195,8 +195,13 @@ const directMessageAPI: IResolvers = {
 const directMessageWs: IResolvers = {
   Subscription: {
     directMessageUpdated: {
-      subscribe: async (_, { conversation_id }, { pubsub }) => {
-        return pubsub.asyncIterator(
+      subscribe: async (_, { conversation_id }, { directMessagePubSub }) => {
+        console.log(
+          "directMessageUpdated",
+          conversation_id,
+          directMessagePubSub
+        );
+        return directMessagePubSub.asyncIterator(
           `DIRECT_MESSAGE_UPDATED_${conversation_id}`
         );
       },
