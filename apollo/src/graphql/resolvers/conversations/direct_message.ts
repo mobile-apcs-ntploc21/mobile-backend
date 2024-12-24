@@ -202,9 +202,10 @@ const directMessageWs: IResolvers = {
         conversation_id: payload?.conversation_id || null,
       }),
       async subscribe(rootValue, args, context) {
+        const { directMessagePubSub } = context;
         return withFilter(
           () => {
-            return context.directMessagePubSub.getAsyncIterator(
+            return directMessagePubSub.asyncIterator(
               Object.values(ServerEvents)
             );
           },
