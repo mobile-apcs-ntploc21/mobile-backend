@@ -1,6 +1,6 @@
 import amqp from "amqplib";
 import { config } from "@/config";
-import { log } from "utils/log";
+import { log } from "@/utils/log";
 
 export type RABBIT_MESSAGE = {
   title: string;
