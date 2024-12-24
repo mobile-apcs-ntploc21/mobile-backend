@@ -48,7 +48,7 @@ const startApp = async () => {
     context: async ({ req, res }) => {
       try {
         const token = req.headers.authorization || "";
-        if (!token) return { req, res, user_id: null };
+        if (!token) return { req, res, user_id: null, directMessagePubSub };
 
         const user_id = await getUserIdByToken(token.split(" ")[1]);
         return { req, res, user_id, directMessagePubSub };
