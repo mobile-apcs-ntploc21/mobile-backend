@@ -535,6 +535,23 @@ const emojisAPI: IResolvers = {
         throw new Error("Please confirm the action.");
       }
     },
+
+    // This function will rename the server emoji's URL.
+    renameServerEmojiUrl: async (_, { emoji_id, image_url }) => {
+      try {
+        const emoji = await EmojiModel.findByIdAndUpdate(
+          emoji_id,
+          {
+            image_url: image_url,
+          },
+          { new: true }
+        );
+
+        return emoji;
+      } catch (error: any) {
+        throw new Error(error);
+      }
+    },
   },
 };
 

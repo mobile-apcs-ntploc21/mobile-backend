@@ -195,28 +195,45 @@ export const createServerEmoji = async (
       return;
     }
 
-    const image_url = await processImage(image, `emojis/${serverId}`);
-
-    if (!image_url) {
-      res.status(500).json({ message: "Failed to upload image." });
-      return;
-    }
-
-    const emoji = await graphQLClient().request(
+    const { createServerEmoji: emoji } = await graphQLClient().request(
       serverEmojiMutations.CREATE_SERVER_EMOJI,
       {
         input: {
           server_id: serverId,
           name,
-          image_url: image_url,
+          image_url: "temp.com",
           uploader_id: user_id,
         },
       }
     );
 
+    const image_url = await processImage(image, `emojis`, emoji.id);
+    console.log(emoji);
+    console.log(image_url);
+
+    if (!image_url) {
+      await graphQLClient().request(
+        serverEmojiMutations.HARD_DELETE_SERVER_EMOJI,
+        {
+          emoji_id: emoji.id,
+        }
+      );
+
+      res.status(500).json({ message: "Failed to upload image." });
+      return;
+    }
+
+    const emojiUpdate = await graphQLClient().request(
+      serverEmojiMutations.RENAME_SERVER_EMOJI_URL,
+      {
+        emoji_id: emoji.id,
+        image_url,
+      }
+    );
+
     res
       .status(201)
-      .json({ message: "Emoji created.", ...emoji.createServerEmoji });
+      .json({ message: "Emoji created.", ...emojiUpdate.renameServerEmojiUrl });
     return;
   } catch (error) {
     if (handleMongooseError(error, 11000)) {

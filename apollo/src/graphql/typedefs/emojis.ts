@@ -54,6 +54,9 @@ const gqlAPI = gql`
 
     # Use to sync server emojis to the unified database
     syncServerEmojis(confirm: Boolean): Boolean
+
+    # Use to rename the server emoji's URL
+    renameServerEmojiUrl(emoji_id: ID!, image_url: String!): Emoji
   }
 `;
 
