@@ -47,8 +47,6 @@ export const uploadToS3 = async (
     const stream = createReadStream();
     const buffer = await streamToBuffer(stream);
 
-    console.log(filename);
-
     // Generate a unique key for the file
     const extension = filename.split(".").pop();
     let key = `${folder}/${uuidv4()}${extension ? `.${extension}` : ""}`;

@@ -208,8 +208,6 @@ export const createServerEmoji = async (
     );
 
     const image_url = await processImage(image, `emojis`, emoji.id);
-    console.log(emoji);
-    console.log(image_url);
 
     if (!image_url) {
       await graphQLClient().request(
