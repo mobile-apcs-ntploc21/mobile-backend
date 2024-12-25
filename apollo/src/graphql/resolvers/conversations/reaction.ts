@@ -368,12 +368,12 @@ const unreactMessageInDM = async (
   // Publish reaction event (unreact)
   directMessagePubSub.publish(ServerEvents.messageReactionRemoved, {
     // @ts-ignore
-    server_id: channel.server_id,
+    conversation_id,
     type: ServerEvents.messageReactionRemoved,
     data: {
       message_id: message_id,
       // @ts-ignore
-      conversation_id: channel.conversation_id,
+      conversation_id,
       reactions: reactions,
     },
   });
