@@ -10,6 +10,7 @@ import userModel from "@models/user";
 import channelModel from "@models/servers/channels/channel";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 import { log } from "@/utils/log";
+import { PubSub } from "graphql-subscriptions";
 
 // ===========================
 
@@ -146,7 +147,8 @@ const reactMessage = async (
 const reactMessageInDM = async (
   message_id: string,
   conversation_id: string,
-  input: { sender_id: string; emoji: string }
+  input: { sender_id: string; emoji: string },
+  directMessagePubSub: PubSub
 ) => {
   // Start a session
   const session = await mongoose.startSession();
@@ -221,6 +223,15 @@ const reactMessageInDM = async (
     .lean();
 
   // Publish reaction event
+  directMessagePubSub.publish(ServerEvents.messageReactionAdded, {
+    conversation_id,
+    type: ServerEvents.messageReactionAdded,
+    data: {
+      message_id: message_id,
+      conversation_id,
+      reactions: reactions,
+    },
+  });
 
   // @ts-ignore
   reactions.forEach((reaction) => (reaction.id = reaction._id));
@@ -303,7 +314,8 @@ const unreactMessage = async (
 const unreactMessageInDM = async (
   message_id: string,
   conversation_id: string,
-  input: { sender_id: string; emoji: string }
+  input: { sender_id: string; emoji: string },
+  directMessagePubSub: PubSub
 ) => {
   // Start a session
   const session = await mongoose.startSession();
@@ -354,6 +366,18 @@ const unreactMessageInDM = async (
     .lean();
 
   // Publish reaction event (unreact)
+  directMessagePubSub.publish(ServerEvents.messageReactionRemoved, {
+    // @ts-ignore
+    server_id: channel.server_id,
+    type: ServerEvents.messageReactionRemoved,
+    data: {
+      message_id: message_id,
+      // @ts-ignore
+      conversation_id: channel.conversation_id,
+      reactions: reactions,
+    },
+  });
+
   return reactions;
 };
 
@@ -387,12 +411,25 @@ const reactionAPI: IResolvers = {
   Mutation: {
     reactMessage: async (_, { message_id, input }) =>
       reactMessage(message_id, input),
-    reactMessageInDM: async (_, { message_id, conversation_id, input }) =>
-      reactMessageInDM(message_id, conversation_id, input),
+    reactMessageInDM: async (
+      _,
+      { message_id, conversation_id, input },
+      { directMessagePubSub }
+    ) =>
+      reactMessageInDM(message_id, conversation_id, input, directMessagePubSub),
     unreactMessage: async (_, { message_id, input }) =>
       unreactMessage(message_id, input),
-    unreactMessageInDM: async (_, { message_id, conversation_id, input }) =>
-      unreactMessageInDM(message_id, conversation_id, input),
+    unreactMessageInDM: async (
+      _,
+      { message_id, conversation_id, input },
+      { directMessagePubSub }
+    ) =>
+      unreactMessageInDM(
+        message_id,
+        conversation_id,
+        input,
+        directMessagePubSub
+      ),
   },
 };
 
