@@ -314,6 +314,16 @@ export const serverEmojiMutations = {
       hardDeleteServerEmoji(emoji_id: $emoji_id)
     }
   `,
+  RENAME_SERVER_EMOJI_URL: gql`
+    mutation renameServerEmojiUrl($emoji_id: ID!, $image_url: String!) {
+      renameServerEmojiUrl(emoji_id: $emoji_id, image_url: $image_url) {
+        id
+        name
+        image_url
+        uploader_id
+      }
+    }
+  `,
 };
 
 // Channels (and its Permission) Mutation

@@ -37,15 +37,24 @@ export const streamToBuffer = (stream: any): Promise<Buffer> => {
   });
 };
 
-export const uploadToS3 = async (file: any, folder: string) => {
+export const uploadToS3 = async (
+  file: any,
+  folder: string,
+  useFilename: boolean = false
+) => {
   try {
     const { createReadStream, filename, mimetype } = await file;
     const stream = createReadStream();
     const buffer = await streamToBuffer(stream);
 
+    console.log(filename);
+
     // Generate a unique key for the file
     const extension = filename.split(".").pop();
-    const key = `${folder}/${uuidv4()}${extension ? `.${extension}` : ""}`;
+    let key = `${folder}/${uuidv4()}${extension ? `.${extension}` : ""}`;
+    if (useFilename) {
+      key = `${folder}/${filename}`;
+    }
 
     const params: PutObjectCommandInput = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
@@ -131,18 +140,20 @@ export const createFileObject = (buffer: any, filename: string) => {
  * @async
  * @param {*} image - The image object file (base64)
  * @param {string} folder - The folder to store the image
+ * @param {string} filename - The filename of the image
  * @returns {Promise<string | null>} - The image URL
  */
 export const processImage = async (
   image: any,
-  folder: string
+  folder: string,
+  filename: string = ""
 ): Promise<string | null> => {
   if (!image) return null;
 
   try {
     const buffer = base64ToBuffer(image);
-    const fileObject = createFileObject(buffer, "temp.png");
-    const imageUrl = await uploadToS3(compressImage(fileObject), folder);
+    const fileObject = createFileObject(buffer, `${filename}.png`);
+    const imageUrl = await uploadToS3(compressImage(fileObject), folder, true);
     return imageUrl;
   } catch (err) {
     return null;
