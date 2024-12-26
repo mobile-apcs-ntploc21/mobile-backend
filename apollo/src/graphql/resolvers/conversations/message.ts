@@ -12,8 +12,12 @@ import ReactionModel from "@/models/conversations/reaction";
 import AssignedUserRoleModel from "@/models/servers/assigned_user_role";
 import { publishEvent, ServerEvents } from "@/graphql/pubsub/pubsub";
 import ServerRoleModel from "@/models/servers/server_role";
+import AttachmentModel from "@/models/conversations/attachment";
 import { log } from "@/utils/log";
 import DirectMessageModel from "@/models/conversations/direct_message";
+import { publishMessage } from "@/rabbitmq";
+import { config } from "@/config";
+import serverModel from "@models/servers/server";
 import { PubSub } from "graphql-subscriptions";
 
 // ==========================
@@ -340,6 +344,8 @@ export const castToIMessage = async (
 
   console.log("extra author: ", extra.author);
 
+  console.log("extra author: ", extra.author);
+
   // Return the message
   return {
     id: String(message._id || message.id),
@@ -542,6 +548,9 @@ const searchMessages = async (
   console.log("Query", query);
   console.log("has:", has);
 
+  console.log("Query", query);
+  console.log("has:", has);
+
   // 5. Filter by attachment
   if (has && has.length > 0) {
     const attachments = await AttachmentModel.find({
@@ -696,6 +705,8 @@ const createMessageTransaction = async (
       mention_channels
     );
 
+    log.debug("filteredRoles", filteredRoles);
+    log.debug("filteredChannels", filteredChannels);
     log.debug("filteredRoles", filteredRoles);
     log.debug("filteredChannels", filteredChannels);
 
