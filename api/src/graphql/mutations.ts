@@ -1410,38 +1410,47 @@ export const directMessageMutations = {
         user_first_id: $user_first_id
         user_second_id: $user_second_id
       ) {
+        _id {
+          user_first_id
+          user_second_id
+        }
         conversation_id
-        sender_id
-        author {
-          user_id
-          username
-          display_name
-          avatar_url
-        }
+        has_new_message
+        number_of_unread_mentions
 
-        content
-        replied_message_id
-        forwarded_message_id
-
-        mention_users
-        emojis
-
-        replied_message {
+        latest_message {
           id
+          conversation_id
           sender_id
+          author {
+            user_id
+            username
+            display_name
+            avatar_url
+          }
+
           content
-          is_deleted
-        }
+          replied_message_id
+          forwarded_message_id
 
-        reactions {
-          emoji_id
-          count
-          reactors
-        }
+          mention_users
+          emojis
 
-        is_deleted
-        is_pinned
-        createdAt
+          replied_message {
+            id
+            sender_id
+            content
+            is_deleted
+          }
+
+          reactions {
+            emoji_id
+            count
+            reactors
+          }
+
+          is_modified
+        }
       }
     }
   `,
