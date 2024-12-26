@@ -1213,6 +1213,196 @@ export const messageMutations = {
   `,
 };
 
+export const ordersMutations = {
+  CREATE_ORDER: gql`
+    mutation createOrder(
+      $user_id: ID!
+      $package_id: ID!
+      $amount: Int!
+      $status: String!
+      $transaction_id: String!
+    ) {
+      createOrder(
+        user_id: $user_id
+        package_id: $package_id
+        amount: $amount
+        status: $status
+        transaction_id: $transaction_id
+      ) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  UPDATE_ORDER: gql`
+    mutation updateOrder(
+      $order_id: ID!
+      $amount: Int
+      $status: String
+      $transaction_id: String
+    ) {
+      updateOrder(
+        id: $order_id
+        amount: $amount
+        status: $status
+        transaction_id: $transaction_id
+      ) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  UPDATE_ORDER_STATUS: gql`
+    mutation updateOrderStatus($id: ID!, $status: String!) {
+      updateOrderStatus(id: $id, status: $status) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  DELETE_ORDER: gql`
+    mutation deleteOrder($order_id: ID!) {
+      deleteOrder(order_id: $order_id)
+    }
+  `,
+};
+
+export const paymentLogMutations = {
+  CREATE_PAYMENT_LOG: gql`
+    mutation createPaymentLog(
+      $user_id: ID!
+      $order_id: ID!
+      $request: String
+      $response: String
+      $transaction_id: String!
+      $log_type: LogType!
+      $data: JSON
+    ) {
+      createPaymentLog(
+        user_id: $user_id
+        order_id: $order_id
+        request: $request
+        response: $response
+        transaction_id: $transaction_id
+        log_type: $log_type
+        data: $data
+      ) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+};
+
+export const userSubscritpionMutation = {
+  UPDATE_USER_PACKAGE_SUBSCRIPTION: gql`
+    mutation updateUserPackageSubscription($user_id: ID!, $package_id: ID!) {
+      updateUserPackageSubscription(
+        user_id: $user_id
+        package_id: $package_id
+      ) {
+        user_id
+        package_id
+
+        is_active
+        startDate
+        endDate
+      }
+    }
+  `,
+
+  UPDATE_USER_SUBSCRIPTION: gql`
+    mutation updateUserSubscription(
+      $user_id: ID!
+      $package_id: ID
+      is_active: Boolean
+      startDate: String
+      endDate: String
+  ) {
+    updateUserSubscription(
+      user_id: $user_id
+      package_id: $package_id
+      is_active: $is_active
+      startDate: $startDate
+      endDate: $endDate
+    ) {
+      user_id
+      package_id
+
+      is_active
+      startDate
+      endDate
+    }
+  }
+
+  `,
+};
+
+export const expireDateMutations = {
+  SET_EXPIRE_DATE: gql`
+    mutation setExpireDate(
+      $object_type: String!
+      $object_id: ID!
+      $expire_date: String!
+    ) {
+      setExpireDate(
+        object_type: $object_type
+        object_id: $object_id
+        expire_date: $expire_date
+      ) {
+        object_type
+        object {
+          object_id
+          expire_date
+        }
+      }
+    }
+  `,
+
+  RESOLVE_EXPIRED: gql`
+    mutation resolveExpired {
+      resolveExpired {
+        object_type
+        object {
+          object_id
+          expire_date
+        }
+      }
+    }
+  `,
+};
+
+export const cronjobMutations = {
+  CLEANUP_SUBSCRIPTIONS: gql`
+    mutation cleanupSubscriptions {
+      cleanupSubscriptions {
+        user_id
+      }
+    }
+  `,
+};
+
 export const directMessageMutations = {
   CREATE_DIRECT_MESSAGE: gql`
     mutation createDirectMessage($user_first_id: ID!, $user_second_id: ID!) {
@@ -1221,25 +1411,171 @@ export const directMessageMutations = {
         user_second_id: $user_second_id
       ) {
         conversation_id
-        latest_message {
-          id
-          conversation_id
-          sender_id
-          author {
-            user_id
-            username
-            display_name
-            avatar_url
-          }
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
         }
-        has_new_message
-        number_of_unread_mentions
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+
+        is_deleted
+        is_pinned
+        createdAt
       }
     }
   `,
-  DELETE_DIRECT_MESSAGE: gql`
-    mutation deleteDirectMessage($conversation_id: ID!) {
-      deleteDirectMessage(conversation_id: $conversation_id)
+  EDIT_MESSAGE_IN_DM: gql`
+    mutation editMessageInDM(
+      $message_id: ID!
+      $input: EditDirectMessageInput!
+    ) {
+      editMessageInDM(message_id: $message_id, input: $input) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        replied_message {
+          id
+          sender_id
+          content
+          is_deleted
+        }
+
+        reactions {
+          emoji_id
+          count
+          reactors
+        }
+
+        is_modified
+      }
+    }
+  `,
+  DELETE_MESSAGE_IN_DM: gql`
+    mutation deleteMessageInDM($message_id: ID!) {
+      deleteMessageInDM(message_id: $message_id)
+    }
+  `,
+  PIN_MESSAGE_IN_DM: gql`
+    mutation pinMessageInDM($message_id: ID!, $conversation_id: ID!) {
+      pinMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+      ) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+  UNPIN_MESSAGE_IN_DM: gql`
+    mutation unpinMessageInDM($message_id: ID!, $conversation_id: ID!) {
+      unpinMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+      ) {
+        id
+        conversation_id
+        sender_id
+        author {
+          user_id
+          username
+          display_name
+          avatar_url
+        }
+
+        content
+        replied_message_id
+        forwarded_message_id
+
+        mention_users
+        emojis
+
+        createdAt
+      }
+    }
+  `,
+  REACT_MESSAGE_IN_DM: gql`
+    mutation reactMessageInDM(
+      $message_id: ID!
+      $conversation_id: ID!
+      $input: ReactMessageInput!
+    ) {
+      reactMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+        input: $input
+      ) {
+        message_id
+        sender_id
+        emoji_id
+      }
+    }
+  `,
+  UNREACT_MESSAGE_IN_DM: gql`
+    mutation unreactMessageInDM(
+      $message_id: ID!
+      $conversation_id: ID!
+      $input: ReactMessageInput!
+    ) {
+      unreactMessageInDM(
+        message_id: $message_id
+        conversation_id: $conversation_id
+        input: $input
+      ) {
+        message_id
+        sender_id
+        emoji_id
+      }
     }
   `,
 };
