@@ -882,6 +882,176 @@ export const messageQueries = {
   `,
 };
 
+export const cronjobQueries = {
+  GET_AVAILABLE_ATTACHMENTS: gql`
+    query availableAttachments {
+      availableAttachments {
+        url
+      }
+    }
+  `,
+  GET_DELETED_EMOJIS: gql`
+    query deletedEmojis {
+      deletedEmojis {
+        id
+        name
+        image_url
+      }
+    }
+  `,
+};
+
+export const ordersQueries = {
+  GET_ORDER: gql`
+    query order($order_id: ID!) {
+      order(order_id: $order_id) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  GET_ORDERS: gql`
+    query orders() {
+      orders() {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  GET_ORDERS_BY_USER: gql`
+    query ordersByUser($user_id: ID!) {
+      ordersByUser(user_id: $user_id) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+  GET_ORDER_BY_TRANSACTION: gql`
+    query orderByTransaction($transaction_id: String!) {
+      orderByTransaction(transaction_id: $transaction_id) {
+        id
+        user_id
+        package_id
+        amount
+        status
+        transaction_id
+        createdAt
+      }
+    }
+  `,
+};
+
+export const paymentLogQueries = {
+  GET_PAYMENT_LOG: gql`
+    query paymentLog($log_id: ID!) {
+      paymentLog(log_id: $log_id) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+  GET_PAYMENT_LOGS: gql`
+    query paymentLogs($user_id: ID!) {
+      paymentLogs(user_id: $user_id) {
+        id
+        user_id
+        order_id
+        request
+        response
+        transaction_id
+        log_type
+        data
+      }
+    }
+  `,
+};
+
+export const packagesQueries = {
+  GET_PACKAGE: gql`
+    query package($package_id: ID!) {
+      package(id: $package_id) {
+        id
+        name
+        description
+        base_price
+        is_on_sale
+        sale_details {
+          discount
+          end_date
+        }
+        duration
+        features_list
+      }
+    }
+  `,
+  GET_PACKAGES: gql`
+    query Packages {
+      packages {
+        id
+        name
+        description
+        base_price
+        is_on_sale
+        sale_details {
+          discount
+          end_date
+        }
+        duration
+        features_list
+      }
+    }
+  `,
+};
+
+export const userSubscriptionQueries = {
+  GET_USER_SUBSCRIPTION: gql`
+    query userSubscription($user_id: ID!) {
+      userSubscription(user_id: $user_id) {
+        user_id
+        package_id
+        is_active
+        startDate
+        endDate
+
+        package_ {
+          id
+          name
+          description
+          base_price
+          is_on_sale
+          sale_details {
+            discount
+            end_date
+          }
+          duration
+          features_list
+        }
+      }
+    }
+  `,
+};
+
 export const directMessageQueries = {
   GET_DIRECT_MESSAGE: gql`
     query getDirectMessage($user_first_id: ID!, $user_second_id: ID!) {

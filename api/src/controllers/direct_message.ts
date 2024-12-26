@@ -17,7 +17,8 @@ const _getDirectMessage = async (
   let response = await graphQLClient().request(
     directMessageQueries.GET_DIRECT_MESSAGE,
     {
-      conversation_id: conversationId,
+      user_first_id,
+      user_second_id,
     }
   );
   let result = response.getDirectMessage;
@@ -116,7 +117,13 @@ export const getDirectMessages = async (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { userId } = req.params;
+  const userId = (req.params?.userId as string) ?? res.locals.uid;
+
+  if (!userId) {
+    res.status(400).json({ message: "User ID is required." });
+    return;
+  }
+
   try {
     const directMessages = await _getDirectMessages(userId);
     res.status(200).json(directMessages);
@@ -560,26 +567,34 @@ export const getPinnedMessages = async (
   }
 
   try {
-    const response = await graphQLClient().request(
-      directMessageMutations.CREATE_DIRECT_MESSAGE,
+    const { pinnedMessages: messages } = await graphQLClient().request(
+      messageQueries.GET_PINNED_MESSAGES,
       {
-        user_first_id,
-        user_second_id,
+        conversation_id: conversation.conversation_id,
       }
     );
 
-    res.status(201).json(response.createDirectMessage);
-  } catch (error) {
+    if (!messages) {
+      // Return empty array if no pinned messages
+      res.status(200).json({ messages: [] });
+      return;
+    }
+
+    res.status(200).json({ messages });
+  } catch (error: any) {
     next(error);
   }
 };
 
-export const deleteDirectMessage = async (
+// =========================
+
+export const createMessage = async (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { conversationId } = req.params;
+  const { content, repliedMessageId, forwardedMessageId, attachments } =
+    req.body;
 
   let user_first_id = res.locals.uid;
   let user_second_id = req.params?.userId as string;
@@ -823,8 +838,9 @@ export const reactMessage = async (
       }
     );
 
-    res.status(204).end();
-  } catch (error) {
+    res.status(200).json({ reactions });
+    return;
+  } catch (error: any) {
     next(error);
     return;
   }

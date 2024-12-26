@@ -16,6 +16,7 @@ import {
   searchMessages,
   getMessage,
 } from "../controllers/direct_message";
+import * as messageCtrl from "../controllers/servers/message";
 
 const directMessageRouter = Router();
 
