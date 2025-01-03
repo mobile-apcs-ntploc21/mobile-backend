@@ -547,6 +547,17 @@ const emojisAPI: IResolvers = {
           { new: true }
         );
 
+        // Publish event to the websocket server
+        publishEvent(ServerEvents.serverUpdated, {
+          type: ServerEvents.emojiUpdated,
+          // @ts-ignore
+          server_id: emoji.server_id,
+          data: {
+            //@ts-ignore
+            ...emoji.toObject(),
+          },
+        });
+
         return emoji;
       } catch (error: any) {
         throw new Error(error);

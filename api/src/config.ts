@@ -29,7 +29,7 @@ const config = {
     process.env.VNPAY_API_URL ??
     "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
 
-  GQL_SERVER_URL: process.env.GQL_SERVER_URL ?? "http://apollo:4000",
+  GQL_SERVER_URL: process.env.GQL_SERVER_URL ?? "http://orantio-apollo:4000",
 };
 
 export default config;
