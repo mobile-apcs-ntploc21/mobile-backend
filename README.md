@@ -6,6 +6,10 @@ Orantio is a mobile messaging platform, designed to enhance your communication e
 
 ![image](https://github.com/user-attachments/assets/81a1a1a5-3806-40c1-8a49-928236ac4e5d)
 
+All reports related to course CS426 and CS300 can be found here:
+- [CS426 - Mobile Device Application Development](https://drive.google.com/drive/folders/1_UMZ-_qxJTzBUqedQv8a4BW-Ij9IIFB-?usp=sharing)
+- [CS300 - Orantio](https://drive.google.com/drive/folders/1HTRgZ1dGJsu_JyMLVBxYjk8a9NIDswzE?usp=sharing)
+
 ## Features
 
 1. Group Messaging
