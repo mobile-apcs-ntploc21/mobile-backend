@@ -13,6 +13,7 @@ import {
   InpOrderAlreadyConfirmed,
   IpnSuccess,
   IpnUnknownError,
+  getDateInGMT7,
 } from "vnpay";
 import { v4 as uuidv4 } from "uuid";
 
@@ -150,7 +151,7 @@ export const createOrder = async (
 
     // Create an Order document
     const amount = packageData.package.base_price;
-    const date = new Date();
+    const date = getDateInGMT7();
     const expireDate = new Date(date.getTime() + 1 * 15 * 60 * 1000); // 15 minutes
     const transactionId = uuidv4();
 
@@ -172,8 +173,8 @@ export const createOrder = async (
       vnp_OrderInfo: orderInfo,
       vnp_OrderType: ProductCode.Other,
       vnp_Locale: locale ? VnpLocale.VN : VnpLocale.EN,
-      vnp_ExpireDate: VnpDateFormat(expireDate),
-      vnp_CreateDate: VnpDateFormat(date),
+      vnp_ExpireDate: VnpDateFormat(date),
+      vnp_CreateDate: VnpDateFormat(expireDate),
       vnp_ReturnUrl: req.body?.returnUrl || config.VNPAY_RETURN_URL,
     };
     if (bankCode !== null && bankCode !== "") {
